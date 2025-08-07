@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   baseURL: false
     ? 'http://localhost:7071/api/v1'
-    : 'https://soydanirodriguezz-back-efdec0a3crfpdkcz.centralus-01.azurewebsites.net/api/v1',
+    : 'https://soydanirodriguezz-back-c3a4gvcqbrg8fcew.centralus-01.azurewebsites.net/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
