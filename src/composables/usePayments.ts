@@ -27,7 +27,7 @@ export function usePayments() {
           'lastPaymentData',
           JSON.stringify({
             purchaseId: response.data.purchase.id,
-            wallpaperNumber: response.data.purchase.wallpaperNumber,
+            wallpaperNumbers: response.data.purchase.wallpaperNumbers,
             email: paymentData.buyerEmail,
           }),
         )
@@ -97,7 +97,7 @@ export function usePayments() {
    */
   const getPurchaseStatus = (wallpaperNumber: number) => {
     return computed(() => {
-      const purchase = userPurchases.value.find((p) => p.wallpaperNumber === wallpaperNumber)
+      const purchase = userPurchases.value.find((p) => p.wallpaperNumbers.includes(wallpaperNumber))
       return purchase?.status || null
     })
   }

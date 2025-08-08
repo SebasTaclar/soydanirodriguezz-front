@@ -3,7 +3,7 @@ import type { ApiResponse } from './apiConfig'
 
 // Tipos para el sistema de pagos
 export interface CreatePaymentRequest {
-  wallpaperNumber: number
+  wallpaperNumbers: number[]
   buyerEmail: string
   buyerName: string
   buyerIdentificationNumber: string
@@ -12,7 +12,7 @@ export interface CreatePaymentRequest {
 
 export interface Purchase {
   id: string
-  wallpaperNumber: number
+  wallpaperNumbers: number[]
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
   amount: number
   currency: string
@@ -24,7 +24,7 @@ export interface PaymentResponse {
   message: string
   purchase: {
     id: string
-    wallpaperNumber: number
+    wallpaperNumbers: number[]
     amount: number
     currency: string
     status: string
@@ -80,7 +80,7 @@ export class PaymentService {
       if (response.success && response.data) {
         return response.data.purchases.some(
           (purchase) =>
-            purchase.wallpaperNumber === wallpaperNumber &&
+            purchase.wallpaperNumbers.includes(wallpaperNumber) &&
             (purchase.status === 'APPROVED' || purchase.status === 'PENDING'),
         )
       }

@@ -308,10 +308,17 @@ const goToNumber = () => {
     const targetPage = Math.ceil(number / numbersPerPage)
     currentPage.value = targetPage
 
+    // Seleccionar el número automáticamente si no está tomado o reservado
+    if (!takenNumbers.value.includes(number) && !isNumberReserved(number)) {
+      if (!selectedNumbers.value.includes(number)) {
+        selectedNumbers.value.push(number)
+      }
+    }
+
     // Limpiar el campo de búsqueda
     searchNumber.value = ''
 
-    // Resaltar el número encontrado por 1 segundo
+    // Resaltar el número encontrado por menos tiempo (500ms)
     setTimeout(() => {
       const button = document.querySelector(`button[data-number="${number}"]`) as HTMLElement
       if (button) {
@@ -324,21 +331,21 @@ const goToNumber = () => {
         const originalBorder = button.style.borderColor
         const originalBackground = button.style.background
 
-        // Aplicar resaltado dorado
-        button.style.transform = 'scale(1.3)'
-        button.style.boxShadow = '0 0 25px rgba(255, 193, 7, 1), 0 0 50px rgba(255, 193, 7, 0.7)'
+        // Aplicar resaltado dorado más sutil
+        button.style.transform = 'scale(1.2)'
+        button.style.boxShadow = '0 0 20px rgba(255, 193, 7, 0.8), 0 0 40px rgba(255, 193, 7, 0.5)'
         button.style.borderColor = '#ffc107'
         button.style.background = 'linear-gradient(135deg, #ffc107, #ff8f00)'
-        button.style.transition = 'all 0.3s ease'
+        button.style.transition = 'all 0.2s ease'
 
-        // Restaurar estilos después de 1 segundo
+        // Restaurar estilos después de 500ms
         setTimeout(() => {
           button.style.transform = originalTransform
           button.style.boxShadow = originalBoxShadow
           button.style.borderColor = originalBorder
           button.style.background = originalBackground
           button.style.transition = 'all 0.3s ease'
-        }, 1000)
+        }, 300)
       }
     }, 200)
   } else {
@@ -385,12 +392,9 @@ const payWithMercadoPago = async () => {
 
       const { createPayment } = usePayments()
 
-      // Para múltiples wallpapers, enviamos el primer número como referencia
-      // TODO: Update backend to handle multiple wallpapers in one transaction
-      const wallpaperNumber = selectedNumbers.value[0]
-
+      // Enviar todos los números seleccionados como array
       const paymentData = {
-        wallpaperNumber: wallpaperNumber,
+        wallpaperNumbers: selectedNumbers.value,
         buyerEmail: userForm.value.email,
         buyerName: userForm.value.name,
         buyerIdentificationNumber: userForm.value.identificationNumber,
@@ -426,34 +430,6 @@ const payWithMercadoPago = async () => {
   } else {
     alert('Completa todos los campos requeridos')
   }
-}
-
-const payWithTransfer = () => {
-  if (selectedNumbers.value.length > 0) {
-    // Confirmar pago de números seleccionados
-    confirmPayment(selectedNumbers.value)
-
-    alert(`Demo: Pago por transferencia procesado. Se compraron ${selectedNumbers.value.length} números.`)
-    selectedNumbers.value = [] // Limpiar selección después del "pago"
-  } else {
-    alert('Demo: Selecciona al menos un número para pagar')
-  }
-}
-
-const generatePaymentLink = () => {
-  if (selectedNumbers.value.length > 0) {
-    // Confirmar pago de números seleccionados
-    confirmPayment(selectedNumbers.value)
-
-    alert(`Demo: Link de pago generado y procesado. Se compraron ${selectedNumbers.value.length} números.`)
-    selectedNumbers.value = [] // Limpiar selección después del "pago"
-  } else {
-    alert('Demo: Selecciona al menos un número para generar el link')
-  }
-}
-
-const showRules = () => {
-  emit('showRules')
 }
 </script>
 
