@@ -1,20 +1,54 @@
 <template>
   <main class="home-main">
     <section class="section">
-      <MainBanner />
+      <MainBanner @showRules="openRulesModal" />
+    </section>
+    <section id="number-selection" class="section">
+      <NumberSelection @showRules="openRulesModal" />
+    </section>
+    <section class="section">
+      <FAQ />
     </section>
     <section class="section offset">
       <Footer_ />
     </section>
+
+    <!-- Modal de reglas -->
+    <RulesModal
+      :isVisible="showRulesModal"
+      @close="closeRulesModal"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import MainBanner from '@/components/MainBanner.vue';
+import NumberSelection from '@/components/NumberSelection.vue';
+import FAQ from '@/components/FAQ.vue';
 import Footer_ from "@/components/Footer_.vue";
+import RulesModal from '@/components/RulesModal.vue';
+
+// Estado del modal de reglas
+const showRulesModal = ref(false)
+
+const openRulesModal = () => {
+  showRulesModal.value = true
+}
+
+const closeRulesModal = () => {
+  showRulesModal.value = false
+}
 
 defineOptions({
   name: 'HomeView',
+});
+
+// Expose variables to template
+defineExpose({
+  showRulesModal,
+  openRulesModal,
+  closeRulesModal
 });
 
 </script>

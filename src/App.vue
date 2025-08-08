@@ -1,13 +1,30 @@
 <template>
   <header>
     <nav class="navbar">
+      <!-- Logo y marca -->
       <RouterLink class="link-navbar home" to="/" @click="closeMobileMenu">
-        <div class="brand-title">Digital<span class="mas">Wallpaper</span><span class="domain">.com</span></div>
+        <div class="brand-container">
+          <div class="logo-circle">🎯</div>
+          <div class="brand-info">
+            <div class="brand-title">FondosDigitales Moto</div>
+            <div class="brand-subtitle">Demo contable</div>
+          </div>
+        </div>
       </RouterLink>
 
-      <!-- Saludo personalizado -->
-      <div v-if="isLoggedIn" class="user-greeting">
-        <span>Hola, {{ username }}</span>
+      <!-- Navegación principal -->
+      <div class="nav-menu desktop-nav">
+        <a href="#numbers" class="nav-link" @click="closeMobileMenu(); scrollToNumbers()">Participa Ahora</a>
+        <a href="#faq" class="nav-link " @click="closeMobileMenu">¿Preguntas?</a>
+      </div>
+
+      <!-- Controles de usuario -->
+      <div class="nav-controls desktop-nav">
+        <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
+        <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
+        <div v-if="isLoggedIn" class="user-greeting">
+          <span>{{ username }}</span>
+        </div>
       </div>
 
       <!-- Menu hamburguesa para mobile -->
@@ -17,26 +34,22 @@
         <span></span>
       </button>
 
-      <!-- Controles de navegación desktop -->
-      <div class="nav-controls desktop-nav">
-        <ThemeToggle />
-        <RouterLink v-if="!isLoggedIn" class="link-navbar access" to="/login">Acceder</RouterLink>
-        <RouterLink v-if="isLoggedIn" @click="logout" class="link-navbar logout-btn" to="/">Cerrar sesión</RouterLink>
-      </div>
-
       <!-- Menu mobile desplegable -->
       <div class="mobile-menu" :class="{ 'active': isMobileMenuOpen }">
         <div class="mobile-menu-content">
-          <!-- Controles mobile -->
+          <div class="mobile-nav-links">
+            <a href="#numbers" class="mobile-link" @click="closeMobileMenu; scrollToNumbers()">Números</a>
+            <a href="#compartir" class="mobile-link" @click="closeMobileMenu">Compartir</a>
+          </div>
+
           <div class="mobile-controls">
-            <ThemeToggle />
-            <RouterLink v-if="!isLoggedIn" class="mobile-link access" to="/login" @click="closeMobileMenu">
+            <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">
               Acceder
             </RouterLink>
             <div v-if="isLoggedIn" class="mobile-user-greeting">
               <span>Hola, {{ username }}</span>
             </div>
-            <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-link logout-btn" to="/">
+            <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-btn logout-btn" to="/">
               Cerrar sesión
             </RouterLink>
           </div>
@@ -56,7 +69,6 @@ import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { authService } from '@/services/api';
 import { onMounted, ref, watch } from 'vue';
 import router from './router';
-import ThemeToggle from '@/components/ThemeToggle.vue';
 import SocialFloating from '@/components/SocialFloating.vue';
 
 const isLoggedIn = ref(false);
@@ -70,6 +82,17 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
+};
+
+// Función para hacer scroll a la sección de números
+const scrollToNumbers = () => {
+  const numbersSection = document.getElementById('number-selection');
+  if (numbersSection) {
+    numbersSection.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
 };
 
 const checkAuthStatus = () => {
@@ -101,7 +124,7 @@ watch(route, () => {
 
 <style scoped>
 .navbar {
-  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   margin: 0;
   width: 100%;
   display: flex;
@@ -111,160 +134,286 @@ watch(route, () => {
   top: 0;
   left: 0;
   z-index: 1000;
-  height: 60px;
-  padding: 0 20px;
-  box-shadow: var(--shadow-heavy);
+  height: 70px;
+  padding: 0 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
 }
 
-.nav-controls {
+/* Logo y marca */
+.brand-container {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-left: auto;
+  gap: 12px;
 }
 
-.hamburger-menu {
-  display: none;
-}
-
-.mobile-menu {
-  display: none;
-}
-
-.link-navbar {
-  text-decoration: none;
-  padding: 10px 15px;
-  font-weight: 500;
-  font-size: 1rem;
-  color: var(--white);
-  transition: all var(--transition-normal);
-  border-radius: var(--border-radius-md);
-}
-
-.link-navbar:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-.home {
+.logo-circle {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  padding: 5px 15px;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
 }
 
-.navbar-logo {
-  height: 45px;
-  width: auto;
-  max-width: 140px;
-  object-fit: contain;
-  transition: all var(--transition-normal);
-  filter: brightness(1.1);
-}
-
-.navbar-logo:hover {
+.logo-circle:hover {
   transform: scale(1.05);
-  filter: brightness(1.3);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .brand-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--white);
-  letter-spacing: -0.5px;
-  transition: all var(--transition-normal);
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  margin: 0;
 }
 
-.brand-title .mas {
-  color: var(--white);
-  font-weight: 600;
-  font-size: 1.5rem;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+.brand-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  line-height: 1;
+  margin: 0;
 }
 
-.brand-title .domain {
-  color: var(--white);
-  font-weight: 600;
-  font-size: 1.5rem;
+/* Navegación principal */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-left: auto;
+  margin-right: 30px;
 }
 
-.brand-title:hover {
-  transform: scale(1.05);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+.nav-link {
+  color: #e2e8f0;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.brand-title:hover .mas {
-  color: var(--white);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-.brand-title:hover .domain {
-  color: var(--white);
-}
-
-.user-greeting {
-  color: var(--white);
-  font-weight: 600;
-  font-size: 1rem;
-  margin-left: 1.5rem;
-  opacity: 0.95;
-}
-
-.user-greeting span {
-  transition: opacity var(--transition-normal);
-}
-
-.user-greeting:hover span {
-  opacity: 1;
-}
-
-.access {
-  margin-left: 0;
+.nav-link:hover {
+  color: #ffffff;
   background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-}
-
-.access:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-1px);
 }
 
-.logout-btn {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: var(--white);
+.share-btn {
+  background: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
+  color: #ffffff !important;
   font-weight: 600;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(34, 211, 238, 0.3);
+}
+
+.share-btn:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  box-shadow: 0 4px 15px rgba(34, 211, 238, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Controles de usuario */
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.access-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+}
+
+.access-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+  transform: translateY(-2px);
+}
+
+.logout-btn {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
 }
 
 .logout-btn:hover {
-  background-color: rgba(220, 53, 69, 0.2);
-  border-color: rgba(220, 53, 69, 0.5);
-  color: #ff6b6b;
+  background: rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.5);
+  transform: translateY(-1px);
 }
 
-.admin-link {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: var(--white);
+.user-greeting {
+  color: #e2e8f0;
   font-weight: 600;
+  font-size: 14px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   backdrop-filter: blur(10px);
 }
 
-.admin-link:hover {
-  background-color: rgba(76, 175, 80, 0.2);
-  border-color: rgba(76, 175, 80, 0.5);
-  color: #81c784;
+/* Menu hamburguesa */
+.hamburger-menu {
+  display: none;
+  flex-direction: column;
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1001;
 }
 
+.hamburger-menu span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-menu.active span:nth-child(1) {
+  transform: rotate(45deg) translate(8px, 8px);
+}
+
+.hamburger-menu.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-menu.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* Menu mobile */
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 70px);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.mobile-menu.active {
+  transform: translateX(0);
+}
+
+.mobile-menu-content {
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.mobile-link {
+  color: #e2e8f0;
+  text-decoration: none;
+  padding: 15px 20px;
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.mobile-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-btn {
+  padding: 15px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.mobile-btn.access-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.mobile-btn.logout-btn {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.mobile-user-greeting {
+  color: #e2e8f0;
+  text-align: center;
+  padding: 15px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .navbar {
     height: 70px;
-    padding: 0 15px;
-    justify-content: space-between;
+    padding: 0 20px;
   }
 
   .desktop-nav {
@@ -273,164 +422,44 @@ watch(route, () => {
 
   .hamburger-menu {
     display: flex;
-    flex-direction: column;
-    width: 30px;
-    height: 30px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 1001;
-  }
-
-  .hamburger-menu span {
-    display: block;
-    height: 3px;
-    width: 100%;
-    background-color: var(--white);
-    border-radius: 3px;
-    transition: all var(--transition-normal);
-  }
-
-  .hamburger-menu.active span:nth-child(1) {
-    transform: rotate(45deg) translate(8px, 8px);
-  }
-
-  .hamburger-menu.active span:nth-child(2) {
-    opacity: 0;
-  }
-
-  .hamburger-menu.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -6px);
   }
 
   .mobile-menu {
-    position: fixed;
-    top: 70px;
-    left: 0;
-    width: 100%;
-    height: calc(100vh - 70px);
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
-    transform: translateX(-100%);
-    transition: transform var(--transition-normal);
-    z-index: 999;
-    overflow-y: auto;
-    display: block !important;
-  }
-
-  .mobile-menu.active {
-    transform: translateX(0);
-  }
-
-  .mobile-menu-content {
-    padding: 2rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .mobile-link {
-    color: var(--white);
-    text-decoration: none;
-    padding: 1rem;
-    font-size: 1.1rem;
-    font-weight: 500;
-    border-radius: var(--border-radius-md);
-    transition: all var(--transition-normal);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    text-align: center;
-  }
-
-  .mobile-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
-  }
-
-  .mobile-controls {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 2px solid rgba(255, 255, 255, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-  }
-
-  .mobile-user-greeting {
-    color: var(--white);
-    text-align: center;
-    padding: 1rem;
-    margin: 0.5rem 0;
-    font-weight: 600;
-    font-size: 1.1rem;
-    opacity: 0.95;
-  }
-
-  .home {
-    padding: 5px 10px;
+    display: block;
   }
 
   .brand-title {
-    font-size: 1.3rem;
+    font-size: 18px;
   }
 
-  .brand-title .mas {
-    font-size: 1.3rem;
+  .brand-subtitle {
+    font-size: 11px;
   }
 
-  .brand-title .domain {
-    font-size: 1.3rem;
+  .logo-circle {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 15px;
   }
 
-  .access {
-    width: 100%;
-    text-align: center;
-    padding: 1rem;
-    font-size: 1.1rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
+  .brand-container {
+    gap: 10px;
   }
 
-  .access:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+  .brand-title {
+    font-size: 16px;
   }
 
-  .logout-btn {
-    width: 100%;
-    text-align: center;
-    padding: 1rem;
-    font-size: 1.1rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: var(--white);
-    backdrop-filter: blur(10px);
-  }
-
-  .logout-btn:hover {
-    background-color: rgba(220, 53, 69, 0.2);
-    border-color: rgba(220, 53, 69, 0.5);
-    color: #ff6b6b;
-  }
-
-  .admin-link {
-    width: 100%;
-    text-align: center;
-    padding: 1rem;
-    font-size: 1.1rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: var(--white);
-    backdrop-filter: blur(10px);
-  }
-
-  .admin-link:hover {
-    background-color: rgba(76, 175, 80, 0.2);
-    border-color: rgba(76, 175, 80, 0.5);
-    color: #81c784;
+  .logo-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
   }
 }
 </style>

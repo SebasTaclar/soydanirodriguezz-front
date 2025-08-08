@@ -1,663 +1,1250 @@
 <template>
-  <section class="hero">
-    <!-- Carrusel de imágenes de fondo -->
-    <div class="carousel-container">
-      <div class="carousel-slide"
-           v-for="(slide, index) in slides"
-           :key="index"
-           :class="{ 'active': currentSlide === index }"
-           :style="{ backgroundImage: `url(${slide.image})` }">
-        <div class="slide-overlay"></div>
-      </div>
-    </div>
-
-    <!-- Contenido principal -->
-    <div class="hero-container">
-      <div class="hero-content">
-        <div class="hero-title">
-          <h1>{{ slides[currentSlide].title }}</h1>
+  <section class="hero-rifa">
+    <!-- Galería de fotos de la moto -->
+    <div class="moto-gallery-section">
+      <div class="gallery-container">
+        <div class="gallery-header">
+          <h1>Gana una <span class="highlight-blue">Pulsar</span> con tu</h1>
+          <h1>número de la suerte</h1>
         </div>
 
-        <div class="hero-description">
-          <p>{{ slides[currentSlide].description }}</p>
-        </div>
-
-        <!-- Sección de productos destacados -->
-        <div class="tournaments-section">
-          <h3 class="tournaments-title">Productos destacados</h3>
-          <div class="tournaments-carousel-container">
-            <div class="tournaments-carousel" :style="{ transform: `translateX(-${currentTournamentSlide * (100 / tournamentsPerView)}%)` }">
-              <div class="tournament-card">
-                <div class="tournament-badge">
-                  <span class="tournament-icon">🏍️</span>
-                  <span class="tournament-league">NS200 Collection</span>
+        <!-- Galería horizontal en .horizontal-gallery -->
+        <div class="horizontal-gallery" ref="galleryRef">
+          <div
+            v-for="(image, index) in motoImages"
+            :key="index"
+            class="gallery-image-item"
+            :class="{ 'active': currentImageIndex === index }"
+            @click="goToImage(index)"
+  >
+            <div class="image-wrapper">
+              <img :src="image.src" :alt="image.alt" />
+              <div class="image-overlay">
+                <div class="image-info">
+                  <h3>{{ image.title }}</h3>
+                  <p>{{ image.description }}</p>
                 </div>
-                <div class="tournament-info">
-                  <span class="tournament-time">Descarga inmediata</span>
-                  <h4 class="tournament-name">Wallpapers NS200 de alta calidad</h4>
-                </div>
-                <button class="tournament-btn" @click="scrollToTournaments">Ver catálogo</button>
-              </div>
-
-              <div class="tournament-card">
-                <div class="tournament-badge">
-                  <span class="tournament-icon">💎</span>
-                  <span class="tournament-league">Premium Edition</span>
-                </div>
-                <div class="tournament-info">
-                  <span class="tournament-time">Calidad superior</span>
-                  <h4 class="tournament-name">Ediciones especiales NS200</h4>
-                </div>
-                <button class="tournament-btn">Ver más detalles</button>
-              </div>
-
-              <div class="tournament-card">
-                <div class="tournament-badge">
-                  <span class="tournament-icon">📱</span>
-                  <span class="tournament-league">Para Móviles</span>
-                </div>
-                <div class="tournament-info">
-                  <span class="tournament-time">4K Resolution</span>
-                  <h4 class="tournament-name">NS200 optimizado para smartphones</h4>
-                </div>
-                <button class="tournament-btn">Ver más detalles</button>
-              </div>
-
-              <div class="tournament-card">
-                <div class="tournament-badge">
-                  <span class="tournament-icon">💻</span>
-                  <span class="tournament-league">Para Escritorio</span>
-                </div>
-                <div class="tournament-info">
-                  <span class="tournament-time">Ultra HD</span>
-                  <h4 class="tournament-name">Wallpapers NS200 para PC</h4>
-                </div>
-                <button class="tournament-btn">Ver más detalles</button>
-              </div>
-
-              <div class="tournament-card">
-                <div class="tournament-badge">
-                  <span class="tournament-icon">🎨</span>
-                  <span class="tournament-league">Artísticos</span>
-                </div>
-                <div class="tournament-info">
-                  <span class="tournament-time">Estilo único</span>
-                  <h4 class="tournament-name">NS200 con diseños abstractos</h4>
-                </div>
-                <button class="tournament-btn">Ver más detalles</button>
-              </div>
-
-              <div class="tournament-card">
-                <div class="tournament-badge">
-                  <span class="tournament-icon">🌟</span>
-                  <span class="tournament-league">Nuevos</span>
-                </div>
-                <div class="tournament-info">
-                  <span class="tournament-time">Recién agregados</span>
-                  <h4 class="tournament-name">Nuevos wallpapers NS200 disponibles</h4>
-                </div>
-                <button class="tournament-btn">Ver más detalles</button>
               </div>
             </div>
-
-            <!-- Controles del carrusel de torneos -->
-            <button class="tournament-carousel-control prev" @click="prevTournament" v-show="currentTournamentSlide > 0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="15,18 9,12 15,6"></polyline>
-              </svg>
-            </button>
-            <button class="tournament-carousel-control next" @click="nextTournament" v-show="currentTournamentSlide < maxTournamentSlide">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9,18 15,12 9,6"></polyline>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Indicadores de torneos (solo en móvil) -->
-          <div class="tournament-indicators">
-            <button
-              v-for="n in Math.ceil(totalTournaments / tournamentsPerView)"
-              :key="n"
-              :class="{ 'active': currentTournamentSlide === n - 1 }"
-              @click="currentTournamentSlide = n - 1"
-              :aria-label="`Ir a grupo ${n} de torneos`">
-            </button>
           </div>
         </div>
+
+        <!-- Navegación con flechas a los lados -->
+        <div class="gallery-navigation">
+          <button class="gallery-nav-arrow gallery-prev" @click="prevImage">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15,18 9,12 15,6"></polyline>
+            </svg>
+          </button>
+          <button class="gallery-nav-arrow gallery-next" @click="nextImage">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Contenido centrado debajo de la galería -->
+        <div class="content-wrapper">
+          <div class="description">
+            <p>Elige tus números, confirma y guarda tu comprobante. Sorteo transparente y regulado por reglas claras.</p>
+          </div>
+          <!-- Botones de acción -->
+          <div class="action-buttons">
+            <button class="btn-primary" @click="selectNumbers">Elegir números</button>
+            <button class="btn-secondary" @click="viewRules">Ver reglas</button>
+          </div>
+           <!-- Estadísticas -->
+          <div class="stats-section">
+            <div class="stat-card">
+              <div class="stat-value">$ 20.000</div>
+              <div class="stat-label">por número</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">15 días</div>
+            <div class="stat-label">para el sorteo</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ availabilityText }}</div>
+            <div class="stat-label">disponibles</div>
+          </div>
+        </div>
+        </div> <!-- Cierre content-wrapper -->
       </div>
     </div>
-
-    <!-- Indicadores del carrusel -->
-    <div class="carousel-indicators">
-      <button
-        v-for="(slide, index) in slides"
-        :key="index"
-        :class="{ 'active': currentSlide === index }"
-        @click="goToSlide(index)"
-        :aria-label="`Ir a imagen ${index + 1}`">
-      </button>
-    </div>
-
-    <!-- Controles de navegación -->
-    <button class="carousel-control prev" @click="prevSlide" aria-label="Imagen anterior">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15,18 9,12 15,6"></polyline>
-      </svg>
-    </button>
-    <button class="carousel-control next" @click="nextSlideManual" aria-label="Siguiente imagen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9,18 15,12 9,6"></polyline>
-      </svg>
-    </button>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 
-// Configuración del carrusel principal
-const slides = ref([
+// Definir emits
+interface Emits {
+  (e: 'showRules'): void
+}
+
+const emit = defineEmits<Emits>()
+
+// Usar el composable de disponibilidad de números
+const {
+  availabilityText,
+} = useNumbersAvailability()
+
+// // Función para simular más ventas (demo)
+// const simulateMoreSales = () => {
+//   const available = getAvailableNumbersArray()
+//   if (available.length > 5) {
+//     // Simular venta de 3-7 números aleatorios
+//     const numToSell = Math.floor(Math.random() * 5) + 3
+//     const soldNumbers = []
+
+//     for (let i = 0; i < numToSell && i < available.length; i++) {
+//       const randomIndex = Math.floor(Math.random() * available.length)
+//       soldNumbers.push(available[randomIndex])
+//       addTakenNumber(available[randomIndex])
+//       available.splice(randomIndex, 1)
+//     }
+
+//     alert(`Demo: Se simuló la venta de ${soldNumbers.length} números: ${soldNumbers.join(', ')}`)
+//   } else {
+//     alert('Demo: No hay suficientes números disponibles para simular más ventas')
+//   }
+// }
+
+// // Función para resetear la demo
+// const resetDemo = () => {
+//   resetToDefaults()
+//   alert('Demo: Números resetados a los valores por defecto')
+// }
+
+// // Función para limpiar la demo
+// const clearDemo = () => {
+//   if (confirm('¿Estás seguro de que quieres limpiar todos los números reservados?')) {
+//     clearAllReserved()
+//     alert('Demo: Todos los números han sido liberados')
+//   }
+// }
+
+// Datos de las imágenes de la moto
+const motoImages = ref([
   {
-    image: '/images/ns200_slide1.jpg',
-    title: 'Wallpapers NS200 Premium',
-    description: 'Descubre nuestra colección exclusiva de fondos digitales de la legendaria moto NS200. Diseños únicos que capturan la esencia deportiva y elegante de esta increíble motocicleta.'
+    src: '/images/ns200_slide1.png',
+    alt: 'KTM 890 Duke GP - Detalles del motor',
+    title: 'Motor de alta performance',
+    description: 'Tecnología avanzada con detalles en naranja racing'
   },
   {
-    image: '/images/ns200_slide2.jpg',
-    title: 'NS200: Potencia y Estilo Digital',
-    description: 'Wallpapers profesionales en ultra alta resolución de la NS200. Perfectos para cualquier dispositivo. Captura la adrenalina y la velocidad en tu pantalla.'
+    src: '/images/ns200_slide2.png',
+    alt: 'KTM 890 Duke GP - Vista frontal',
+    title: 'Diseño agresivo frontal',
+    description: 'Faros LED distintivos y carenado deportivo'
   },
   {
-    image: '/images/ns200_slide3.jpg',
-    title: 'Diseños Deportivos Exclusivos',
-    description: 'Cada wallpaper está cuidadosamente diseñado para mostrar la belleza deportiva de la NS200. Desde ángulos dinámicos hasta detalles impresionantes.'
+    src: '/images/ns200_slide3.jpeg',
+    alt: 'KTM 890 Duke GP - Vista lateral completa',
+    title: 'Perfil deportivo completo',
+    description: 'Líneas aerodinámicas perfectas en negro y naranja'
   },
   {
-    image: '/images/ns200_slide4.jpg',
-    title: '¡La NS200 en tu Pantalla!',
-    description: 'Colección completa de fondos NS200 en diferentes estilos y ángulos. Compra fácil, descarga inmediata. ¡Lleva la pasión motociclista a tu mundo digital!'
+    src: '/images/ns200_slide4.jpg',
+    alt: 'KTM 890 Duke GP - Rueda trasera',
+    title: 'Rueda deportiva',
+    description: 'Llanta naranja con frenos de alta performance'
+  },
+  {
+    src: '/images/ns200_slide5.jpeg',
+    alt: 'KTM 890 Duke GP - Rueda trasera',
+    title: 'Rueda deportiva',
+    description: 'Llanta naranja con frenos de alta performance'
+  },
+  {
+    src: '/images/ns200_slide6.jpeg',
+    alt: 'KTM 890 Duke GP - Rueda trasera',
+    title: 'Rueda deportiva',
+    description: 'Llanta naranja con frenos de alta performance'
+  },
+  {
+    src: '/images/ns200_slide7.jpeg',
+    alt: 'KTM 890 Duke GP - Rueda trasera',
+    title: 'Rueda deportiva',
+    description: 'Llanta naranja con frenos de alta performance'
   }
 ])
 
-const currentSlide = ref(0)
-let intervalId: number | null = null
+const currentImageIndex = ref(0)
+const galleryRef = ref<HTMLElement | null>(null)
 
-// Configuración del carrusel de torneos
-const currentTournamentSlide = ref(0)
-const totalTournaments = 6
-const windowWidth = ref(window.innerWidth)
-
-const tournamentsPerView = computed(() => {
-  // En desktop mostrar 3, en tablet 2, en móvil 1
-  if (windowWidth.value >= 1024) return 3
-  if (windowWidth.value >= 768) return 2
-  return 1
-})
-
-const maxTournamentSlide = computed(() => {
-  return Math.max(0, Math.ceil(totalTournaments / tournamentsPerView.value) - 1)
-})
-
-// Funciones del carrusel principal
-const nextSlide = () => {
-  currentSlide.value = (currentSlide.value + 1) % slides.value.length
-}
-
-const prevSlide = () => {
-  currentSlide.value = currentSlide.value === 0 ? slides.value.length - 1 : currentSlide.value - 1
-}
-
-const nextSlideManual = () => {
-  resetInterval()
-  nextSlide()
-  startInterval()
-}
-
-const goToSlide = (index: number) => {
-  resetInterval()
-  currentSlide.value = index
-  startInterval()
-}
-
-// Funciones del carrusel de torneos
-const nextTournament = () => {
-  if (currentTournamentSlide.value < maxTournamentSlide.value) {
-    currentTournamentSlide.value++
+// Funciones para el carousel de imágenes con scroll horizontal
+const nextImage = () => {
+  if (galleryRef.value) {
+    const scrollAmount = 400 // Cantidad de píxeles para scroll
+    galleryRef.value.scrollBy({ left: scrollAmount, behavior: 'smooth' })
   }
 }
 
-const prevTournament = () => {
-  if (currentTournamentSlide.value > 0) {
-    currentTournamentSlide.value--
+const prevImage = () => {
+  if (galleryRef.value) {
+    const scrollAmount = 400 // Cantidad de píxeles para scroll
+    galleryRef.value.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
   }
 }
 
-// Función para hacer scroll a la sección de torneos
-const scrollToTournaments = () => {
-  const element = document.getElementById('ongoing_tournaments')
+const goToImage = (index: number) => {
+  currentImageIndex.value = index
+}
+
+// Datos de los productos
+const products = ref([
+  {
+    name: 'Pulsera Deportiva',
+    image: '/images/ns200_slide1.jpg',
+    description: 'Pulsera deportiva de alta calidad'
+  },
+  {
+    name: 'Pulsera Premium',
+    image: '/images/ns200_slide2.jpg',
+    description: 'Edición premium con materiales especiales'
+  },
+  {
+    name: 'Pulsera Clásica',
+    image: '/images/ns200_slide3.jpg',
+    description: 'Diseño clásico y elegante'
+  }
+])
+
+const currentProductIndex = ref(0)
+const currentProduct = ref(products.value[0])
+
+// Funciones de navegación
+const nextProduct = () => {
+  currentProductIndex.value = (currentProductIndex.value + 1) % products.value.length
+  currentProduct.value = products.value[currentProductIndex.value]
+}
+
+// const prevProduct = () => {
+//   currentProductIndex.value = currentProductIndex.value === 0
+//     ? products.value.length - 1
+//     : currentProductIndex.value - 1
+//   currentProduct.value = products.value[currentProductIndex.value]
+// }
+
+// const goToProduct = (index: number) => {
+//   currentProductIndex.value = index
+//   currentProduct.value = products.value[index]
+// }
+
+// Funciones de acción
+const selectNumbers = () => {
+  // Hacer scroll suave a la sección de selección de números
+  const element = document.getElementById('number-selection')
   if (element) {
-    element.scrollIntoView({ behavior: 'smooth' })
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
   }
 }
 
-// Control del auto-play
-const startInterval = () => {
-  intervalId = window.setInterval(nextSlide, 5000)
+const viewRules = () => {
+  // Emitir evento para abrir modal de reglas
+  emit('showRules')
 }
 
-const resetInterval = () => {
-  if (intervalId) {
-    clearInterval(intervalId)
-    intervalId = null
+// Navegación con teclado
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'ArrowLeft') {
+    prevImage()
+  } else if (event.key === 'ArrowRight') {
+    nextImage()
   }
 }
 
-// Control del resize de ventana
-const handleResize = () => {
-  windowWidth.value = window.innerWidth
-  // Resetear posición si es necesario
-  if (currentTournamentSlide.value > maxTournamentSlide.value) {
-    currentTournamentSlide.value = maxTournamentSlide.value
-  }
-}
-
-// Lifecycle hooks
 onMounted(() => {
-  startInterval()
-  window.addEventListener('resize', handleResize)
+  // Auto-rotación cada 5 segundos
+  setInterval(() => {
+    nextProduct()
+  }, 5000)
+
+  // Agregar listener para teclado
+  window.addEventListener('keydown', handleKeydown)
 })
 
+// Limpiar el listener cuando se desmonte el componente
 onUnmounted(() => {
-  resetInterval()
-  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
 <style scoped>
-/* Hero Section */
-.hero {
+.hero-rifa {
   position: relative;
-  height: 100vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Galería de fotos de la moto - Carousel */
+.moto-gallery-section {
+  position: relative;
+  width: 100%;
+  padding: 5rem 2rem;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #020617 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gallery-container {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  overflow-x: visible;
+}
+
+.gallery-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 0 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gallery-header h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.1;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-header .highlight-blue {
+  color: #60a5fa;
+  text-shadow: 0 0 30px rgba(96, 165, 250, 0.4);
+}
+
+/* Contenedor para centrar el contenido debajo de la galería */
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+}
+
+/* Galería horizontal */
+.horizontal-gallery {
+  display: flex;
+  width: 100vw;
+  margin: 0 0 2rem 0;
+  margin-left: calc(-50vw + 50%);
+  flex-wrap: nowrap;
+  gap: 2rem;
+  padding: 2rem;
+  background: rgba(15, 23, 42, 0.6);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  border-radius: 0;
+}
+
+/* Ocultar scrollbar en WebKit */
+.horizontal-gallery::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-image-item {
+  flex: 0 0 400px; /* Ancho fijo para cada imagen */
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(96, 165, 250, 0.3);
+  background: #1e293b;
+}
+
+.gallery-image-item:hover {
+  transform: translateY(-8px);
+  z-index: 10;
+  border-color: rgba(96, 165, 250, 0.8);
+  box-shadow: 0 12px 35px rgba(96, 165, 250, 0.3);
+}
+
+.gallery-image-item.active {
+  border-color: #60a5fa;
+  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
+}
+
+.image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gallery-image-item:hover .image-wrapper img {
+  transform: scale(1.1);
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(30, 41, 59, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Carrusel de fondo */
-.carousel-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-.carousel-slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   opacity: 0;
-  transition: opacity 1s ease-in-out;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(2px);
 }
 
-.carousel-slide.active {
+.gallery-image-item:hover .image-overlay {
   opacity: 1;
 }
 
-.slide-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    rgba(0, 0, 0, 0.7) 100%
-  );
+.gallery-image-item.active .image-overlay {
+  opacity: 0;
 }
 
-/* Contenido principal */
-.hero-container {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.hero-content {
+.image-info {
   text-align: center;
-  color: white;
+  color: #ffffff;
+  padding: 1rem;
 }
 
-.hero-logo {
-  margin-bottom: 2rem;
-}
-
-.carousel-logo {
-  width: 120px;
-  height: auto;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-.hero-title h1 {
-  font-size: 3.5rem;
+.image-info h3 {
+  font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  margin: 0 0 0.5rem 0;
+  color: #60a5fa;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-.hero-description p {
-  font-size: 1.3rem;
-  margin-bottom: 3rem;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
-  line-height: 1.6;
-}
-
-/* Sección de torneos */
-.tournaments-section {
-  margin-top: 4rem;
-  max-width: 100%;
-}
-
-.tournaments-title {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-}
-
-.tournaments-carousel-container {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-}
-
-.tournaments-carousel {
-  display: flex;
-  transition: transform 0.5s ease;
-  gap: 1rem;
-}
-
-.tournament-card {
-  flex: 0 0 calc(33.333% - 0.67rem);
-  background: var(--app-surface-elevated);
-  border-radius: 12px;
-  padding: 1.5rem;
-  color: var(--app-text-primary);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--app-shadow);
-  border: 1px solid var(--app-border-color);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.tournament-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
-
-.tournament-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.tournament-icon {
-  font-size: 1.5rem;
-}
-
-.tournament-league {
-  font-weight: 600;
-  color: var(--primary-blue);
-}
-
-.tournament-info {
-  margin-bottom: 1.5rem;
-}
-
-.tournament-time {
+.image-info p {
   font-size: 0.9rem;
-  color: var(--medium-gray);
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.tournament-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  line-height: 1.4;
   margin: 0;
+  color: #e2e8f0;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
 }
 
-.tournament-btn {
-  background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
-  color: white;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.3s ease;
-}
-
-.tournament-btn:hover {
-  background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
-  transform: translateY(-2px);
-}
-
-/* Controles del carrusel de torneos */
-.tournament-carousel-control {
+/* Navegación con flechas a los lados */
+.gallery-navigation {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--app-surface-elevated);
-  border: 2px solid var(--app-border-color);
-  width: 50px;
-  height: 50px;
+  width: 100%;
+  height: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.gallery-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 2px solid rgba(96, 165, 250, 0.4);
   border-radius: 50%;
+  color: #60a5fa;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary-blue);
   transition: all 0.3s ease;
-  z-index: 10;
+  backdrop-filter: blur(15px);
+  pointer-events: all;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.tournament-carousel-control:hover {
-  background: var(--app-hover-bg);
-  border-color: var(--primary-blue);
+.gallery-prev {
+  left: 2rem;
+}
+
+.gallery-next {
+  right: 2rem;
+}
+
+.gallery-nav-arrow:hover {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%);
+  border-color: #60a5fa;
   transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 25px rgba(96, 165, 250, 0.5);
+  color: #ffffff;
 }
 
-.tournament-carousel-control.prev {
-  left: -25px;
+.gallery-nav-arrow svg {
+  width: 24px;
+  height: 24px;
 }
 
-.tournament-carousel-control.next {
-  right: -25px;
+/* Botón agregar fotos */
+.add-photos-section {
+  text-align: center;
 }
 
-.tournament-carousel-control svg {
+.add-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+}
+
+.add-photo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.4);
+}
+
+.add-photo-btn svg {
   width: 20px;
   height: 20px;
 }
 
-/* Indicadores de torneos */
-.tournament-indicators {
+/* Responsive para la galería horizontal */
+@media (max-width: 1024px) {
+  .horizontal-gallery {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 2rem 3rem;
+  }
+
+  .gallery-image-item {
+    flex: 1 1 calc(50% - 0.75rem);
+    min-width: calc(50% - 0.75rem);
+  }
+
+  .image-wrapper {
+    height: 350px;
+  }
+
+  .gallery-header h1 {
+    font-size: 3rem;
+  }
+
+  .gallery-nav-arrow {
+    width: 50px;
+    height: 50px;
+  }
+
+  .gallery-prev {
+    left: 1rem;
+  }
+
+  .gallery-next {
+    right: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .gallery-header h1 {
+    font-size: 2.5rem;
+  }
+
+  .horizontal-gallery {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem 1rem;
+  }
+
+  .gallery-image-item {
+    flex: none;
+    border-right: none;
+  }
+
+  .image-wrapper {
+    height: 300px;
+  }
+
+  .moto-gallery-section {
+    padding: 3rem 0;
+  }
+
+  .gallery-container {
+    padding: 0;
+  }
+
+  .gallery-nav-arrow {
+    width: 45px;
+    height: 45px;
+  }
+
+  .gallery-nav-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .gallery-prev {
+    left: 0.5rem;
+  }
+
+  .gallery-next {
+    right: 0.5rem;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .gallery-header h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    padding: 0 1rem;
+  }
+
+  .horizontal-gallery {
+    padding: 1rem 0.5rem;
+    gap: 1rem;
+  }
+
+  .image-wrapper {
+    height: 250px;
+  }
+
+  .moto-gallery-section {
+    padding: 2rem 0;
+  }
+
+  .gallery-nav-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .gallery-nav-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .gallery-prev {
+    left: 0.25rem;
+  }
+
+  .gallery-next {
+    right: 0.25rem;
+  }
+}
+
+/* Nueva sección de contenido debajo de la galería */
+.content-section {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  padding: 4rem 0;
+  margin: 2rem 0;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+  color: white;
+}
+
+/* Estilos específicos para el contenido */
+.content-section .verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 25px;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+}
+
+.content-section .main-title h1 {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.content-section .highlight {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.content-section .description {
+  margin-bottom: 3rem;
+}
+
+.content-section .description p {
+  font-size: 1.2rem;
+  color: #cbd5e1;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.content-section .action-buttons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.content-section .stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Ajustar el contenedor principal para dar espacio a la galería */
+.hero-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenido izquierdo */
+.hero-content {
+  color: white;
+}
+
+.verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.verification-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+}
+
+.verification-text {
+  color: #22c55e;
+}
+
+.main-title {
+  margin-bottom: 1.5rem;
+}
+
+.main-title h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.highlight {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+.description {
+  margin: 0 auto 2rem auto;
+  text-align: center;
+}
+
+.description p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #94a3b8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Botones de acción */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin: 0 auto 3rem auto;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 400px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(148, 163, 184, 0.1);
+  border-color: #94a3b8;
+  color: white;
+}
+
+/* Controles de demo */
+.demo-controls {
+  display: flex;
+  gap: 0.8rem;
+  margin: 1rem auto 0 auto;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 600px;
+}
+
+.btn-demo {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.btn-demo:hover {
+  background: rgba(96, 165, 250, 0.2);
+  border-color: #60a5fa;
+  transform: translateY(-1px);
+}
+
+/* Estadísticas */
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 0 auto 2rem auto;
+  max-width: 800px;
+  justify-content: center;
+}
+
+.stat-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+/* Tip */
+.tip-section {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.tip-section p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+/* Producto lado derecho */
+.hero-product {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.product-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+}
+
+.product-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.nav-btn {
+  width: 50px;
+  height: 50px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.nav-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.nav-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.product-showcase {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.3) 0%, rgba(51, 65, 85, 0.2) 100%);
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(20px);
+}
+
+.product-label {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.product-image-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.product-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.product-image {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.product-image:hover {
+  transform: scale(1.05);
+}
+
+/* Indicadores */
+.product-indicators {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
   margin-top: 1.5rem;
 }
 
-.tournament-indicators button {
+.indicator-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid var(--app-border-color);
-  background: var(--app-surface);
+  border: none;
+  background: rgba(148, 163, 184, 0.3);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.tournament-indicators button.active {
-  background: var(--primary-blue);
-  border-color: var(--primary-blue);
+.indicator-dot.active {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
   transform: scale(1.2);
 }
 
-/* Indicadores del carrusel principal */
-.carousel-indicators {
+/* Elementos decorativos */
+.decorative-elements {
   position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 1rem;
-  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.carousel-indicators button {
-  width: 16px;
-  height: 16px;
+.floating-circle {
+  position: absolute;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  opacity: 0.1;
+  animation: float 6s ease-in-out infinite;
 }
 
-.carousel-indicators button.active {
-  background: var(--primary-blue);
-  border-color: var(--primary-blue);
-  transform: scale(1.2);
+.circle-1 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  top: 10%;
+  right: 10%;
+  animation-delay: 0s;
 }
 
-.carousel-indicators button:hover {
-  border-color: white;
+.circle-2 {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+  bottom: 20%;
+  left: 5%;
+  animation-delay: 2s;
 }
 
-/* Controles del carrusel principal */
-.carousel-control {
-  position: absolute;
+.circle-3 {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: all 0.3s ease;
-  z-index: 3;
-  backdrop-filter: blur(10px);
+  left: 20%;
+  animation-delay: 4s;
 }
 
-.carousel-control:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-50%) scale(1.1);
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
 }
 
-.carousel-control.prev {
-  left: 30px;
-}
-
-.carousel-control.next {
-  right: 30px;
-}
-
-.carousel-control svg {
-  width: 24px;
-  height: 24px;
-}
-
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 1024px) {
-  .tournament-card {
-    flex: 0 0 calc(50% - 0.5rem);
+  .hero-container {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
   }
 
-  .tournament-carousel-control {
-    display: none;
+  .main-title h1 {
+    font-size: 2.5rem;
   }
 
-  .tournament-indicators {
-    display: flex;
+  .stats-section {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
   }
 }
 
 @media (max-width: 768px) {
-  .hero-title h1 {
-    font-size: 2.5rem;
+  .hero-container {
+    padding: 1rem;
+    gap: 2rem;
   }
 
-  .hero-description p {
-    font-size: 1.1rem;
+  .main-title h1 {
+    font-size: 2rem;
   }
 
-  .tournament-card {
-    flex: 0 0 100%;
+  .action-buttons {
+    justify-content: center;
   }
 
-  .tournaments-title {
-    font-size: 1.6rem;
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
   }
 
-  .carousel-control {
-    width: 50px;
-    height: 50px;
+  .demo-controls {
+    gap: 0.5rem;
+    margin-top: 0.8rem;
   }
 
-  .carousel-control.prev {
-    left: 15px;
+  .btn-demo {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
   }
 
-  .carousel-control.next {
-    right: 15px;
+  .stats-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .nav-btn {
+    width: 40px;
+    height: 40px;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-title h1 {
-    font-size: 2rem;
+  .main-title h1 {
+    font-size: 1.8rem;
   }
 
-  .hero-description p {
+  .description p {
     font-size: 1rem;
   }
 
-  .carousel-logo {
-    width: 100px;
-  }
-
-  .tournament-card {
+  .product-showcase {
     padding: 1rem;
   }
 
-  .tournaments-section {
-    margin-top: 2rem;
+  .product-image-container {
+    min-height: 200px;
+  }
+}
+
+/* Estilos responsivos para la sección de contenido */
+@media (max-width: 1024px) {
+  .content-section .main-title h1 {
+    font-size: 3.5rem;
+  }
+
+  .content-section .action-buttons {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-section {
+    padding: 3rem 0;
+    margin: 1rem;
+    border-radius: 16px;
+  }
+
+  .content-container {
+    padding: 0 1rem;
+  }
+
+  .content-section .main-title h1 {
+    font-size: 2.5rem;
+  }
+
+  .content-section .description p {
+    font-size: 1.1rem;
+  }
+
+  .content-section .action-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .content-section .stats-section {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-section {
+    padding: 2rem 0;
+    margin: 0.5rem;
+  }
+
+  .content-section .main-title h1 {
+    font-size: 2rem;
+  }
+
+  .content-section .description p {
+    font-size: 1rem;
+  }
+
+  .content-section .verification-badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
   }
 }
 </style>
