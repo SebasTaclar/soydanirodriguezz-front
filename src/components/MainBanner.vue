@@ -52,6 +52,7 @@
           <div class="action-buttons">
             <button class="btn-primary" @click="selectNumbers">Elegir números</button>
             <button class="btn-secondary" @click="viewRules">Ver reglas</button>
+            <button v-if="isAdmin" class="btn-admin" @click="goToAdmin">⚙️ Panel Admin</button>
           </div>
            <!-- Estadísticas -->
           <div class="stats-section">
@@ -75,8 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
+import { authService } from '@/services/api/authService'
 
 // Definir emits
 interface Emits {
@@ -85,9 +88,16 @@ interface Emits {
 
 const emit = defineEmits<Emits>()
 
-// Usar el composable de disponibilidad de números
+// Router
+const router = useRouter()
+
+// Verificar si el usuario es administrador
+const isAdmin = computed(() => authService.isAdmin())
+
+// Usar el composable de disponibilidad
 const {
   availabilityText,
+  getAvailableNumbersArray
 } = useNumbersAvailability()
 
 // // Función para simular más ventas (demo)
@@ -248,6 +258,11 @@ const selectNumbers = () => {
 const viewRules = () => {
   // Emitir evento para abrir modal de reglas
   emit('showRules')
+}
+
+const goToAdmin = () => {
+  // Navegar al panel de administración
+  router.push('/admin')
 }
 
 // Navegación con teclado
@@ -855,6 +870,27 @@ onUnmounted(() => {
   color: white;
 }
 
+.btn-admin {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-admin:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
 /* Controles de demo */
 .demo-controls {
   display: flex;
@@ -1142,7 +1178,8 @@ onUnmounted(() => {
   }
 
   .btn-primary,
-  .btn-secondary {
+  .btn-secondary,
+  .btn-admin {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
   }

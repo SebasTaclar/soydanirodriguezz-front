@@ -27,6 +27,15 @@ const router = createRouter({
         requiresGuest: true, // Solo accesible cuando no está autenticado
       },
     },
+    {
+      path: '/admin',
+      name: 'admin-dashboard',
+      component: () => import('../views/AdminDashboard.vue'),
+      meta: {
+        requiresAuth: true,
+        requiredRole: 'admin', // Solo accesible para administradores
+      },
+    },
     // Catch-all route - debe ir al final
     {
       path: '/:pathMatch(.*)*',

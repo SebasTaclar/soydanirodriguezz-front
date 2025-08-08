@@ -13,6 +13,8 @@ export interface CreatePaymentRequest {
 export interface Purchase {
   id: string
   wallpaperNumbers: number[]
+  buyerEmail: string
+  buyerName: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
   amount: number
   currency: string
@@ -67,6 +69,19 @@ export class PaymentService {
       return response
     } catch (error) {
       console.error('Error getting purchases:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtener todas las compras (solo para administradores)
+   */
+  async getAllPurchases(): Promise<ApiResponse<GetPurchasesResponse>> {
+    try {
+      const response = await apiClient.get<GetPurchasesResponse>('/purchases')
+      return response
+    } catch (error) {
+      console.error('Error getting all purchases:', error)
       throw error
     }
   }
