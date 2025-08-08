@@ -3,8 +3,8 @@
     <div class="selection-container">
       <!-- Título y descripción -->
       <div class="selection-header">
-        <h2>Elige tus números</h2>
-        <p>Selecciona y reserva antes de pagar. Precio especial por lanzamiento.</p>
+        <h2>Elige tus Wallpapers NS200</h2>
+        <p>Selecciona los números de wallpapers que quieres comprar. Cada wallpaper cuesta $5.000 COP.</p>
       </div>
 
       <!-- Sección ¿Cómo funciona? -->
@@ -12,33 +12,26 @@
         <h3 class="how-it-works-title">¿Cómo funciona?</h3>
         <div class="steps-container">
           <div class="step-card">
-            <div class="step-icon">🎯
-
-            </div>
+            <div class="step-icon">�️</div>
             <div class="step-content">
-              <h4>1. Elige tus números</h4>
-              <p>Selecciona disponibles y confirma tu compra.</p>
+              <h4>1. Elige tus wallpapers</h4>
+              <p>Selecciona los números de wallpapers NS200 que quieres comprar.</p>
             </div>
           </div>
 
           <div class="step-card">
-            <div class="step-icon">
-             💳
-
-            </div>
+            <div class="step-icon">💳</div>
             <div class="step-content">
               <h4>2. Realiza el pago</h4>
-              <p>Con el botón de tu preferencia (demo).</p>
+              <p>Paga de forma segura con MercadoPago.</p>
             </div>
           </div>
 
           <div class="step-card">
-            <div class="step-icon">
-              🏁
-            </div>
+            <div class="step-icon">📱</div>
             <div class="step-content">
-              <h4>3. Espera el sorteo</h4>
-              <p>Recibirás un comprobante de participación.</p>
+              <h4>3. Descarga inmediata</h4>
+              <p>Recibe tus wallpapers en alta calidad 4K.</p>
             </div>
           </div>
         </div>
@@ -65,20 +58,14 @@
 
           <!-- Grid de números -->
           <div class="numbers-grid">
-            <button
-              v-for="number in 200"
-              :key="number"
-              :class="[
-                'number-btn',
-                {
-                  'selected': selectedNumbers.includes(number),
-                  'taken': takenNumbers.includes(number),
-                  'reserved': isNumberReserved(number)
-                }
-              ]"
-              @click="toggleNumber(number)"
-              :disabled="takenNumbers.includes(number) || isNumberReserved(number)"
-            >
+            <button v-for="number in 200" :key="number" :class="[
+              'number-btn',
+              {
+                'selected': selectedNumbers.includes(number),
+                'taken': takenNumbers.includes(number),
+                'reserved': isNumberReserved(number)
+              }
+            ]" @click="toggleNumber(number)" :disabled="takenNumbers.includes(number) || isNumberReserved(number)">
               {{ number.toString().padStart(2, '0') }}
               <span v-if="isNumberReserved(number)" class="reservation-timer">
                 {{ formatTimeLeft(getReservationTimeLeft(number)) }}
@@ -88,17 +75,11 @@
 
           <!-- Controles de reserva -->
           <div class="reservation-controls">
-            <button
-              class="control-btn reserve-btn"
-              :disabled="selectedNumbers.length === 0"
-              @click="reserveSelectedNumbers"
-            >
+            <button class="control-btn reserve-btn" :disabled="selectedNumbers.length === 0"
+              @click="reserveSelectedNumbers">
               ⏱️ Reservar números (5 min)
             </button>
-            <button
-              class="control-btn clear-all-btn"
-              @click="clearAllNumbers"
-            >
+            <button class="control-btn clear-all-btn" @click="clearAllNumbers">
               🧹 Limpiar todo
             </button>
           </div>
@@ -112,11 +93,7 @@
             <span class="selection-count">{{ selectedNumbers.length }} seleccionados</span>
 
             <div class="selected-numbers">
-              <span
-                v-for="number in selectedNumbers"
-                :key="number"
-                class="selected-number-tag"
-              >
+              <span v-for="number in selectedNumbers" :key="number" class="selected-number-tag">
                 #{{ number.toString().padStart(2, '0') }}
                 <button @click="removeNumber(number)" class="remove-btn">×</button>
               </span>
@@ -126,48 +103,29 @@
           <!-- Total a pagar -->
           <div class="payment-summary">
             <h3>Total a pagar</h3>
-            <div class="total-amount">${{ (selectedNumbers.length * 20000).toLocaleString() }}</div>
-            <p class="payment-note">Los pagos están en modo demo solo para pruebas.<br>No se procesa dinero real.</p>
+            <div class="total-amount">${{ (selectedNumbers.length * 5000).toLocaleString() }} COP</div>
+            <p class="payment-note">Cada wallpaper NS200 en alta calidad 4K.</p>
           </div>
 
-          <!-- Formulario -->
+          <!-- Formulario de datos del comprador -->
           <div class="user-form">
-            <input
-              v-model="userInfo.name"
-              type="text"
-              placeholder="Tu nombre"
-              class="form-input"
-            />
-            <input
-              v-model="userInfo.whatsapp"
-              type="text"
-              placeholder="WhatsApp (opcional)"
-              class="form-input"
-            />
+            <h4>Datos del comprador</h4>
+            <input v-model="userForm.name" type="text" placeholder="Nombre completo *" class="form-input" required />
+            <input v-model="userForm.email" type="email" placeholder="Email *" class="form-input" required />
+            <input v-model="userForm.identificationNumber" type="text" placeholder="Número de identificación *"
+              class="form-input" required />
+            <p class="required-note">* Campos obligatorios</p>
           </div>
 
           <!-- Botones de pago -->
           <div class="payment-buttons">
-            <button
-              class="payment-btn primary-payment"
-              :disabled="selectedNumbers.length === 0"
-              @click="payWithPayPal"
-            >
+            <button class="payment-btn mercadopago-payment" :disabled="!isFormValid || selectedNumbers.length === 0"
+              @click="payWithMercadoPago">
+              💳 Pagar con MercadoPago
+            </button>
+            <button class="payment-btn primary-payment" :disabled="!isFormValid || selectedNumbers.length === 0"
+              @click="payWithPayPal">
               Pagar con PayPal (demo)
-            </button>
-            <button
-              class="payment-btn secondary-payment"
-              :disabled="selectedNumbers.length === 0"
-              @click="payWithTransfer"
-            >
-              Pagar por transferencia (demo)
-            </button>
-            <button
-              class="payment-btn link-payment"
-              :disabled="selectedNumbers.length === 0"
-              @click="generatePaymentLink"
-            >
-              Generar link de pago (demo)
             </button>
           </div>
 
@@ -175,7 +133,8 @@
           <div class="security-section">
             <div class="security-icon">
               <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                <path
+                  d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z" />
               </svg>
             </div>
             <div class="security-content">
@@ -191,7 +150,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, computed, onMounted, defineEmits } from 'vue'
+import { usePayments } from '@/composables/usePayments'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 
 // Definir emits
@@ -200,6 +160,17 @@ interface Emits {
 }
 
 const emit = defineEmits<Emits>()
+
+// Payment composable
+const { createPayment } = usePayments()
+
+// Form refs
+const userForm = ref({
+  name: '',
+  email: '',
+  identificationType: 'CC',
+  identificationNumber: ''
+})
 
 // Usar el composable de disponibilidad de números
 const {
@@ -221,12 +192,6 @@ const selectedNumbers = ref<number[]>([])
 // Estado de reserva actual
 const reservationExpiry = ref<number>(0)
 
-// Información del usuario
-const userInfo = reactive({
-  name: '',
-  whatsapp: ''
-})
-
 // Función para alternar selección de número
 const toggleNumber = (number: number) => {
   if (takenNumbers.value.includes(number) || isNumberReserved(number)) return
@@ -235,9 +200,8 @@ const toggleNumber = (number: number) => {
   if (index > -1) {
     selectedNumbers.value.splice(index, 1)
   } else {
-    if (selectedNumbers.value.length < 10) { // Máximo 10 números
-      selectedNumbers.value.push(number)
-    }
+    // Allow only one wallpaper selection for now
+    selectedNumbers.value = [number]
   }
 }
 
@@ -250,18 +214,16 @@ const removeNumber = (number: number) => {
 }
 
 // Función para seleccionar números aleatorios
-const selectRandomNumbers = (count: number = 3) => {
+const selectRandomNumbers = (count: number = 1) => {
   selectedNumbers.value = []
 
   // Usar el composable para obtener números disponibles
   const availableNumbers = getAvailableNumbersArray()
 
-  // Seleccionar la cantidad especificada de números aleatorios
-  const maxSelectable = Math.min(count, availableNumbers.length, 10) // Máximo 10 números
-  for (let i = 0; i < maxSelectable; i++) {
+  // Seleccionar un wallpaper aleatorio
+  if (availableNumbers.length > 0) {
     const randomIndex = Math.floor(Math.random() * availableNumbers.length)
     selectedNumbers.value.push(availableNumbers[randomIndex])
-    availableNumbers.splice(randomIndex, 1)
   }
 }
 
@@ -273,7 +235,7 @@ const clearSelection = () => {
 // Función para reservar números seleccionados
 const reserveSelectedNumbers = () => {
   if (selectedNumbers.value.length > 0) {
-    const expiresAt = reserveNumbers(selectedNumbers.value, userInfo.name)
+    const expiresAt = reserveNumbers(selectedNumbers.value, userForm.value.name)
     reservationExpiry.value = expiresAt
 
     alert(`🔒 ${selectedNumbers.value.length} números reservados por 5 minutos. ¡Completa el pago antes de que expire!`)
@@ -294,6 +256,63 @@ const formatTimeLeft = (timeLeft: number) => {
   const minutes = Math.floor(timeLeft / 60000)
   const seconds = Math.floor((timeLeft % 60000) / 1000)
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
+
+// Computed properties
+const totalAmount = computed(() => {
+  return selectedNumbers.value.length > 0 ? 5000 : 0
+})
+
+const isFormValid = computed(() => {
+  return userForm.value.name.trim() !== '' &&
+    userForm.value.email.trim() !== '' &&
+    userForm.value.identificationNumber.trim() !== ''
+})
+
+// Payment methods
+const payWithMercadoPago = async () => {
+  if (selectedNumbers.value.length > 0 && isFormValid.value) {
+    try {
+      const { createPayment } = usePayments()
+
+      // For now, handle one wallpaper at a time
+      // TODO: Update backend to handle multiple wallpapers in one transaction
+      const wallpaperNumber = selectedNumbers.value[0]
+
+      const paymentData = {
+        wallpaperNumber: wallpaperNumber,
+        buyerEmail: userForm.value.email,
+        buyerName: userForm.value.name,
+        buyerIdentificationNumber: userForm.value.identificationNumber
+      }
+
+      const response = await createPayment(paymentData)
+
+      if (response?.payment?.paymentUrl) {
+        // Redirect to MercadoPago
+        window.open(response.payment.paymentUrl, '_blank')
+
+        // Show success message
+        alert(`✅ Redirigiendo a MercadoPago para completar el pago del wallpaper #${wallpaperNumber} por $${(5000).toLocaleString()} COP`)
+
+        // Clear selection after successful initiation
+        selectedNumbers.value = []
+        userForm.value = {
+          name: '',
+          email: '',
+          identificationType: 'CC',
+          identificationNumber: ''
+        }
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error)
+      alert('Error al procesar el pago. Intenta nuevamente.')
+    }
+  } else if (selectedNumbers.value.length === 0) {
+    alert('Selecciona al menos un wallpaper para pagar')
+  } else {
+    alert('Completa todos los campos requeridos')
+  }
 }
 
 // Funciones de pago (demo) - ahora confirman la reserva
@@ -578,8 +597,15 @@ const showRules = () => {
 }
 
 @keyframes reservedPulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 0.9; }
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
 }
 
 /* Controles de reserva */
@@ -769,6 +795,33 @@ const showRules = () => {
 .primary-payment:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
+}
+
+.mercadopago-payment {
+  background: linear-gradient(135deg, #00b4d8, #0077b6);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.mercadopago-payment:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.mercadopago-payment:hover:not(:disabled):before {
+  left: 100%;
+}
+
+.mercadopago-payment:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 180, 216, 0.4);
 }
 
 .secondary-payment {
