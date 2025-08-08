@@ -2,13 +2,14 @@
   <div class="admin-dashboard">
     <div class="dashboard-container">
       <!-- Header -->
+            <!-- Header -->
       <div class="dashboard-header">
         <h1>Panel de Administración</h1>
         <p>Gestión de compras de wallpapers NS200</p>
-        <button @click="refreshData" :disabled="isLoading" class="refresh-btn">
-          <span v-if="isLoading">🔄</span>
+        <button @click="refreshData" :disabled="isLoadingPurchases || isRefreshingWallpapers" class="refresh-btn">
+          <span v-if="isLoadingPurchases || isRefreshingWallpapers">🔄</span>
           <span v-else>↻</span>
-          Actualizar
+          {{ isRefreshingWallpapers ? 'Actualizando...' : 'Actualizar' }}
         </button>
       </div>
 
@@ -19,7 +20,7 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="isLoading && purchases.length === 0" class="loading-state">
+      <div v-if="isLoadingPurchases && purchases.length === 0" class="loading-state">
         <div class="loading-spinner"></div>
         <p>Cargando compras...</p>
       </div>
@@ -63,7 +64,19 @@
 
         <!-- Status Filter -->
         <div class="filter-section">
-          <h3>Filtrar por Estado</h3>
+          <div class="filter-header">
+            <h3>Filtrar por Estado</h3>
+            <button
+              @click="refreshData"
+              :disabled="isLoadingPurchases || isRefreshingWallpapers"
+              class="refresh-btn"
+              title="Refrescar datos"
+            >
+              <span v-if="isRefreshingWallpapers">🔄</span>
+              <span v-else>🔄</span>
+              {{ isRefreshingWallpapers ? 'Actualizando...' : 'Refrescar' }}
+            </button>
+          </div>
           <div class="status-filters">
             <button
               @click="selectedStatus = 'ALL'"
@@ -156,6 +169,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAdminPurchases } from '@/composables/useAdminPurchases'
+import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import { authService } from '@/services/api/authService'
 import { useRouter } from 'vue-router'
 
@@ -166,8 +180,9 @@ if (!authService.isAdmin()) {
   router.push('/')
 }
 
+// Admin purchases composable
 const {
-  isLoading,
+  isLoading: isLoadingPurchases,
   error,
   purchases,
   purchasesByStatus,
@@ -175,8 +190,15 @@ const {
   getAllPurchases
 } = useAdminPurchases()
 
+// Numbers availability composable
+const {
+  refreshTakenNumbers,
+  isLoadingWallpapers
+} = useNumbersAvailability()
+
 // Estado local
 const selectedStatus = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'>('ALL')
+const isRefreshingWallpapers = ref(false)
 
 // Compras filtradas
 const filteredPurchases = computed(() => {
@@ -188,7 +210,21 @@ const filteredPurchases = computed(() => {
 
 // Métodos
 const refreshData = async () => {
-  await getAllPurchases()
+  try {
+    isRefreshingWallpapers.value = true
+
+    // Refrescar compras y wallpapers en paralelo
+    await Promise.all([
+      getAllPurchases(),
+      refreshTakenNumbers()
+    ])
+
+    console.log('✅ Datos actualizados: compras y wallpapers')
+  } catch (error) {
+    console.error('❌ Error actualizando datos:', error)
+  } finally {
+    isRefreshingWallpapers.value = false
+  }
 }
 
 const formatDate = (dateString: string) => {
@@ -214,7 +250,9 @@ const getStatusText = (status: string) => {
 
 // Cargar datos al montar el componente
 onMounted(async () => {
-  await getAllPurchases()
+  console.log('📊 Cargando dashboard admin...')
+  await refreshData()
+  console.log('✅ Dashboard admin cargado')
 })
 </script>
 
@@ -408,11 +446,54 @@ onMounted(async () => {
   margin-bottom: 3rem;
 }
 
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .filter-section h3 {
   color: #ffffff;
   font-size: 1.5rem;
   margin-bottom: 1rem;
   font-weight: 700;
+}
+
+.refresh-btn {
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #047857, #065f46);
+  transform: translateY(-1px);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.refresh-btn span {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .status-filters {

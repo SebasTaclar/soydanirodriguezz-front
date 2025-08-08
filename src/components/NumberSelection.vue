@@ -185,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineEmits } from 'vue'
+import { ref, computed, defineEmits, onMounted } from 'vue'
 import { usePayments } from '@/composables/usePayments'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 
@@ -210,15 +210,14 @@ const userForm = ref({
 // Usar el composable de disponibilidad de números
 const {
   takenNumbers,
-
-
+  isNumberAvailableSync,
   isNumberReserved,
-  getAvailableNumbersArray,
+  getAvailableNumbersArraySync,
   reserveNumbers,
   confirmPayment,
   getReservationTimeLeft,
   clearAll,
-
+  refreshTakenNumbers
 } = useNumbersAvailability()
 
 // Estado de números seleccionados localmente
@@ -237,6 +236,13 @@ const reservationExpiry = ref<number>(0)
 
 // Estado de carga para el pago
 const isProcessingPayment = ref<boolean>(false)
+
+// Refrescar datos al cargar el componente
+onMounted(async () => {
+  console.log('🔄 Cargando datos de wallpapers desde API...')
+  await refreshTakenNumbers()
+  console.log('✅ Datos de wallpapers actualizados')
+})
 
 // Función para alternar selección de número
 const toggleNumber = (number: number) => {
@@ -261,8 +267,8 @@ const removeNumber = (number: number) => {
 
 // Función para seleccionar números aleatorios
 const selectRandomNumbers = (count: number = 3) => {
-  // Usar el composable para obtener números disponibles
-  const availableNumbers = getAvailableNumbersArray()
+  // Usar el composable para obtener números disponibles (versión síncrona)
+  const availableNumbers = getAvailableNumbersArraySync()
 
   // Seleccionar la cantidad especificada de números aleatorios
   const maxSelectable = Math.min(count, availableNumbers.length)
