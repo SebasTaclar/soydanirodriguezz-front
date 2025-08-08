@@ -1,6 +1,6 @@
 // Configuración base para la API
 export const API_CONFIG = {
-  baseURL: false
+  baseURL: true
     ? 'http://localhost:7071/api/v1'
     : 'https://soydanirodriguezz-back-c3a4gvcqbrg8fcew.centralus-01.azurewebsites.net/api/v1',
   timeout: 10000,

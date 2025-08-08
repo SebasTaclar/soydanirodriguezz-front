@@ -20,7 +20,7 @@
           </div>
 
           <div class="step-card">
-            <div class="step-icon">💳</div>
+                                    <div class="step-icon">1️⃣</div>
             <div class="step-content">
               <h4>2. Realiza el pago</h4>
               <p>Paga de forma segura con MercadoPago.</p>
@@ -31,7 +31,7 @@
             <div class="step-icon">📱</div>
             <div class="step-content">
               <h4>3. Descarga inmediata</h4>
-              <p>Recibe tus wallpapers en alta calidad 4K.</p>
+              <p>Recibe tus wallpapers en alta calidad.</p>
             </div>
           </div>
         </div>
@@ -56,31 +56,72 @@
             </button>
           </div>
 
+          <!-- Buscador de número específico -->
+          <div class="number-search">
+            <div class="search-input-container">
+              <input
+                v-model="searchNumber"
+                type="number"
+                min="1"
+                max="5000"
+                placeholder="Buscar wallpaper (ej: 1234)"
+                class="search-input"
+                @keyup.enter="goToNumber"
+              />
+              <button class="search-btn" @click="goToNumber" :disabled="!searchNumber">
+                🔍 Buscar
+              </button>
+            </div>
+          </div>
+
           <!-- Grid de números -->
           <div class="numbers-grid">
-            <button v-for="number in 200" :key="number" :class="[
+            <button v-for="number in currentPageNumbers" :key="number" :class="[
               'number-btn',
               {
                 'selected': selectedNumbers.includes(number),
                 'taken': takenNumbers.includes(number),
                 'reserved': isNumberReserved(number)
               }
-            ]" @click="toggleNumber(number)" :disabled="takenNumbers.includes(number) || isNumberReserved(number)">
-              {{ number.toString().padStart(2, '0') }}
+            ]" @click="toggleNumber(number)" :disabled="takenNumbers.includes(number) || isNumberReserved(number)" :data-number="number">
+              {{ number.toString().padStart(4, '0') }}
+              <span v-if="selectedNumbers.includes(number)" class="selected-check">✓</span>
               <span v-if="isNumberReserved(number)" class="reservation-timer">
                 {{ formatTimeLeft(getReservationTimeLeft(number)) }}
               </span>
             </button>
           </div>
 
-          <!-- Controles de reserva -->
-          <div class="reservation-controls">
-            <button class="control-btn reserve-btn" :disabled="selectedNumbers.length === 0"
-              @click="reserveSelectedNumbers">
-              ⏱️ Reservar números (5 min)
+          <!-- Paginación -->
+          <div class="pagination-controls">
+            <button class="pagination-btn" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
+              ‹ Anterior
             </button>
+
+            <div class="page-info">
+              <span>Página {{ currentPage }} de {{ totalPages }}</span>
+              <span class="numbers-range">Números {{ firstNumberInPage }} - {{ lastNumberInPage }}</span>
+
+              <!-- Selector de página -->
+              <div class="page-selector">
+                <label for="page-select">Ir a página:</label>
+                <select id="page-select" v-model="currentPage" @change="goToPage(currentPage)" class="page-select">
+                  <option v-for="page in totalPages" :key="page" :value="page">
+                    {{ page }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <button class="pagination-btn" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">
+              Siguiente ›
+            </button>
+          </div>
+
+          <!-- Controles de limpieza -->
+          <div class="clean-controls">
             <button class="control-btn clear-all-btn" @click="clearAllNumbers">
-              🧹 Limpiar todo
+              🧹 Limpiar selección
             </button>
           </div>
         </div>
@@ -104,7 +145,6 @@
           <div class="payment-summary">
             <h3>Total a pagar</h3>
             <div class="total-amount">${{ (selectedNumbers.length * 5000).toLocaleString() }} COP</div>
-            <p class="payment-note">Cada wallpaper NS200 en alta calidad 4K.</p>
           </div>
 
           <!-- Formulario de datos del comprador -->
@@ -123,26 +163,21 @@
               @click="payWithMercadoPago">
               💳 Pagar con MercadoPago
             </button>
-            <button class="payment-btn primary-payment" :disabled="!isFormValid || selectedNumbers.length === 0"
-              @click="payWithPayPal">
-              Pagar con PayPal (demo)
-            </button>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <!-- Sorteo seguro -->
-          <div class="security-section">
-            <div class="security-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z" />
-              </svg>
-            </div>
-            <div class="security-content">
-              <h4>Sorteo seguro</h4>
-              <p>Revisa las reglas y condiciones del sorteo.</p>
-              <button class="rules-btn" @click="showRules">Ver reglas</button>
-            </div>
-          </div>
+    <!-- Overlay de carga -->
+    <div v-if="isProcessingPayment" class="payment-loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <h3>Procesando pago...</h3>
+        <p>Redirigiendo a MercadoPago</p>
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
       </div>
     </div>
@@ -150,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineEmits } from 'vue'
+import { ref, computed, defineEmits } from 'vue'
 import { usePayments } from '@/composables/usePayments'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 
@@ -189,8 +224,19 @@ const {
 // Estado de números seleccionados localmente
 const selectedNumbers = ref<number[]>([])
 
+// Estado de paginación
+const currentPage = ref<number>(1)
+const numbersPerPage = 100
+const totalNumbers = 5000
+
+// Estado de búsqueda
+const searchNumber = ref<string>('')
+
 // Estado de reserva actual
 const reservationExpiry = ref<number>(0)
+
+// Estado de carga para el pago
+const isProcessingPayment = ref<boolean>(false)
 
 // Función para alternar selección de número
 const toggleNumber = (number: number) => {
@@ -200,8 +246,8 @@ const toggleNumber = (number: number) => {
   if (index > -1) {
     selectedNumbers.value.splice(index, 1)
   } else {
-    // Allow only one wallpaper selection for now
-    selectedNumbers.value = [number]
+    // Permitir múltiples selecciones
+    selectedNumbers.value.push(number)
   }
 }
 
@@ -214,16 +260,89 @@ const removeNumber = (number: number) => {
 }
 
 // Función para seleccionar números aleatorios
-const selectRandomNumbers = (count: number = 1) => {
-  selectedNumbers.value = []
-
+const selectRandomNumbers = (count: number = 3) => {
   // Usar el composable para obtener números disponibles
   const availableNumbers = getAvailableNumbersArray()
 
-  // Seleccionar un wallpaper aleatorio
-  if (availableNumbers.length > 0) {
+  // Seleccionar la cantidad especificada de números aleatorios
+  const maxSelectable = Math.min(count, availableNumbers.length)
+  for (let i = 0; i < maxSelectable; i++) {
     const randomIndex = Math.floor(Math.random() * availableNumbers.length)
-    selectedNumbers.value.push(availableNumbers[randomIndex])
+    const randomNumber = availableNumbers[randomIndex]
+
+    if (!selectedNumbers.value.includes(randomNumber)) {
+      selectedNumbers.value.push(randomNumber)
+    }
+
+    availableNumbers.splice(randomIndex, 1)
+  }
+}
+
+// Funciones de paginación
+const totalPages = computed(() => Math.ceil(totalNumbers / numbersPerPage))
+
+const currentPageNumbers = computed(() => {
+  const startNumber = (currentPage.value - 1) * numbersPerPage + 1
+  const endNumber = Math.min(currentPage.value * numbersPerPage, totalNumbers)
+  const numbers = []
+  for (let i = startNumber; i <= endNumber; i++) {
+    numbers.push(i)
+  }
+  return numbers
+})
+
+const firstNumberInPage = computed(() => (currentPage.value - 1) * numbersPerPage + 1)
+const lastNumberInPage = computed(() => Math.min(currentPage.value * numbersPerPage, totalNumbers))
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
+
+// Función para buscar un número específico
+const goToNumber = () => {
+  const number = parseInt(searchNumber.value)
+  if (number >= 1 && number <= totalNumbers) {
+    // Calcular en qué página está el número
+    const targetPage = Math.ceil(number / numbersPerPage)
+    currentPage.value = targetPage
+
+    // Limpiar el campo de búsqueda
+    searchNumber.value = ''
+
+    // Resaltar el número encontrado por 1 segundo
+    setTimeout(() => {
+      const button = document.querySelector(`button[data-number="${number}"]`) as HTMLElement
+      if (button) {
+        // Scroll al número
+        button.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+        // Guardar estilos originales
+        const originalTransform = button.style.transform
+        const originalBoxShadow = button.style.boxShadow
+        const originalBorder = button.style.borderColor
+        const originalBackground = button.style.background
+
+        // Aplicar resaltado dorado
+        button.style.transform = 'scale(1.3)'
+        button.style.boxShadow = '0 0 25px rgba(255, 193, 7, 1), 0 0 50px rgba(255, 193, 7, 0.7)'
+        button.style.borderColor = '#ffc107'
+        button.style.background = 'linear-gradient(135deg, #ffc107, #ff8f00)'
+        button.style.transition = 'all 0.3s ease'
+
+        // Restaurar estilos después de 1 segundo
+        setTimeout(() => {
+          button.style.transform = originalTransform
+          button.style.boxShadow = originalBoxShadow
+          button.style.borderColor = originalBorder
+          button.style.background = originalBackground
+          button.style.transition = 'all 0.3s ease'
+        }, 1000)
+      }
+    }, 200)
+  } else {
+    alert('Número no válido. Ingresa un número entre 1 y 5000.')
   }
 }
 
@@ -232,23 +351,11 @@ const clearSelection = () => {
   selectedNumbers.value = []
 }
 
-// Función para reservar números seleccionados
-const reserveSelectedNumbers = () => {
-  if (selectedNumbers.value.length > 0) {
-    const expiresAt = reserveNumbers(selectedNumbers.value, userForm.value.name)
-    reservationExpiry.value = expiresAt
-
-    alert(`🔒 ${selectedNumbers.value.length} números reservados por 5 minutos. ¡Completa el pago antes de que expire!`)
-    selectedNumbers.value = [] // Limpiar selección después de reservar
-  }
-}
-
 // Función para limpiar todo
 const clearAllNumbers = () => {
   clearAll()
   selectedNumbers.value = []
   reservationExpiry.value = 0
-  alert('🧹 Todos los números han sido liberados')
 }
 
 // Función para formatear tiempo restante
@@ -260,7 +367,7 @@ const formatTimeLeft = (timeLeft: number) => {
 
 // Computed properties
 const totalAmount = computed(() => {
-  return selectedNumbers.value.length > 0 ? 5000 : 0
+  return selectedNumbers.value.length * 5000
 })
 
 const isFormValid = computed(() => {
@@ -273,9 +380,12 @@ const isFormValid = computed(() => {
 const payWithMercadoPago = async () => {
   if (selectedNumbers.value.length > 0 && isFormValid.value) {
     try {
+      // Activar loading
+      isProcessingPayment.value = true
+
       const { createPayment } = usePayments()
 
-      // For now, handle one wallpaper at a time
+      // Para múltiples wallpapers, enviamos el primer número como referencia
       // TODO: Update backend to handle multiple wallpapers in one transaction
       const wallpaperNumber = selectedNumbers.value[0]
 
@@ -283,7 +393,8 @@ const payWithMercadoPago = async () => {
         wallpaperNumber: wallpaperNumber,
         buyerEmail: userForm.value.email,
         buyerName: userForm.value.name,
-        buyerIdentificationNumber: userForm.value.identificationNumber
+        buyerIdentificationNumber: userForm.value.identificationNumber,
+        amount: totalAmount.value
       }
 
       const response = await createPayment(paymentData)
@@ -291,9 +402,6 @@ const payWithMercadoPago = async () => {
       if (response?.payment?.paymentUrl) {
         // Redirect to MercadoPago
         window.open(response.payment.paymentUrl, '_blank')
-
-        // Show success message
-        alert(`✅ Redirigiendo a MercadoPago para completar el pago del wallpaper #${wallpaperNumber} por $${(5000).toLocaleString()} COP`)
 
         // Clear selection after successful initiation
         selectedNumbers.value = []
@@ -307,24 +415,16 @@ const payWithMercadoPago = async () => {
     } catch (error) {
       console.error('Error creating payment:', error)
       alert('Error al procesar el pago. Intenta nuevamente.')
+    } finally {
+      // Desactivar loading después de 2 segundos para dar tiempo al redirect
+      setTimeout(() => {
+        isProcessingPayment.value = false
+      }, 2000)
     }
   } else if (selectedNumbers.value.length === 0) {
     alert('Selecciona al menos un wallpaper para pagar')
   } else {
     alert('Completa todos los campos requeridos')
-  }
-}
-
-// Funciones de pago (demo) - ahora confirman la reserva
-const payWithPayPal = () => {
-  if (selectedNumbers.value.length > 0) {
-    // Confirmar pago de números seleccionados
-    confirmPayment(selectedNumbers.value)
-
-    alert(`Demo: Pago con PayPal completado. Se compraron ${selectedNumbers.value.length} números.`)
-    selectedNumbers.value = [] // Limpiar selección después del "pago"
-  } else {
-    alert('Demo: Selecciona al menos un número para pagar')
   }
 }
 
@@ -563,7 +663,32 @@ const showRules = () => {
   background: linear-gradient(135deg, #10b981, #059669);
   border-color: #10b981;
   color: white;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  transform: scale(1.05);
+  font-weight: 700;
+}
+
+.number-btn.selected:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.selected-check {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #059669;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .number-btn.taken {
@@ -608,18 +733,108 @@ const showRules = () => {
   }
 }
 
-/* Controles de reserva */
-.reservation-controls {
+@keyframes highlightFound {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  }
+  20% {
+    transform: scale(1.2);
+    box-shadow: 0 8px 30px rgba(255, 193, 7, 0.8);
+    border-color: #ffc107;
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+  }
+  50% {
+    transform: scale(1.25);
+    box-shadow: 0 12px 40px rgba(255, 193, 7, 1);
+    border-color: #ffc107;
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+  }
+  80% {
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px rgba(255, 193, 7, 0.6);
+    border-color: #ffc107;
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  }
+}
+
+/* Buscador de números */
+.number-search {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.search-input-container {
   display: flex;
-  gap: 1rem;
+  gap: 0.8rem;
+  max-width: 400px;
+  margin: 0;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  background: rgba(51, 65, 85, 0.8);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.search-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.search-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(51, 65, 85, 0.6);
+}
+
+/* Controles de paginación */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 2rem;
   padding-top: 2rem;
   border-top: 1px solid rgba(96, 165, 250, 0.2);
-  justify-content: center;
 }
 
-.reserve-btn {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+.pagination-btn {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
   border: none;
   padding: 0.8rem 1.5rem;
@@ -630,16 +845,81 @@ const showRules = () => {
   font-size: 0.9rem;
 }
 
-.reserve-btn:hover:not(:disabled) {
+.pagination-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
 }
 
-.reserve-btn:disabled {
+.pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: rgba(51, 65, 85, 0.6);
 }
 
+.page-info {
+  text-align: center;
+  color: #e2e8f0;
+}
+
+.page-info span {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.numbers-range {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.page-selector {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.page-selector label {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.page-select {
+  background: rgba(51, 65, 85, 0.8);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 6px;
+  color: #e2e8f0;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.page-select:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
+}
+
+.page-select option {
+  background: #334155;
+  color: #e2e8f0;
+  padding: 0.4rem;
+}
+
+/* Controles de limpieza */
+.clean-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(96, 165, 250, 0.1);
+}
+
+/* Controles de reserva */
 .clear-all-btn {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
@@ -743,6 +1023,30 @@ const showRules = () => {
   margin-bottom: 2rem;
 }
 
+.user-form h4 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  background: rgba(96, 165, 250, 0.1);
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.required-note {
+  color: #f59e0b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0.5rem 0 0 0;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 .form-input {
   width: 100%;
   padding: 0.8rem;
@@ -785,16 +1089,6 @@ const showRules = () => {
 .payment-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.primary-payment {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  color: white;
-}
-
-.primary-payment:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
 }
 
 .mercadopago-payment {
@@ -845,59 +1139,105 @@ const showRules = () => {
   background: rgba(16, 185, 129, 0.2);
 }
 
-.security-section {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(16, 185, 129, 0.1);
-  border-radius: 10px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.security-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-radius: 8px;
+/* Overlay de carga para pagos */
+.payment-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.security-icon svg {
-  width: 20px;
-  height: 20px;
+.loading-content {
+  text-align: center;
   color: white;
+  max-width: 400px;
+  padding: 3rem 2rem;
+  background: rgba(30, 41, 59, 0.9);
+  border-radius: 20px;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.security-content h4 {
-  color: #10b981;
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-  font-weight: 600;
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(96, 165, 250, 0.3);
+  border-top: 4px solid #60a5fa;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 2rem auto;
 }
 
-.security-content p {
-  color: #94a3b8;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  margin: 0 0 0.8rem 0;
+.loading-content h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
 }
 
-.rules-btn {
-  background: none;
-  border: none;
-  color: #10b981;
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
+.loading-content p {
+  font-size: 1.1rem;
+  color: #cbd5e1;
+  margin-bottom: 2rem;
 }
 
-.rules-btn:hover {
-  color: #059669;
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.loading-dots span {
+  width: 12px;
+  height: 12px;
+  background: #60a5fa;
+  border-radius: 50%;
+  animation: loadingDots 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loadingDots {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Responsive */
@@ -992,6 +1332,31 @@ const showRules = () => {
     font-size: 0.9rem;
   }
 
+  .pagination-controls {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .pagination-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .search-input-container {
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .search-btn {
+    width: 100%;
+  }
+
+  .page-selector {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
   .reservation-controls {
     flex-direction: column;
     gap: 0.8rem;
@@ -1002,6 +1367,16 @@ const showRules = () => {
   .clear-all-btn {
     width: 100%;
     max-width: 280px;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .pagination-btn {
+    width: 100%;
+    max-width: 200px;
   }
 }
 
@@ -1057,6 +1432,16 @@ const showRules = () => {
   .clear-all-btn {
     padding: 0.7rem 1rem;
     font-size: 0.85rem;
+  }
+
+  .pagination-controls {
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  .pagination-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
   }
 }
 </style>

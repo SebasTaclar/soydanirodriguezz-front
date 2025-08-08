@@ -7,6 +7,7 @@ export interface CreatePaymentRequest {
   buyerEmail: string
   buyerName: string
   buyerIdentificationNumber: string
+  amount: number
 }
 
 export interface Purchase {
