@@ -36,6 +36,21 @@ const router = createRouter({
         requiredRole: 'admin', // Solo accesible para administradores
       },
     },
+    {
+      path: '/payment/success',
+      name: 'payment-success',
+      component: () => import('../views/PaymentSuccess.vue'),
+    },
+    {
+      path: '/payment/failure',
+      name: 'payment-failure',
+      component: () => import('../views/PaymentFailure.vue'),
+    },
+    {
+      path: '/payment/pending',
+      name: 'payment-pending',
+      component: () => import('../views/PaymentPending.vue'),
+    },
     // Catch-all route - debe ir al final
     {
       path: '/:pathMatch(.*)*',

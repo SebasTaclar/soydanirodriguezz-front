@@ -9,14 +9,18 @@
         </div>
 
         <!-- Galería horizontal en .horizontal-gallery -->
-        <div class="horizontal-gallery" ref="galleryRef">
+        <div
+          class="horizontal-gallery"
+          ref="galleryRef"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+        >
           <div
             v-for="(image, index) in motoImages"
             :key="index"
             class="gallery-image-item"
             :class="{ 'active': currentImageIndex === index }"
-            @click="goToImage(index)"
-  >
+            @click="goToImage(index)">
             <div class="image-wrapper">
               <img :src="image.src" :alt="image.alt" />
               <div class="image-overlay">
@@ -52,12 +56,11 @@
           <div class="action-buttons">
             <button class="btn-primary" @click="selectNumbers">Elegir números</button>
             <button class="btn-secondary" @click="viewRules">Ver reglas</button>
-            <button v-if="isAdmin" class="btn-admin" @click="goToAdmin">⚙️ Panel Admin</button>
           </div>
            <!-- Estadísticas -->
           <div class="stats-section">
             <div class="stat-card">
-              <div class="stat-value">$ 20.000</div>
+              <div class="stat-value">$ 5.000</div>
               <div class="stat-label">por número</div>
             </div>
             <div class="stat-card">
@@ -76,10 +79,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
-import { authService } from '@/services/api/authService'
 
 // Definir emits
 interface Emits {
@@ -88,16 +89,10 @@ interface Emits {
 
 const emit = defineEmits<Emits>()
 
-// Router
-const router = useRouter()
-
-// Verificar si el usuario es administrador
-const isAdmin = computed(() => authService.isAdmin())
-
 // Usar el composable de disponibilidad
 const {
   availabilityText,
-  getAvailableNumbersArray
+  // getAvailableNumbersArray
 } = useNumbersAvailability()
 
 // // Función para simular más ventas (demo)
@@ -184,18 +179,49 @@ const motoImages = ref([
 const currentImageIndex = ref(0)
 const galleryRef = ref<HTMLElement | null>(null)
 
+// Variables para gestos táctiles
+const touchStartX = ref(0)
+const touchEndX = ref(0)
+
 // Funciones para el carousel de imágenes con scroll horizontal
 const nextImage = () => {
   if (galleryRef.value) {
-    const scrollAmount = 400 // Cantidad de píxeles para scroll
+    const isMobile = window.innerWidth <= 768
+    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 400
     galleryRef.value.scrollBy({ left: scrollAmount, behavior: 'smooth' })
   }
 }
 
 const prevImage = () => {
   if (galleryRef.value) {
-    const scrollAmount = 400 // Cantidad de píxeles para scroll
+    const isMobile = window.innerWidth <= 768
+    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 400
     galleryRef.value.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
+  }
+}
+
+// Funciones para gestos táctiles
+const handleTouchStart = (e: TouchEvent) => {
+  touchStartX.value = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: TouchEvent) => {
+  touchEndX.value = e.changedTouches[0].clientX
+  handleSwipe()
+}
+
+const handleSwipe = () => {
+  const swipeThreshold = 50
+  const difference = touchStartX.value - touchEndX.value
+
+  if (Math.abs(difference) > swipeThreshold) {
+    if (difference > 0) {
+      // Swipe izquierda - siguiente imagen
+      nextImage()
+    } else {
+      // Swipe derecha - imagen anterior
+      prevImage()
+    }
   }
 }
 
@@ -258,11 +284,6 @@ const selectNumbers = () => {
 const viewRules = () => {
   // Emitir evento para abrir modal de reglas
   emit('showRules')
-}
-
-const goToAdmin = () => {
-  // Navegar al panel de administración
-  router.push('/admin')
 }
 
 // Navegación con teclado
@@ -588,14 +609,20 @@ onUnmounted(() => {
   }
 
   .horizontal-gallery {
-    flex-direction: column;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 1.5rem;
     padding: 2rem 1rem;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
   }
 
   .gallery-image-item {
-    flex: none;
-    border-right: none;
+    flex: 0 0 85vw !important;
+    min-width: 85vw !important;
+    max-width: 85vw !important;
+    scroll-snap-align: center;
   }
 
   .image-wrapper {
@@ -640,6 +667,18 @@ onUnmounted(() => {
   .horizontal-gallery {
     padding: 1rem 0.5rem;
     gap: 1rem;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+  }
+
+  .gallery-image-item {
+    flex: 0 0 90vw !important;
+    min-width: 90vw !important;
+    max-width: 90vw !important;
+    scroll-snap-align: center;
   }
 
   .image-wrapper {
@@ -868,27 +907,6 @@ onUnmounted(() => {
   background: rgba(148, 163, 184, 0.1);
   border-color: #94a3b8;
   color: white;
-}
-
-.btn-admin {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-admin:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
 }
 
 /* Controles de demo */
@@ -1178,8 +1196,7 @@ onUnmounted(() => {
   }
 
   .btn-primary,
-  .btn-secondary,
-  .btn-admin {
+  .btn-secondary {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
   }
@@ -1220,6 +1237,10 @@ onUnmounted(() => {
 
   .product-image-container {
     min-height: 200px;
+  }
+
+  .gallery-navigation{
+    top: 30%;
   }
 }
 

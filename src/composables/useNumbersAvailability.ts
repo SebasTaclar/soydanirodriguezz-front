@@ -11,7 +11,7 @@ interface ReservedNumber {
 }
 
 // Estado global para los números
-const totalNumbers = ref(200)
+const totalNumbers = ref(5000)
 const takenNumbers = ref<number[]>([]) // Números pagados/confirmados (API data)
 const reservedNumbers = ref<ReservedNumber[]>([]) // Números reservados temporalmente (local)
 const selectedNumbers = ref<number[]>([]) // Números seleccionados actualmente
