@@ -610,7 +610,7 @@ onMounted(async () => {
 }
 
 .wallpapers {
-  max-width: 200px;
+  max-width: 400px;
 }
 
 .wallpaper-numbers {

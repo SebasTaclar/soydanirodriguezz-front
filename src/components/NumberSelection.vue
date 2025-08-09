@@ -1245,7 +1245,6 @@ const payWithMercadoPago = async () => {
   .step-card:last-child {
     grid-column: 1 / -1;
     max-width: 400px;
-    margin: 0 auto;
   }
 }
 

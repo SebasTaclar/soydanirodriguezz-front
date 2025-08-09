@@ -21,6 +21,7 @@
       <!-- Controles de usuario -->
       <div class="nav-controls desktop-nav">
         <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
+        <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Panel Admin</RouterLink>
         <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
         <div v-if="isLoggedIn" class="user-greeting">
           <span>{{ username }}</span>
@@ -49,6 +50,9 @@
             <div v-if="isLoggedIn" class="mobile-user-greeting">
               <span>Hola, {{ username }}</span>
             </div>
+            <RouterLink v-if="isLoggedIn && isAdmin" class="mobile-btn admin-btn" to="/admin" @click="closeMobileMenu">
+              ⚙️ Panel Admin
+            </RouterLink>
             <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-btn logout-btn" to="/">
               Cerrar sesión
             </RouterLink>
@@ -67,13 +71,16 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { authService } from '@/services/api';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import router from './router';
 import SocialFloating from '@/components/SocialFloating.vue';
 
 const isLoggedIn = ref(false);
 const username = ref('');
 const isMobileMenuOpen = ref(false);
+
+// Verificar si el usuario es administrador
+const isAdmin = computed(() => authService.isAdmin());
 
 // Funciones para el menú hamburguesa
 const toggleMobileMenu = () => {
@@ -271,6 +278,18 @@ watch(route, () => {
   transform: translateY(-1px);
 }
 
+.admin-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
+}
+
+.admin-btn:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.5);
+  transform: translateY(-2px);
+}
+
 .user-greeting {
   color: #e2e8f0;
   font-weight: 600;
@@ -396,6 +415,12 @@ watch(route, () => {
   background: rgba(248, 113, 113, 0.1);
   color: #f87171;
   border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.mobile-btn.admin-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
 }
 
 .mobile-user-greeting {
