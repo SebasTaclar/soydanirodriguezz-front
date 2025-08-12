@@ -50,7 +50,7 @@
         <!-- Contenido centrado debajo de la galería -->
         <div class="content-wrapper">
           <div class="description">
-            <p>Elige tus números, confirma y guarda tu comprobante. Sorteo transparente y regulado por reglas claras.</p>
+            <p>Elige tus números, confirma y guarda tu comprobante. Dinámica transparente y regulado por reglas claras.</p>
           </div>
           <!-- Botones de acción -->
           <div class="action-buttons">
@@ -60,13 +60,9 @@
            <!-- Estadísticas -->
           <div class="stats-section">
             <div class="stat-card">
-              <div class="stat-value">$ 5.000</div>
+              <div class="stat-value">$ 15.000</div>
               <div class="stat-label">por número</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-value">15 días</div>
-            <div class="stat-label">para el sorteo</div>
-          </div>
           <div class="stat-card">
             <div class="stat-value">{{ availabilityText }}</div>
             <div class="stat-label">disponibles</div>
@@ -943,7 +939,8 @@ onUnmounted(() => {
 /* Estadísticas */
 .stats-section {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* 2 columnas para centrar las dos tarjetas en desktop */
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin: 0 auto 2rem auto;
   max-width: 800px;
@@ -1176,7 +1173,8 @@ onUnmounted(() => {
   }
 
   .stats-section {
-    grid-template-columns: repeat(3, 1fr);
+  /* Mantener 2 columnas para que las tarjetas queden centradas */
+  grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
 }

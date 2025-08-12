@@ -2,7 +2,7 @@
   <div v-if="isVisible" class="modal-overlay" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
-        <h3>Reglas del Sorteo</h3>
+        <h3>Reglas de la Dinámica</h3>
         <button class="close-btn" @click="closeModal">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
@@ -14,9 +14,8 @@
         <div class="rule-section">
           <h4>🎯 Participación</h4>
           <ul>
-            <li>Cada número tiene un costo de $20.000 COP</li>
-            <li>Puedes seleccionar máximo 10 números por compra</li>
-            <li>Los números van del 001 al 200</li>
+            <li>Cada número tiene un costo de $15.000 COP</li>
+            <li>Los números van del 001 al 5000</li>
             <li>Una vez comprado, el número queda reservado para ti</li>
           </ul>
         </div>
@@ -24,8 +23,6 @@
         <div class="rule-section">
           <h4>📅 Fechas importantes</h4>
           <ul>
-            <li>Sorteo: 15 de cada mes a las 8:00 PM</li>
-            <li>Cierre de ventas: 14 de cada mes a las 11:59 PM</li>
             <li>Transmisión en vivo por nuestras redes sociales</li>
           </ul>
         </div>
@@ -33,9 +30,7 @@
         <div class="rule-section">
           <h4>🏆 Premios</h4>
           <ul>
-            <li>1er Lugar: Motocicleta 200 NS (nuevo modelo)</li>
-            <li>2do Lugar: $500.000 en efectivo</li>
-            <li>3er Lugar: Kit de accesorios para moto</li>
+            <li>Motocicleta 200 NS</li>
           </ul>
         </div>
 
@@ -44,9 +39,7 @@
           <ul>
             <li>El sorteo se realiza con sistema aleatorio certificado</li>
             <li>En caso de no venderse todos los números, se sortea entre los vendidos</li>
-            <li>Los premios no son canjeables por dinero</li>
             <li>El ganador debe reclamar en máximo 30 días</li>
-            <li>Válido solo para residentes en Colombia</li>
           </ul>
         </div>
 
@@ -54,8 +47,6 @@
           <div class="demo-icon">⚠️</div>
           <div class="demo-text">
             <strong>AVISO IMPORTANTE:</strong> Este sitio está en modo DEMO.
-            No se procesan pagos reales ni se entregan premios.
-            Es únicamente para demostración técnica.
           </div>
         </div>
       </div>

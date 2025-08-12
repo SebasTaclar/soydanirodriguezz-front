@@ -4,7 +4,7 @@
       <!-- Título y descripción -->
       <div class="selection-header">
         <h2>Elige tus Wallpapers NS200</h2>
-        <p>Selecciona los números de wallpapers que quieres comprar. Cada wallpaper cuesta $5.000 COP.</p>
+        <p>Selecciona los números de wallpapers que quieres comprar. Cada wallpaper cuesta $15.000 COP.</p>
       </div>
 
       <!-- Sección ¿Cómo funciona? -->
@@ -40,6 +40,16 @@
       <div class="selection-content">
         <!-- Panel de números -->
         <div class="numbers-panel">
+          <!-- Texto informativo sobre selección de números -->
+          <div class="number-info-block">
+            <h3 class="number-info-title">Elige tus números como prefieras:</h3>
+            <ul class="number-info-list">
+              <li>“¡Déjalo a la suerte! Usa la opción aleatoria y el sistema escogerá por ti en segundos.”</li>
+              <li>“Búscalos rápidamente: ingresa el número que quieres y el sistema te dirá si está disponible.”</li>
+              <li>“Toma el control: selecciona manualmente los números que más te gusten.”</li>
+            </ul>
+          </div>
+
           <!-- Botones de control -->
           <div class="control-buttons">
             <button class="control-btn random-btn" @click="selectRandomNumbers(3)">
@@ -74,25 +84,28 @@
             </div>
           </div>
 
-          <!-- Grid de números -->
-          <div class="numbers-grid">
-            <button v-for="number in currentPageNumbers" :key="number" :class="[
-              'number-btn',
-              {
-                'selected': selectedNumbers.includes(number),
-                'taken': takenNumbers.includes(number),
-                'reserved': isNumberReserved(number)
-              }
-            ]" @click="toggleNumber(number)" :disabled="takenNumbers.includes(number) || isNumberReserved(number)" :data-number="number">
-              {{ number.toString().padStart(4, '0') }}
-              <span v-if="selectedNumbers.includes(number)" class="selected-check">✓</span>
-              <span v-if="isNumberReserved(number)" class="reservation-timer">
-                {{ formatTimeLeft(getReservationTimeLeft(number)) }}
-              </span>
-            </button>
-          </div>
-
-          <!-- Paginación -->
+          <!-- Lista de números horizontal -->
+          <div class="numbers-list-container">
+            <div class="numbers-horizontal-row">
+              <div v-for="number in displayNumbers" :key="number" class="number-item">
+                <button
+                  @click="toggleNumber(number)"
+                  :disabled="takenNumbers.includes(number) || isNumberReserved(number)"
+                  :class="[
+                    'number-btn',
+                    {
+                      'btn-selected': selectedNumbers.includes(number),
+                      'btn-taken': takenNumbers.includes(number),
+                      'btn-reserved': isNumberReserved(number),
+                      'btn-searched': number === searchedNumber
+                    }
+                  ]"
+                  :data-number="number">
+                  {{ number.toString().padStart(4, '0') }}
+                </button>
+              </div>
+            </div>
+          </div>          <!-- Paginación -->
           <div class="pagination-controls">
             <button class="pagination-btn" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
               ‹ Anterior
@@ -144,7 +157,7 @@
           <!-- Total a pagar -->
           <div class="payment-summary">
             <h3>Total a pagar</h3>
-            <div class="total-amount">${{ (selectedNumbers.length * 5000).toLocaleString() }} COP</div>
+            <div class="total-amount">${{ (selectedNumbers.length * 15000).toLocaleString() }} COP</div>
           </div>
 
           <!-- Formulario de datos del comprador -->
@@ -225,11 +238,12 @@ const selectedNumbers = ref<number[]>([])
 
 // Estado de paginación
 const currentPage = ref<number>(1)
-const numbersPerPage = 100
+const numbersPerPage = 10
 const totalNumbers = 5000
 
 // Estado de búsqueda
 const searchNumber = ref<string>('')
+const searchedNumber = ref<number | null>(null)
 
 // Estado de reserva actual
 const reservationExpiry = ref<number>(0)
@@ -297,6 +311,22 @@ const currentPageNumbers = computed(() => {
   return numbers
 })
 
+// Computed que muestra números con el buscado al principio
+const displayNumbers = computed(() => {
+  let numbers = [...currentPageNumbers.value]
+
+  // Si hay un número buscado, ponerlo al principio
+  if (searchedNumber.value) {
+    numbers = numbers.filter(n => n !== searchedNumber.value)
+    numbers.unshift(searchedNumber.value)
+
+    // Mantener solo los primeros numbersPerPage números
+    numbers = numbers.slice(0, numbersPerPage)
+  }
+
+  return numbers
+})
+
 const firstNumberInPage = computed(() => (currentPage.value - 1) * numbersPerPage + 1)
 const lastNumberInPage = computed(() => Math.min(currentPage.value * numbersPerPage, totalNumbers))
 
@@ -314,6 +344,9 @@ const goToNumber = () => {
     const targetPage = Math.ceil(number / numbersPerPage)
     currentPage.value = targetPage
 
+    // Establecer el número buscado para mostrarlo al principio
+    searchedNumber.value = number
+
     // Seleccionar el número automáticamente si no está tomado o reservado
     if (!takenNumbers.value.includes(number) && !isNumberReserved(number)) {
       if (!selectedNumbers.value.includes(number)) {
@@ -324,36 +357,10 @@ const goToNumber = () => {
     // Limpiar el campo de búsqueda
     searchNumber.value = ''
 
-    // Resaltar el número encontrado por menos tiempo (500ms)
+    // Limpiar el número buscado después de 3 segundos
     setTimeout(() => {
-      const button = document.querySelector(`button[data-number="${number}"]`) as HTMLElement
-      if (button) {
-        // Scroll al número
-        button.scrollIntoView({ behavior: 'smooth', block: 'center' })
-
-        // Guardar estilos originales
-        const originalTransform = button.style.transform
-        const originalBoxShadow = button.style.boxShadow
-        const originalBorder = button.style.borderColor
-        const originalBackground = button.style.background
-
-        // Aplicar resaltado dorado más sutil
-        button.style.transform = 'scale(1.2)'
-        button.style.boxShadow = '0 0 20px rgba(255, 193, 7, 0.8), 0 0 40px rgba(255, 193, 7, 0.5)'
-        button.style.borderColor = '#ffc107'
-        button.style.background = 'linear-gradient(135deg, #ffc107, #ff8f00)'
-        button.style.transition = 'all 0.2s ease'
-
-        // Restaurar estilos después de 500ms
-        setTimeout(() => {
-          button.style.transform = originalTransform
-          button.style.boxShadow = originalBoxShadow
-          button.style.borderColor = originalBorder
-          button.style.background = originalBackground
-          button.style.transition = 'all 0.3s ease'
-        }, 300)
-      }
-    }, 200)
+      searchedNumber.value = null
+    }, 3000)
   } else {
     alert('Número no válido. Ingresa un número entre 1 y 5000.')
   }
@@ -445,6 +452,8 @@ const payWithMercadoPago = async () => {
   min-height: 100vh;
   padding: 4rem 0;
   position: relative;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .selection-container {
@@ -598,109 +607,645 @@ const payWithMercadoPago = async () => {
   background: rgba(239, 68, 68, 0.2);
 }
 
-.numbers-grid {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 0.8rem;
-  max-height: 500px;
-  overflow-y: auto;
-  padding-right: 10px;
+
+/* Lista de números horizontal */
+.numbers-list-container {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 1.2rem 1rem; /* Menos padding vertical */
 }
 
-.numbers-grid::-webkit-scrollbar {
-  width: 6px;
+.numbers-horizontal-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem; /* Menor separación horizontal */
+  justify-content: center;
+  align-items: stretch;
 }
 
-.numbers-grid::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
-  border-radius: 3px;
-}
-
-.numbers-grid::-webkit-scrollbar-thumb {
-  background: rgba(96, 165, 250, 0.5);
-  border-radius: 3px;
+.number-item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
 }
 
 .number-btn {
-  aspect-ratio: 1;
+  width: 70px;
+  height: 70px;
+  padding: 0;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
   border: 2px solid rgba(96, 165, 250, 0.3);
-  background: rgba(51, 65, 85, 0.6);
+  background: rgba(51, 65, 85, 0.7);
   color: #e2e8f0;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.number-btn:hover:not(:disabled) {
-  border-color: #60a5fa;
-  background: rgba(96, 165, 250, 0.1);
-  transform: translateY(-2px);
-}
-
-.number-btn.selected {
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-color: #10b981;
-  color: white;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-  transform: scale(1.05);
-  font-weight: 700;
-}
-
-.number-btn.selected:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-  transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
-}
-
-.selected-check {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #059669;
-  font-size: 0.7rem;
-  font-weight: 700;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  text-align: center;
+  box-shadow: 2px 0 12px 0 rgba(96, 165, 250, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
 }
 
-.number-btn.taken {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #fca5a5;
+.number-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 2px 0 16px 0 rgba(96, 165, 250, 0.22);
+  border-color: #60a5fa;
+}
+
+/* ...resto de estilos sin cambios... */
+
+/* Estilos para scroll horizontal */
+.numbers-horizontal-row {
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(96, 165, 250, 0.3) transparent;
+}
+
+.numbers-horizontal-row::-webkit-scrollbar {
+  height: 4px;
+}
+
+.numbers-horizontal-row::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 2px;
+}
+
+.numbers-horizontal-row::-webkit-scrollbar-thumb {
+  background: rgba(96, 165, 250, 0.3);
+  border-radius: 2px;
+}
+
+.numbers-horizontal-row::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.5);
+}
+
+.numbers-list-container {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 1.2rem 1rem; /* Menos padding vertical */
+}
+
+.numbers-horizontal-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem; /* Menor separación horizontal */
+  justify-content: center;
+  align-items: stretch;
+}
+
+.number-item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+}
+
+.number-btn {
+  width: 70px;
+  height: 70px;
+  padding: 0;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  border: 2px solid rgba(96, 165, 250, 0.3);
+  background: rgba(51, 65, 85, 0.7);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 2px 0 12px 0 rgba(96, 165, 250, 0.12); /* Sombra lateral tipo columna */
+}
+
+.number-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 2px 0 16px 0 rgba(96, 165, 250, 0.22);
+  border-color: #60a5fa;
+}
+
+.number-btn.btn-selected {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border-color: #10b981;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.number-btn.btn-taken {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-color: #ef4444;
+  opacity: 0.7;
   cursor: not-allowed;
-  opacity: 0.5;
 }
 
-.number-btn.reserved {
-  background: rgba(249, 115, 22, 0.2);
-  border-color: rgba(249, 115, 22, 0.5);
-  color: #fb923c;
+.number-btn.btn-reserved {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white;
+  border-color: #f59e0b;
+  opacity: 0.85;
   cursor: not-allowed;
-  position: relative;
-  animation: reservedPulse 2s ease-in-out infinite;
+  animation: reservedPulse 2s infinite;
 }
 
-.reservation-timer {
+.number-btn.btn-searched {
+  background: linear-gradient(135deg, #ffc107, #ff8f00) !important;
+  color: white !important;
+  border-color: #ffc107 !important;
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.8) !important;
+  transform: scale(1.1) !important;
+  animation: searchPulse 0.8s ease-in-out;
+}
+
+.number-btn:disabled {
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+@keyframes searchPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 193, 7, 0.8);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 25px rgba(255, 193, 7, 1);
+  }
+  100% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+  }
+}
+
+@keyframes reservedPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (max-width: 1024px) {
+  .numbers-horizontal-row {
+    gap: 0.8rem;
+  }
+  .number-btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 1.1rem;
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .selection-container {
+    padding: 0 1rem;
+  }
+
+  .selection-header h2 {
+    font-size: 2.2rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .selection-header p {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+
+  .selection-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .numbers-panel {
+    padding: 1.5rem;
+  }
+
+  .control-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .control-buttons .clear-btn {
+    grid-column: 1 / -1;
+  }
+
+  .number-info-block {
+    padding: 0 !important;
+    margin-bottom: 1.5rem;
+  }
+
+  .number-info-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .number-info-list {
+    font-size: 0.9rem;
+  }
+
+  .number-info-list li {
+    padding-left: 1.8rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .numbers-list-container {
+    padding: 1rem 0.5rem;
+    margin: 0 -0.5rem;
+  }
+
+  .numbers-horizontal-row {
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0 0.5rem;
+  }
+
+  .number-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+    min-width: 45px;
+  }
+
+  .search-input-container {
+    flex-direction: column;
+    max-width: 100%;
+    gap: 0.6rem;
+  }
+
+  .search-btn {
+    width: 100%;
+    padding: 0.9rem;
+  }
+
+  .sidebar-panel {
+    padding: 1.5rem;
+    position: static;
+  }
+
+  .selected-numbers {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 0.4rem;
+  }
+
+  .selected-number-tag {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .pagination-btn {
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  .page-selector {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .how-it-works-title {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .steps-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .step-card {
+    padding: 1.5rem;
+  }
+
+  .step-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .selection-container {
+    padding: 0 0.8rem;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .selection-header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .selection-header p {
+    font-size: 0.9rem;
+    padding: 0 0.5rem;
+  }
+
+  .numbers-panel {
+    padding: 1rem;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .control-buttons {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .control-btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .number-info-block {
+    padding: 0 !important;
+    margin-bottom: 1rem;
+  }
+
+  .number-info-title {
+    font-size: 1rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .number-info-title::before {
+    font-size: 1.2rem;
+  }
+
+  .number-info-list {
+    font-size: 0.85rem;
+  }
+
+  .number-info-list li {
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.0;
+  }
+
+  .number-info-list li::before {
+    font-size: 1rem;
+  }
+
+  .numbers-list-container {
+    padding: 0.8rem 0.2rem;
+    margin: 0 -0.2rem;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .numbers-horizontal-row {
+    gap: 0.2rem;
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0 0.2rem;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .number-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    flex-shrink: 0;
+    min-width: 36px;
+    border-width: 1px;
+  }
+
+  .search-input {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .search-btn {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .sidebar-panel {
+    padding: 1rem;
+  }
+
+  .selection-summary h3,
+  .payment-summary h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .selected-numbers {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 0.3rem;
+    max-height: 150px;
+  }
+
+  .selected-number-tag {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .form-input {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .payment-btn {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .pagination-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .how-it-works-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .steps-container {
+    padding: 0 0.5rem;
+    gap: 1rem;
+  }
+
+  .step-card {
+    padding: 1.2rem 1rem;
+  }
+
+  .step-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .step-content h4 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-content p {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+}
+
+.status-col {
+  text-align: center;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-indicator.selected {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-indicator.taken {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-indicator.reserved {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.status-indicator.available {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.status-icon {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.status-text {
+  font-size: 0.8rem;
+  letter-spacing: 0.3px;
+}
+
+.action-col {
+  text-align: center;
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+  min-width: 70px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-select {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: white;
+  box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+}
+
+.btn-select:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+}
+
+.btn-remove {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-remove:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-disabled {
+  background: rgba(51, 65, 85, 0.5);
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.reservation-tooltip {
   position: absolute;
-  bottom: -15px;
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.6rem;
-  background: rgba(249, 115, 22, 0.9);
-  color: white;
-  padding: 1px 4px;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 10;
+  margin-top: 0.5rem;
+  pointer-events: none;
+}
+
+.number-list-row.reserved:hover .reservation-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.reservation-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: rgba(0, 0, 0, 0.9);
 }
 
 @keyframes reservedPulse {
@@ -948,23 +1493,27 @@ const payWithMercadoPago = async () => {
 }
 
 .selected-numbers {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 0.5rem;
   margin-top: 1rem;
   margin-bottom: 2rem;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .selected-number-tag {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.15);
 }
 
 .remove-btn {
@@ -1233,8 +1782,35 @@ const payWithMercadoPago = async () => {
     position: static;
   }
 
-  .numbers-grid {
-    grid-template-columns: repeat(8, 1fr);
+  .numbers-list-header {
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .number-list-row {
+    padding: 0.6rem 1rem;
+    min-height: 55px;
+  }
+
+  .number-display {
+    font-size: 1rem;
+    padding: 0.3rem 0.6rem;
+    min-width: 55px;
+  }
+
+  .status-indicator {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .status-text {
+    font-size: 0.75rem;
+  }
+
+  .action-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    min-width: 65px;
   }
 
   .steps-container {
@@ -1253,9 +1829,42 @@ const payWithMercadoPago = async () => {
     font-size: 2.5rem;
   }
 
-  .numbers-grid {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.6rem;
+  .numbers-list-header {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.8rem;
+    grid-template-columns: 1fr 1.8fr 1fr;
+  }
+
+  .number-list-row {
+    padding: 0.5rem 0.8rem;
+    min-height: 50px;
+    grid-template-columns: 1fr 1.8fr 1fr;
+  }
+
+  .number-display {
+    font-size: 0.95rem;
+    padding: 0.3rem 0.5rem;
+    min-width: 50px;
+  }
+
+  .status-indicator {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    gap: 0.3rem;
+  }
+
+  .status-text {
+    font-size: 0.7rem;
+  }
+
+  .status-icon {
+    font-size: 0.8rem;
+  }
+
+  .action-button {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.7rem;
+    min-width: 55px;
   }
 
   .control-buttons {
@@ -1366,13 +1975,53 @@ const payWithMercadoPago = async () => {
     padding: 0 1rem;
   }
 
-  .numbers-grid {
-    grid-template-columns: repeat(5, 1fr);
+  .numbers-list-header {
+    padding: 0.6rem;
+    font-size: 0.75rem;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .number-list-row {
+    padding: 0.4rem 0.6rem;
+    min-height: 45px;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .number-display {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.4rem;
+    min-width: 45px;
+  }
+
+  .status-indicator {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
+    gap: 0.25rem;
+  }
+
+  .status-text {
+    font-size: 0.65rem;
+  }
+
+  .status-icon {
+    font-size: 0.7rem;
+  }
+
+  .action-button {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+    min-width: 50px;
   }
 
   .numbers-panel,
   .sidebar-panel {
     padding: 1rem;
+  }
+
+  .numbers-list-content {
+    max-height: 300px;
   }
 
   .how-it-works-title {
@@ -1399,11 +2048,6 @@ const payWithMercadoPago = async () => {
     height: 22px;
   }
 
-  .reservation-timer {
-    font-size: 0.5rem;
-    bottom: -12px;
-  }
-
   .reservation-controls {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
@@ -1424,5 +2068,66 @@ const payWithMercadoPago = async () => {
     padding: 0.6rem 1rem;
     font-size: 0.8rem;
   }
+}
+
+/* Estilos para el bloque informativo */
+.number-info-block {
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.number-info-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(96, 165, 250, 0.2);
+  border-color: rgba(96, 165, 250, 0.5);
+}
+
+.number-info-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.number-info-title::before {
+  content: "💡";
+  font-size: 1.5rem;
+}
+
+.number-info-list {
+  margin: 0;
+  padding-left: 0;
+  color: #cbd5e1;
+  font-size: 1rem;
+  list-style: none;
+}
+
+.number-info-list li {
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+  padding-left: 2rem;
+  position: relative;
+  font-style: italic;
+}
+
+.number-info-list li::before {
+  content: "✨";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 1.1rem;
+  color: #60a5fa;
+}
+
+.number-info-list li:last-child {
+  margin-bottom: 0;
 }
 </style>
