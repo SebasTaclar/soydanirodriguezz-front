@@ -84,9 +84,9 @@
             </div>
           </div>
 
-          <!-- Lista de números horizontal -->
+          <!-- Lista de números en cuadrícula -->
           <div class="numbers-list-container">
-            <div class="numbers-horizontal-row">
+            <div class="numbers-grid">
               <div v-for="number in displayNumbers" :key="number" class="number-item">
                 <button
                   @click="toggleNumber(number)"
@@ -238,8 +238,14 @@ const selectedNumbers = ref<number[]>([])
 
 // Estado de paginación
 const currentPage = ref<number>(1)
-const numbersPerPage = 10
 const totalNumbers = 5000
+
+// Computed para números por página responsivo
+const responsiveNumbersPerPage = computed(() => {
+  // En móvil mostrar 50 números (5x10) hasta 640px, en desktop/tablet 100 (10x10)
+  if (window.innerWidth <= 640) return 50 // 5 columnas x 10 filas
+  return 50 // 10 columnas x 10 filas para pantallas mayores a 640px
+})
 
 // Estado de búsqueda
 const searchNumber = ref<string>('')
@@ -299,11 +305,11 @@ const selectRandomNumbers = (count: number = 3) => {
 }
 
 // Funciones de paginación
-const totalPages = computed(() => Math.ceil(totalNumbers / numbersPerPage))
+const totalPages = computed(() => Math.ceil(totalNumbers / responsiveNumbersPerPage.value))
 
 const currentPageNumbers = computed(() => {
-  const startNumber = (currentPage.value - 1) * numbersPerPage + 1
-  const endNumber = Math.min(currentPage.value * numbersPerPage, totalNumbers)
+  const startNumber = (currentPage.value - 1) * responsiveNumbersPerPage.value + 1
+  const endNumber = Math.min(currentPage.value * responsiveNumbersPerPage.value, totalNumbers)
   const numbers = []
   for (let i = startNumber; i <= endNumber; i++) {
     numbers.push(i)
@@ -320,15 +326,15 @@ const displayNumbers = computed(() => {
     numbers = numbers.filter(n => n !== searchedNumber.value)
     numbers.unshift(searchedNumber.value)
 
-    // Mantener solo los primeros numbersPerPage números
-    numbers = numbers.slice(0, numbersPerPage)
+    // Mantener solo los primeros responsiveNumbersPerPage números
+    numbers = numbers.slice(0, responsiveNumbersPerPage.value)
   }
 
   return numbers
 })
 
-const firstNumberInPage = computed(() => (currentPage.value - 1) * numbersPerPage + 1)
-const lastNumberInPage = computed(() => Math.min(currentPage.value * numbersPerPage, totalNumbers))
+const firstNumberInPage = computed(() => (currentPage.value - 1) * responsiveNumbersPerPage.value + 1)
+const lastNumberInPage = computed(() => Math.min(currentPage.value * responsiveNumbersPerPage.value, totalNumbers))
 
 const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
@@ -341,7 +347,7 @@ const goToNumber = () => {
   const number = parseInt(searchNumber.value)
   if (number >= 1 && number <= totalNumbers) {
     // Calcular en qué página está el número
-    const targetPage = Math.ceil(number / numbersPerPage)
+    const targetPage = Math.ceil(number / responsiveNumbersPerPage.value)
     currentPage.value = targetPage
 
     // Establecer el número buscado para mostrarlo al principio
@@ -357,10 +363,10 @@ const goToNumber = () => {
     // Limpiar el campo de búsqueda
     searchNumber.value = ''
 
-    // Limpiar el número buscado después de 3 segundos
+    // Limpiar el número buscado después de 1 segundo (reducido de 3)
     setTimeout(() => {
       searchedNumber.value = null
-    }, 3000)
+    }, 1000)
   } else {
     alert('Número no válido. Ingresa un número entre 1 y 5000.')
   }
@@ -610,18 +616,26 @@ const payWithMercadoPago = async () => {
 
 /* Lista de números horizontal */
 .numbers-list-container {
-  background: rgba(15, 23, 42, 0.3);
-  border-radius: 12px;
-  border: 1px solid rgba(96, 165, 250, 0.2);
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 16px;
+  border: 1px solid rgba(71, 85, 105, 0.4);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 1.2rem 1rem; /* Menos padding vertical */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem 1.2rem;
+}
+
+.numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: stretch;
 }
 
 .numbers-horizontal-row {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.5rem; /* Menor separación horizontal */
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.5rem;
   justify-content: center;
   align-items: stretch;
 }
@@ -636,70 +650,52 @@ const payWithMercadoPago = async () => {
   width: 70px;
   height: 70px;
   padding: 0;
-  border-radius: 16px;
-  font-size: 1.2rem;
-  font-family: 'Courier New', monospace;
-  font-weight: 700;
-  border: 2px solid rgba(96, 165, 250, 0.3);
-  background: rgba(51, 65, 85, 0.7);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid #4b6cae;
+  background: rgba(51, 65, 85, 0.9);
   color: #e2e8f0;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
   text-align: center;
-  box-shadow: 2px 0 12px 0 rgba(96, 165, 250, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .number-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 2px 0 16px 0 rgba(96, 165, 250, 0.22);
-  border-color: #60a5fa;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-color: #4b6cae;
+  background: rgba(71, 85, 105, 0.9);
 }
 
 /* ...resto de estilos sin cambios... */
 
 /* Estilos para scroll horizontal */
-.numbers-horizontal-row {
-  -webkit-overflow-scrolling: touch !important;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(96, 165, 250, 0.3) transparent;
-}
-
+.numbers-grid::-webkit-scrollbar,
 .numbers-horizontal-row::-webkit-scrollbar {
   height: 4px;
+  width: 4px;
 }
 
+.numbers-grid::-webkit-scrollbar-track,
 .numbers-horizontal-row::-webkit-scrollbar-track {
   background: rgba(15, 23, 42, 0.2);
   border-radius: 2px;
 }
 
+.numbers-grid::-webkit-scrollbar-thumb,
 .numbers-horizontal-row::-webkit-scrollbar-thumb {
   background: rgba(96, 165, 250, 0.3);
   border-radius: 2px;
 }
 
+.numbers-grid::-webkit-scrollbar-thumb:hover,
 .numbers-horizontal-row::-webkit-scrollbar-thumb:hover {
   background: rgba(96, 165, 250, 0.5);
-}
-
-.numbers-list-container {
-  background: rgba(15, 23, 42, 0.3);
-  border-radius: 12px;
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 1.2rem 1rem; /* Menos padding vertical */
-}
-
-.numbers-horizontal-row {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.5rem; /* Menor separación horizontal */
-  justify-content: center;
-  align-items: stretch;
 }
 
 .number-item {
@@ -712,36 +708,37 @@ const payWithMercadoPago = async () => {
   width: 70px;
   height: 70px;
   padding: 0;
-  border-radius: 16px;
-  font-size: 1.2rem;
-  font-family: 'Courier New', monospace;
-  font-weight: 700;
-  border: 2px solid rgba(96, 165, 250, 0.3);
-  background: rgba(51, 65, 85, 0.7);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid #4b6cae;
+  background: rgba(51, 65, 85, 0.9);
   color: #e2e8f0;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
   text-align: center;
-  box-shadow: 2px 0 12px 0 rgba(96, 165, 250, 0.12); /* Sombra lateral tipo columna */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .number-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 2px 0 16px 0 rgba(96, 165, 250, 0.22);
-  border-color: #60a5fa;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-color: #4b6cae;
+  background: rgba(71, 85, 105, 0.9);
 }
 
 .number-btn.btn-selected {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border-color: #10b981;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+  transition: all 0.1s ease !important;
 }
 
 .number-btn.btn-taken {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #ef4444b0, #d12e2edc);
   color: white;
-  border-color: #ef4444;
+  border-color: #ef4444b4;
   opacity: 0.7;
   cursor: not-allowed;
 }
@@ -759,9 +756,9 @@ const payWithMercadoPago = async () => {
   background: linear-gradient(135deg, #ffc107, #ff8f00) !important;
   color: white !important;
   border-color: #ffc107 !important;
-  box-shadow: 0 0 20px rgba(255, 193, 7, 0.8) !important;
-  transform: scale(1.1) !important;
-  animation: searchPulse 0.8s ease-in-out;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.7) !important;
+  transform: scale(1.05) !important;
+  animation: searchPulse 0.4s ease-in-out;
 }
 
 .number-btn:disabled {
@@ -773,15 +770,15 @@ const payWithMercadoPago = async () => {
 @keyframes searchPulse {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 rgba(255, 193, 7, 0.8);
+    box-shadow: 0 0 0 rgba(255, 193, 7, 0.7);
   }
   50% {
-    transform: scale(1.15);
-    box-shadow: 0 0 25px rgba(255, 193, 7, 1);
+    transform: scale(1.08);
+    box-shadow: 0 0 18px rgba(255, 193, 7, 0.9);
   }
   100% {
-    transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.7);
   }
 }
 
@@ -860,24 +857,25 @@ const payWithMercadoPago = async () => {
 
   .numbers-list-container {
     padding: 1rem 0.5rem;
-    margin: 0 -0.5rem;
+    margin: 0;
+    overflow: hidden;
   }
 
+  .numbers-grid,
   .numbers-horizontal-row {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
     gap: 0.4rem;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    justify-content: flex-start;
-    padding: 0 0.5rem;
+    justify-content: center;
   }
 
   .number-btn {
-    width: 45px;
-    height: 45px;
-    font-size: 0.85rem;
-    border-radius: 8px;
-    flex-shrink: 0;
-    min-width: 45px;
+    width: 15px;
+    height: 15px;
+    border-radius: 10px;
+    aspect-ratio: 1;
+    border: 2px solid #4b6cae;
+    min-height: 45px;
   }
 
   .search-input-container {
@@ -946,9 +944,9 @@ const payWithMercadoPago = async () => {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .selection-container {
-    padding: 0 0.8rem;
+    padding: 0 1rem;
     max-width: 100%;
     overflow-x: hidden;
   }
@@ -964,7 +962,7 @@ const payWithMercadoPago = async () => {
   }
 
   .numbers-panel {
-    padding: 1rem;
+    padding: 1rem 0.5rem;
     max-width: 100%;
     overflow: hidden;
   }
@@ -1008,30 +1006,34 @@ const payWithMercadoPago = async () => {
   }
 
   .numbers-list-container {
-    padding: 0.8rem 0.2rem;
-    margin: 0 -0.2rem;
+    padding: 0.8rem 0.5rem;
+    margin: 0;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 12px;
   }
 
+  .numbers-grid,
   .numbers-horizontal-row {
-    gap: 0.2rem;
-    justify-content: flex-start;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding: 0 0.2rem;
-    width: 100%;
-    -webkit-overflow-scrolling: touch;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.3rem;
+    justify-content: center;
+    max-width: 95vw;
+    margin: 0 auto;
   }
 
   .number-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 0.7rem;
-    border-radius: 6px;
-    flex-shrink: 0;
-    min-width: 36px;
-    border-width: 1px;
+    width: 15px;
+    height: 15px;
+    border: 2px solid #4b6cae;
+    aspect-ratio: 1;
+    min-height: 58px;
+    min-width: 58px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
   }
 
   .search-input {
@@ -1771,6 +1773,67 @@ const payWithMercadoPago = async () => {
   }
 }
 
+/* Estilos base para vistas de tabla */
+.numbers-list-header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  font-weight: 700;
+  padding: 1rem 1.2rem;
+  border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.number-list-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 1rem;
+  padding: 0.8rem 1.2rem;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.1);
+  background: rgba(30, 41, 59, 0.4);
+  transition: all 0.2s ease;
+  min-height: 60px;
+  align-items: center;
+}
+
+.number-list-row:hover {
+  background: rgba(51, 65, 85, 0.6);
+  transform: translateX(4px);
+}
+
+.number-display {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 8px;
+  color: #60a5fa;
+  text-align: center;
+  min-width: 60px;
+  font-family: 'Courier New', monospace;
+}
+
+.numbers-list-content {
+  max-height: 400px;
+  overflow-y: auto;
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.status-col {
+  text-align: center;
+}
+
+.action-col {
+  text-align: center;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .selection-content {
@@ -1970,7 +2033,7 @@ const payWithMercadoPago = async () => {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .selection-container {
     padding: 0 1rem;
   }
