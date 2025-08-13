@@ -75,7 +75,7 @@
             <div class="footer-container">
                 <!-- Copyright centrado -->
                 <div class="copyright-section">
-                    <p>&copy; 2025 RifasMoto. Todos los derechos reservados.</p>
+                    <p>&copy; 2025 FondosDigitales. Todos los derechos reservados.</p>
                 </div>
 
                 <!-- Enlaces centrados en su propio div -->
