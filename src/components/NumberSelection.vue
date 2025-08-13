@@ -366,7 +366,7 @@ const goToNumber = () => {
     // Limpiar el número buscado después de 1 segundo (reducido de 3)
     setTimeout(() => {
       searchedNumber.value = null
-    }, 1000)
+    }, 400)
   } else {
     alert('Número no válido. Ingresa un número entre 1 y 5000.')
   }
