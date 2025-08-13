@@ -26,15 +26,10 @@ const loadTakenNumbersFromAPI = async () => {
     isLoadingWallpapers.value = true
     const unavailableNumbers = await wallpaperService.getUnavailableNumbers()
     takenNumbers.value = unavailableNumbers
-
-    console.log('📡 Números tomados cargados desde API:', {
-      count: unavailableNumbers.length,
-      numbers: unavailableNumbers.slice(0, 10), // Solo mostrar primeros 10
-    })
   } catch (error) {
     console.error('❌ Error cargando números desde API:', error)
     // Fallback a datos locales si la API falla
-    const storedTaken = localStorage.getItem('rifa-taken-numbers')
+    const storedTaken = localStorage.getItem('wallpaper-taken-numbers')
     if (storedTaken) {
       takenNumbers.value = JSON.parse(storedTaken)
     }
@@ -46,17 +41,13 @@ const loadTakenNumbersFromAPI = async () => {
 // Inicializar desde localStorage para reservas (solo reservas son locales)
 const initializeFromStorage = () => {
   try {
-    const storedReserved = localStorage.getItem('rifa-reserved-numbers')
+    const storedReserved = localStorage.getItem('wallpaper-reserved-numbers')
 
     if (storedReserved) {
       reservedNumbers.value = JSON.parse(storedReserved)
       // Limpiar reservas expiradas al cargar
       cleanExpiredReservations()
     }
-
-    console.log('📦 Reservas locales cargadas:', {
-      reserved: reservedNumbers.value.length,
-    })
   } catch (error) {
     console.error('Error cargando reservas desde localStorage:', error)
   }
@@ -86,7 +77,7 @@ const cleanExpiredReservations = () => {
 watch(
   reservedNumbers,
   (newReservations) => {
-    localStorage.setItem('rifa-reserved-numbers', JSON.stringify(newReservations))
+    localStorage.setItem('wallpaper-reserved-numbers', JSON.stringify(newReservations))
   },
   { deep: true },
 )
@@ -144,8 +135,6 @@ export function useNumbersAvailability() {
         })
       }
     })
-
-    console.log(`⏱️ ${numbers.length} números reservados por 5 minutos`)
     return expiresAt
   }
 
@@ -161,8 +150,6 @@ export function useNumbersAvailability() {
         }
       }
     })
-
-    console.log(`✅ Pago confirmado para ${numbers.length} números`)
   }
 
   // Función para liberar reservas específicas
@@ -258,8 +245,7 @@ export function useNumbersAvailability() {
   const clearAll = () => {
     reservedNumbers.value = []
     selectedNumbers.value = []
-    localStorage.removeItem('rifa-reserved-numbers')
-    console.log('🧹 Todas las reservas locales han sido liberadas')
+    localStorage.removeItem('wallpaper-reserved-numbers')
     // Refrescar datos de la API
     refreshTakenNumbers()
   }
@@ -269,7 +255,6 @@ export function useNumbersAvailability() {
     reservedNumbers.value = []
     selectedNumbers.value = []
     await refreshTakenNumbers()
-    console.log('🔄 Estado reiniciado - datos actualizados desde API')
   }
 
   return {

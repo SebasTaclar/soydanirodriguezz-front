@@ -4,10 +4,8 @@
       <!-- Logo y marca -->
       <RouterLink class="link-navbar home" to="/" @click="closeMobileMenu">
         <div class="brand-container">
-          <div class="logo-circle">🎯</div>
           <div class="brand-info">
-            <div class="brand-title">FondosDigitales Moto</div>
-            <div class="brand-subtitle">Demo contable</div>
+            <div class="brand-title">DigitalWallpapers</div>
           </div>
         </div>
       </RouterLink>
@@ -486,5 +484,14 @@ watch(route, () => {
     height: 40px;
     font-size: 18px;
   }
+}
+
+/* Quitar subrayado del link principal */
+.link-navbar {
+  text-decoration: none !important;
+}
+
+.link-navbar:hover {
+  text-decoration: none !important;
 }
 </style>

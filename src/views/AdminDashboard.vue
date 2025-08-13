@@ -2,7 +2,7 @@
   <div class="admin-dashboard">
     <div class="dashboard-container">
       <!-- Header -->
-            <!-- Header -->
+      <!-- Header -->
       <div class="dashboard-header">
         <h1>Panel de Administración</h1>
         <p>Gestión de compras de wallpapers NS200</p>
@@ -66,46 +66,31 @@
         <div class="filter-section">
           <div class="filter-header">
             <h3>Filtrar por Estado</h3>
-            <button
-              @click="refreshData"
-              :disabled="isLoadingPurchases || isRefreshingWallpapers"
-              class="refresh-btn"
-              title="Refrescar datos"
-            >
+            <button @click="refreshData" :disabled="isLoadingPurchases || isRefreshingWallpapers" class="refresh-btn"
+              title="Refrescar datos">
               <span v-if="isRefreshingWallpapers">🔄</span>
               <span v-else>🔄</span>
               {{ isRefreshingWallpapers ? 'Actualizando...' : 'Refrescar' }}
             </button>
           </div>
           <div class="status-filters">
-            <button
-              @click="selectedStatus = 'ALL'"
-              :class="['filter-btn', { active: selectedStatus === 'ALL' }]"
-            >
+            <button @click="selectedStatus = 'ALL'" :class="['filter-btn', { active: selectedStatus === 'ALL' }]">
               Todos ({{ purchases.length }})
             </button>
-            <button
-              @click="selectedStatus = 'PENDING'"
-              :class="['filter-btn', 'pending', { active: selectedStatus === 'PENDING' }]"
-            >
+            <button @click="selectedStatus = 'PENDING'"
+              :class="['filter-btn', 'pending', { active: selectedStatus === 'PENDING' }]">
               Pendientes ({{ purchasesByStatus.PENDING.length }})
             </button>
-            <button
-              @click="selectedStatus = 'APPROVED'"
-              :class="['filter-btn', 'approved', { active: selectedStatus === 'APPROVED' }]"
-            >
+            <button @click="selectedStatus = 'APPROVED'"
+              :class="['filter-btn', 'approved', { active: selectedStatus === 'APPROVED' }]">
               Aprobadas ({{ purchasesByStatus.APPROVED.length }})
             </button>
-            <button
-              @click="selectedStatus = 'REJECTED'"
-              :class="['filter-btn', 'rejected', { active: selectedStatus === 'REJECTED' }]"
-            >
+            <button @click="selectedStatus = 'REJECTED'"
+              :class="['filter-btn', 'rejected', { active: selectedStatus === 'REJECTED' }]">
               Rechazadas ({{ purchasesByStatus.REJECTED.length }})
             </button>
-            <button
-              @click="selectedStatus = 'CANCELLED'"
-              :class="['filter-btn', 'cancelled', { active: selectedStatus === 'CANCELLED' }]"
-            >
+            <button @click="selectedStatus = 'CANCELLED'"
+              :class="['filter-btn', 'cancelled', { active: selectedStatus === 'CANCELLED' }]">
               Canceladas ({{ purchasesByStatus.CANCELLED.length }})
             </button>
           </div>
@@ -133,17 +118,14 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="purchase in filteredPurchases" :key="purchase.id" :class="`purchase-row ${purchase.status.toLowerCase()}`">
+                <tr v-for="purchase in filteredPurchases" :key="purchase.id"
+                  :class="`purchase-row ${purchase.status.toLowerCase()}`">
                   <td class="purchase-id">#{{ purchase.id }}</td>
                   <td class="buyer-name">{{ purchase.buyerName }}</td>
                   <td class="buyer-email">{{ purchase.buyerEmail }}</td>
                   <td class="wallpapers">
                     <div class="wallpaper-numbers">
-                      <span
-                        v-for="number in purchase.wallpaperNumbers"
-                        :key="number"
-                        class="wallpaper-tag"
-                      >
+                      <span v-for="number in purchase.wallpaperNumbers" :key="number" class="wallpaper-tag">
                         #{{ number }}
                       </span>
                     </div>
@@ -193,7 +175,6 @@ const {
 // Numbers availability composable
 const {
   refreshTakenNumbers,
-  isLoadingWallpapers
 } = useNumbersAvailability()
 
 // Estado local
@@ -219,7 +200,6 @@ const refreshData = async () => {
       refreshTakenNumbers()
     ])
 
-    console.log('✅ Datos actualizados: compras y wallpapers')
   } catch (error) {
     console.error('❌ Error actualizando datos:', error)
   } finally {
@@ -250,9 +230,7 @@ const getStatusText = (status: string) => {
 
 // Cargar datos al montar el componente
 onMounted(async () => {
-  console.log('📊 Cargando dashboard admin...')
   await refreshData()
-  console.log('✅ Dashboard admin cargado')
 })
 </script>
 
@@ -362,8 +340,13 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .dashboard-content {
@@ -492,8 +475,13 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .status-filters {

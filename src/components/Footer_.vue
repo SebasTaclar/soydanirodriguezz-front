@@ -1,101 +1,103 @@
 <template>
-    <footer class="modern-footer">
-        <!-- Sección principal del footer -->
-        <div class="footer-main">
-            <div class="footer-container">
-                <!-- Columna 1: Logo y descripción -->
-                <div class="footer-column brand-column">
-                    <div class="brand-section">
-                        <h2 class="brand-title">FondosDigitales<span class="highlight">Moto</span></h2>
-                        <p class="brand-description">
-                            Tu oportunidad de comprar tus fondos digitales y ganar la moto de tus sueños.
-                        </p>
-                    </div>
+  <footer class="modern-footer">
+    <!-- Sección principal del footer -->
+    <div class="footer-main">
+      <div class="footer-container">
+        <!-- Columna 1: Logo y descripción -->
+        <div class="footer-column brand-column">
+          <div class="brand-section">
+            <h2 class="brand-title">FondosDigitales<span class="highlight">Moto</span></h2>
+            <p class="brand-description">
+              Tu oportunidad de comprar tus fondos digitales y ganar la moto de tus sueños.
+            </p>
+          </div>
 
-                </div>
+        </div>
 
-                <!-- Columna 2: Enlaces rápidos -->
-                <div class="footer-column">
-                    <h3 class="column-title">Enlaces Rápidos</h3>
-                    <ul class="footer-links">
-                        <li><a href="#ganadores">Ganadores</a></li>
-                        <li><a href="#como-funciona">¿Cómo Funciona?</a></li>
-                        <li><a href="#reglamento">Reglamento</a></li>
-                    </ul>
-                </div>
+        <!-- Columna 2: Enlaces rápidos -->
+        <div class="footer-column">
+          <h3 class="column-title">Enlaces Rápidos</h3>
+          <ul class="footer-links">
+            <li><a href="#colecciones">Colecciones</a></li>
+            <li><a href="#como-funciona">¿Cómo Funciona?</a></li>
+            <li><a href="#reglamento">Reglamento</a></li>
+          </ul>
+        </div>
 
-                <!-- Columna 3: Soporte -->
-                <div class="footer-column">
-                    <h3 class="column-title">Soporte</h3>
-                    <ul class="footer-links">
-                        <!-- <li><a href="#ayuda">Centro de Ayuda</a></li> -->
-                        <li><a href="#contacto">Contacto</a></li>
-                        <li><a href="#preguntas">Preguntas Frecuentes</a></li>
-                        <li><a href="#terminos">Términos y Condiciones</a></li>
-                        <!-- <li><a href="#privacidad">Política de Privacidad</a></li> -->
-                    </ul>
-                </div>
+        <!-- Columna 3: Soporte -->
+        <div class="footer-column">
+          <h3 class="column-title">Soporte</h3>
+          <ul class="footer-links">
+            <!-- <li><a href="#ayuda">Centro de Ayuda</a></li> -->
+            <li><a href="#contacto">Contacto</a></li>
+            <li><a href="#preguntas">Preguntas Frecuentes</a></li>
+            <li><a href="#terminos">Términos y Condiciones</a></li>
+            <!-- <li><a href="#privacidad">Política de Privacidad</a></li> -->
+          </ul>
+        </div>
 
-                <!-- Columna 4: Contacto -->
-                <div class="footer-column contact-column">
-                    <h3 class="column-title">Contacto</h3>
-                    <div class="contact-info">
+        <!-- Columna 4: Contacto -->
+        <div class="footer-column contact-column">
+          <h3 class="column-title">Contacto</h3>
+          <div class="contact-info">
 
 
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <span>Teléfono</span>
-                                <p>+57 (1) 234-5678</p>
-                            </div>
-                        </div>
-
-                        <div class="contact-item">
-                            <div class="contact-icon">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                                </svg>
-                            </div>
-                            <div class="contact-text">
-                                <span>Email</span>
-                                <p>info@rifasmoto.com</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="contact-item">
+              <div class="contact-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                </svg>
+              </div>
+              <div class="contact-text">
+                <span>Teléfono</span>
+                <p>+57 (1) 234-5678</p>
+              </div>
             </div>
-        </div>
 
-        <!-- Barra inferior -->
-        <div class="footer-bottom">
-            <div class="footer-container">
-                <!-- Copyright centrado -->
-                <div class="copyright-section">
-                    <p>&copy; 2025 FondosDigitales. Todos los derechos reservados.</p>
-                </div>
-
-                <!-- Enlaces centrados en su propio div -->
-                <div class="links-section">
-                    <div class="bottom-links">
-                        <a href="#privacidad">Privacidad</a>
-                        <a href="#terminos">Términos</a>
-                        <a href="#cookies">Cookies</a>
-                    </div>
-                </div>
+            <div class="contact-item">
+              <div class="contact-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                </svg>
+              </div>
+              <div class="contact-text">
+                <span>Email</span>
+                <p>info@digitalwallpapers.com</p>
+              </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra inferior -->
+    <div class="footer-bottom">
+      <div class="footer-container">
+        <!-- Copyright centrado -->
+        <div class="copyright-section">
+          <p>&copy; 2025 FondosDigitales. Todos los derechos reservados.</p>
         </div>
 
-        <!-- Elementos decorativos -->
-        <div class="footer-decoration">
-            <div class="decoration-circle circle-1"></div>
-            <div class="decoration-circle circle-2"></div>
-            <div class="decoration-circle circle-3"></div>
+        <!-- Enlaces centrados en su propio div -->
+        <div class="links-section">
+          <div class="bottom-links">
+            <a href="#privacidad">Privacidad</a>
+            <a href="#terminos">Términos</a>
+            <a href="#cookies">Cookies</a>
+          </div>
         </div>
-    </footer>
+      </div>
+    </div>
+
+    <!-- Elementos decorativos -->
+    <div class="footer-decoration">
+      <div class="decoration-circle circle-1"></div>
+      <div class="decoration-circle circle-2"></div>
+      <div class="decoration-circle circle-3"></div>
+    </div>
+  </footer>
 </template>
 
 <style scoped>
@@ -419,10 +421,13 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px) scale(1);
     opacity: 0.7;
   }
+
   50% {
     transform: translateY(-20px) scale(1.1);
     opacity: 1;

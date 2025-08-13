@@ -11,8 +11,8 @@
           <div class="input-group">
             <label for="tournamentName">Nombre del Torneo *</label>
             <input type="text" id="tournamentName" v-model="formData.name" required
-              placeholder="Ej: Colección soydanirodriguezz Verano 2025" class="form-input" :class="{ 'error': errors.name }"
-              @input="clearError('name')" />
+              placeholder="Ej: Colección soydanirodriguezz Verano 2025" class="form-input"
+              :class="{ 'error': errors.name }" @input="clearError('name')" />
             <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
           </div>
 
@@ -316,9 +316,7 @@ const handleSubmit = async () => {
       if (selectedFile.value && result.tournament?.id) {
         try {
           const bannerResult = await uploadTournamentBanner(result.tournament.id, selectedFile.value)
-          if (bannerResult.success) {
-            console.log('Banner subido exitosamente')
-          } else {
+          if (!bannerResult.success) {
             console.warn('Error al subir banner:', bannerResult.message)
           }
         } catch (bannerError) {
@@ -411,7 +409,6 @@ const handleDeleteBanner = async () => {
 
     if (result.success) {
       currentBanner.value = null
-      console.log('Banner eliminado exitosamente')
     } else {
       console.error('Error al eliminar banner:', result.message)
     }

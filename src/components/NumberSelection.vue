@@ -147,7 +147,7 @@
           <!-- Total a pagar -->
           <div class="payment-summary">
             <h3>Total a pagar</h3>
-            <div class="total-amount">${{ (selectedNumbers.length * 15000).toLocaleString() }} COP</div>
+            <div class="total-amount">${{ (selectedNumbers.length * 5000).toLocaleString() }} COP</div>
           </div>
 
           <!-- Formulario de datos del comprador -->
@@ -162,9 +162,13 @@
 
           <!-- Botones de pago -->
           <div class="payment-buttons">
-            <button class="payment-btn mercadopago-payment" :disabled="!isFormValid || selectedNumbers.length === 0"
-              @click="showTermsModal">
-              💳 Pagar con MercadoPago
+            <button class="payment-btn mercadopago-payment"
+              :disabled="!isFormValid || selectedNumbers.length === 0 || isProcessingPayment" @click="showTermsModal">
+              <span v-if="!isProcessingPayment">💳 Pagar con MercadoPago</span>
+              <span v-else class="processing-text">
+                <div class="processing-spinner"></div>
+                Validando disponibilidad...
+              </span>
             </button>
           </div>
         </div>
@@ -173,6 +177,18 @@
 
     <!-- Modal de Términos y Condiciones -->
     <TermsAndConditionsModal v-if="showTermsAndConditions" @close="handleTermsClose" @accept="handleTermsAccept" />
+
+    <!-- Notificación de números no disponibles -->
+    <div v-if="unavailableNotification.show" class="unavailable-notification">
+      <div class="notification-content">
+        <div class="notification-icon">⚠️</div>
+        <div class="notification-text">
+          <h4>Wallpapers no disponibles</h4>
+          <p>{{ unavailableNotification.message }}</p>
+        </div>
+        <button @click="unavailableNotification.show = false" class="notification-close">✕</button>
+      </div>
+    </div>
 
     <!-- Overlay de carga -->
     <div v-if="isProcessingPayment" class="payment-loading-overlay">
@@ -191,20 +207,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineEmits, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePayments } from '@/composables/usePayments'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import TermsAndConditionsModal from '@/components/TermsAndConditionsModal.vue'
-
-// Definir emits
-interface Emits {
-  (e: 'showRules'): void
-}
-
-const emit = defineEmits<Emits>()
-
-// Payment composable
-const { createPayment } = usePayments()
 
 // Form refs
 const userForm = ref({
@@ -217,12 +223,8 @@ const userForm = ref({
 // Usar el composable de disponibilidad de números
 const {
   takenNumbers,
-  isNumberAvailableSync,
   isNumberReserved,
   getAvailableNumbersArraySync,
-  reserveNumbers,
-  confirmPayment,
-  getReservationTimeLeft,
   clearAll,
   refreshTakenNumbers
 } = useNumbersAvailability()
@@ -254,23 +256,101 @@ const isProcessingPayment = ref<boolean>(false)
 // Estado del modal de términos y condiciones
 const showTermsAndConditions = ref<boolean>(false)
 
+// Estado para mostrar notificaciones de números no disponibles
+const unavailableNotification = ref<{
+  show: boolean
+  numbers: number[]
+  message: string
+}>({
+  show: false,
+  numbers: [],
+  message: ''
+})
+
+// Función para validar números seleccionados en tiempo real
+const validateSelectedNumbers = async () => {
+  if (selectedNumbers.value.length === 0) return
+
+  try {
+    // Refrescar datos desde la API
+    await refreshTakenNumbers()
+
+    // Verificar números seleccionados
+    const nowUnavailable = selectedNumbers.value.filter(number =>
+      takenNumbers.value.includes(number) || isNumberReserved(number)
+    )
+
+    if (nowUnavailable.length > 0) {
+      // Remover números no disponibles automáticamente
+      selectedNumbers.value = selectedNumbers.value.filter(
+        number => !nowUnavailable.includes(number)
+      )
+
+      // Mostrar notificación
+      unavailableNotification.value = {
+        show: true,
+        numbers: nowUnavailable,
+        message: `Wallpapers ${nowUnavailable.map(n => `#${n.toString().padStart(4, '0')}`).join(', ')} ya no están disponibles y fueron removidos de tu selección.`
+      }
+
+      // Ocultar notificación después de 5 segundos
+      setTimeout(() => {
+        unavailableNotification.value.show = false
+      }, 5000)
+    }
+  } catch (error) {
+    console.error('Error validating selected numbers:', error)
+  }
+}
+
 // Refrescar datos al cargar el componente
 onMounted(async () => {
-  console.log('🔄 Cargando datos de wallpapers desde API...')
   await refreshTakenNumbers()
-  console.log('✅ Datos de wallpapers actualizados')
+
+  // Validar números seleccionados cada 30 segundos
+  setInterval(validateSelectedNumbers, 30000)
 })
 
 // Función para alternar selección de número
-const toggleNumber = (number: number) => {
-  if (takenNumbers.value.includes(number) || isNumberReserved(number)) return
+const toggleNumber = async (number: number) => {
+  // Verificar que el número no esté tomado o reservado
+  if (takenNumbers.value.includes(number) || isNumberReserved(number)) {
+    return
+  }
 
   const index = selectedNumbers.value.indexOf(number)
   if (index > -1) {
+    // Remover número
     selectedNumbers.value.splice(index, 1)
   } else {
-    // Permitir múltiples selecciones
-    selectedNumbers.value.push(number)
+    // Antes de agregar, verificar disponibilidad en tiempo real
+    try {
+      // Refrescar datos para este número específico
+      await refreshTakenNumbers()
+
+      // Verificar nuevamente si está disponible
+      if (takenNumbers.value.includes(number) || isNumberReserved(number)) {
+        // Mostrar notificación rápida
+        unavailableNotification.value = {
+          show: true,
+          numbers: [number],
+          message: `El wallpaper #${number.toString().padStart(4, '0')} ya no está disponible.`
+        }
+
+        setTimeout(() => {
+          unavailableNotification.value.show = false
+        }, 3000)
+
+        return
+      }
+
+      // Si está disponible, agregarlo
+      selectedNumbers.value.push(number)
+    } catch (error) {
+      console.error('Error verificando disponibilidad:', error)
+      // En caso de error, permitir la selección pero mostrar advertencia
+      selectedNumbers.value.push(number)
+    }
   }
 }
 
@@ -381,13 +461,6 @@ const clearAllNumbers = () => {
   reservationExpiry.value = 0
 }
 
-// Función para formatear tiempo restante
-const formatTimeLeft = (timeLeft: number) => {
-  const minutes = Math.floor(timeLeft / 60000)
-  const seconds = Math.floor((timeLeft % 60000) / 1000)
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
-
 // Computed properties
 const totalAmount = computed(() => {
   return selectedNumbers.value.length * 5000
@@ -405,6 +478,57 @@ const payWithMercadoPago = async () => {
     try {
       // Activar loading
       isProcessingPayment.value = true
+
+      // VALIDACIÓN CRÍTICA: Verificar que todos los números seleccionados aún estén disponibles
+      console.log('🔍 Validando disponibilidad de números antes del pago...')
+
+      // Refrescar los datos desde la API para obtener el estado más actualizado
+      await refreshTakenNumbers()
+
+      // Verificar cada número seleccionado
+      const unavailableNumbers: number[] = []
+
+      for (const number of selectedNumbers.value) {
+        // Verificar si el número está tomado (pagado por otro usuario)
+        if (takenNumbers.value.includes(number)) {
+          unavailableNumbers.push(number)
+        }
+        // Verificar si el número está reservado por otro usuario
+        if (isNumberReserved(number)) {
+          unavailableNumbers.push(number)
+        }
+      }
+
+      // Si hay números no disponibles, mostrar error y removerlos de la selección
+      if (unavailableNumbers.length > 0) {
+        // Remover números no disponibles de la selección
+        selectedNumbers.value = selectedNumbers.value.filter(
+          number => !unavailableNumbers.includes(number)
+        )
+
+        // Mostrar mensaje de error específico
+        const numbersList = unavailableNumbers
+          .map(n => `#${n.toString().padStart(4, '0')}`)
+          .join(', ')
+
+        alert(
+          `⚠️ Los siguientes wallpapers ya no están disponibles: ${numbersList}\n\n` +
+          `Han sido removidos de tu selección. Por favor, selecciona otros wallpapers.`
+        )
+
+        // Desactivar loading y salir
+        isProcessingPayment.value = false
+        return
+      }
+
+      // Si no quedan números seleccionados después de la validación
+      if (selectedNumbers.value.length === 0) {
+        alert('Todos los wallpapers seleccionados ya no están disponibles. Por favor, selecciona otros.')
+        isProcessingPayment.value = false
+        return
+      }
+
+      console.log('✅ Todos los números están disponibles, procesando pago...')
 
       const { createPayment } = usePayments()
 
@@ -434,7 +558,18 @@ const payWithMercadoPago = async () => {
       }
     } catch (error) {
       console.error('Error creating payment:', error)
-      alert('Error al procesar el pago. Intenta nuevamente.')
+
+      // Verificar si el error es debido a números no disponibles
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      if (errorMessage.toLowerCase().includes('not available') ||
+        errorMessage.toLowerCase().includes('no disponible') ||
+        errorMessage.toLowerCase().includes('already taken')) {
+        alert('❌ Algunos wallpapers seleccionados ya no están disponibles. La página se actualizará con los números correctos.')
+        // Refrescar la página para mostrar el estado actualizado
+        window.location.reload()
+      } else {
+        alert('❌ Error al procesar el pago. Intenta nuevamente.')
+      }
     } finally {
       // Desactivar loading después de 2 segundos para dar tiempo al redirect
       setTimeout(() => {
@@ -1682,6 +1817,31 @@ const handleTermsAccept = () => {
   box-shadow: 0 8px 25px rgba(0, 180, 216, 0.4);
 }
 
+.processing-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processing-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .secondary-payment {
   background: rgba(51, 65, 85, 0.8);
   color: #e2e8f0;
@@ -1717,6 +1877,99 @@ const handleTermsAccept = () => {
   justify-content: center;
   z-index: 9999;
   animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Notificación de números no disponibles */
+.unavailable-notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 10000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification-content {
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 400px;
+  position: relative;
+}
+
+.notification-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.notification-text h4 {
+  color: #92400e;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.notification-text p {
+  color: #b45309;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.notification-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #92400e;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.notification-close:hover {
+  background: rgba(146, 64, 14, 0.1);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .unavailable-notification {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    right: 1rem;
+  }
+
+  .notification-content {
+    padding: 1rem;
+    max-width: none;
+  }
+
+  .notification-text h4 {
+    font-size: 1rem;
+  }
+
+  .notification-text p {
+    font-size: 0.85rem;
+  }
 }
 
 .loading-content {
