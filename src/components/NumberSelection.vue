@@ -20,7 +20,7 @@
           </div>
 
           <div class="step-card">
-                                    <div class="step-icon">1️⃣</div>
+            <div class="step-icon">1️⃣</div>
             <div class="step-content">
               <h4>2. Realiza el pago</h4>
               <p>Paga de forma segura con MercadoPago.</p>
@@ -69,15 +69,8 @@
           <!-- Buscador de número específico -->
           <div class="number-search">
             <div class="search-input-container">
-              <input
-                v-model="searchNumber"
-                type="number"
-                min="1"
-                max="5000"
-                placeholder="Buscar wallpaper (ej: 1234)"
-                class="search-input"
-                @keyup.enter="goToNumber"
-              />
+              <input v-model="searchNumber" type="number" min="1" max="5000" placeholder="Buscar wallpaper (ej: 1234)"
+                class="search-input" @keyup.enter="goToNumber" />
               <button class="search-btn" @click="goToNumber" :disabled="!searchNumber">
                 🔍 Buscar
               </button>
@@ -88,10 +81,8 @@
           <div class="numbers-list-container">
             <div class="numbers-grid">
               <div v-for="number in displayNumbers" :key="number" class="number-item">
-                <button
-                  @click="toggleNumber(number)"
-                  :disabled="takenNumbers.includes(number) || isNumberReserved(number)"
-                  :class="[
+                <button @click="toggleNumber(number)"
+                  :disabled="takenNumbers.includes(number) || isNumberReserved(number)" :class="[
                     'number-btn',
                     {
                       'btn-selected': selectedNumbers.includes(number),
@@ -99,13 +90,12 @@
                       'btn-reserved': isNumberReserved(number),
                       'btn-searched': number === searchedNumber
                     }
-                  ]"
-                  :data-number="number">
+                  ]" :data-number="number">
                   {{ number.toString().padStart(4, '0') }}
                 </button>
               </div>
             </div>
-          </div>          <!-- Paginación -->
+          </div> <!-- Paginación -->
           <div class="pagination-controls">
             <button class="pagination-btn" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
               ‹ Anterior
@@ -173,13 +163,16 @@
           <!-- Botones de pago -->
           <div class="payment-buttons">
             <button class="payment-btn mercadopago-payment" :disabled="!isFormValid || selectedNumbers.length === 0"
-              @click="payWithMercadoPago">
+              @click="showTermsModal">
               💳 Pagar con MercadoPago
             </button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Modal de Términos y Condiciones -->
+    <TermsAndConditionsModal v-if="showTermsAndConditions" @close="handleTermsClose" @accept="handleTermsAccept" />
 
     <!-- Overlay de carga -->
     <div v-if="isProcessingPayment" class="payment-loading-overlay">
@@ -201,6 +194,7 @@
 import { ref, computed, defineEmits, onMounted } from 'vue'
 import { usePayments } from '@/composables/usePayments'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
+import TermsAndConditionsModal from '@/components/TermsAndConditionsModal.vue'
 
 // Definir emits
 interface Emits {
@@ -256,6 +250,9 @@ const reservationExpiry = ref<number>(0)
 
 // Estado de carga para el pago
 const isProcessingPayment = ref<boolean>(false)
+
+// Estado del modal de términos y condiciones
+const showTermsAndConditions = ref<boolean>(false)
 
 // Refrescar datos al cargar el componente
 onMounted(async () => {
@@ -449,6 +446,30 @@ const payWithMercadoPago = async () => {
   } else {
     alert('Completa todos los campos requeridos')
   }
+}
+
+// Métodos para manejar el modal de términos y condiciones
+const showTermsModal = () => {
+  if (selectedNumbers.value.length === 0) {
+    alert('Selecciona al menos un wallpaper para pagar')
+    return
+  }
+
+  if (!isFormValid.value) {
+    alert('Completa todos los campos requeridos')
+    return
+  }
+
+  showTermsAndConditions.value = true
+}
+
+const handleTermsClose = () => {
+  showTermsAndConditions.value = false
+}
+
+const handleTermsAccept = () => {
+  showTermsAndConditions.value = false
+  payWithMercadoPago()
 }
 </script>
 
@@ -772,10 +793,12 @@ const payWithMercadoPago = async () => {
     transform: scale(1);
     box-shadow: 0 0 0 rgba(255, 193, 7, 0.7);
   }
+
   50% {
     transform: scale(1.08);
     box-shadow: 0 0 18px rgba(255, 193, 7, 0.9);
   }
+
   100% {
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(255, 193, 7, 0.7);
@@ -783,9 +806,12 @@ const payWithMercadoPago = async () => {
 }
 
 @keyframes reservedPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.6;
   }
+
   50% {
     opacity: 0.9;
   }
@@ -795,6 +821,7 @@ const payWithMercadoPago = async () => {
   .numbers-horizontal-row {
     gap: 0.8rem;
   }
+
   .number-btn {
     padding: 0.8rem 1.2rem;
     font-size: 1.1rem;
@@ -1267,24 +1294,28 @@ const payWithMercadoPago = async () => {
     transform: scale(1);
     box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
   }
+
   20% {
     transform: scale(1.2);
     box-shadow: 0 8px 30px rgba(255, 193, 7, 0.8);
     border-color: #ffc107;
     background: linear-gradient(135deg, #ffc107, #ff8f00);
   }
+
   50% {
     transform: scale(1.25);
     box-shadow: 0 12px 40px rgba(255, 193, 7, 1);
     border-color: #ffc107;
     background: linear-gradient(135deg, #ffc107, #ff8f00);
   }
+
   80% {
     transform: scale(1.1);
     box-shadow: 0 8px 30px rgba(255, 193, 7, 0.6);
     border-color: #ffc107;
     background: linear-gradient(135deg, #ffc107, #ff8f00);
   }
+
   100% {
     transform: scale(1);
     box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
@@ -1515,7 +1546,7 @@ const payWithMercadoPago = async () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 2px 8px rgba(16,185,129,0.15);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
 }
 
 .remove-btn {
@@ -1748,6 +1779,7 @@ const payWithMercadoPago = async () => {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1757,16 +1789,21 @@ const payWithMercadoPago = async () => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
 
 @keyframes loadingDots {
-  0%, 80%, 100% {
+
+  0%,
+  80%,
+  100% {
     transform: scale(0);
     opacity: 0.5;
   }
+
   40% {
     transform: scale(1);
     opacity: 1;
