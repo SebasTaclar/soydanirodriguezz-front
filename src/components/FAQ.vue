@@ -6,18 +6,13 @@
       </div>
 
       <div class="faq-list">
-        <div
-          v-for="(faq, index) in faqs"
-          :key="index"
-          class="faq-item"
-          :class="{ 'active': activeIndex === index }"
-          @click="toggleFAQ(index)"
-        >
+        <div v-for="(faq, index) in faqs" :key="index" class="faq-item" :class="{ 'active': activeIndex === index }"
+          @click="toggleFAQ(index)">
           <div class="faq-question">
             <span>{{ faq.question }}</span>
             <div class="faq-icon">
               <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+                <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
               </svg>
             </div>
           </div>
@@ -63,7 +58,6 @@ const { takenNumbers, refreshTakenNumbers } = useNumbersAvailability()
 
 // Configuración
 const totalNumbers = 5000
-const sorteoThreshold = 50 // 50% para iniciar
 
 // Computed properties
 const soldNumbers = computed(() => takenNumbers.value.length)
@@ -91,7 +85,7 @@ const faqs = ref([
     question: "¿Puedo comprar más de un número?",
     answer: "Sí, puedes comprar tantos números como desees, siempre y cuando estén disponibles."
   },
-   {
+  {
     question: "¿No me permite hacer el pago desde mi Iphone?",
     answer: "Si tienes problemas para realizar el pago desde tu iPhone, asegúrate de que tu navegador permita ventanas emergentes y que no haya extensiones bloqueando el proceso. (Si ya le diste bloquear a ventanas emergentes, intenta cerrar todas las pestañas en las que este abierta la pagina y vuelve a intentar el proceso).."
   },
@@ -299,8 +293,13 @@ const toggleFAQ = (index: number) => {
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes fadeIn {
@@ -308,6 +307,7 @@ const toggleFAQ = (index: number) => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

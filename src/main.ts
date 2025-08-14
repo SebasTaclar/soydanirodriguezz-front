@@ -1,5 +1,4 @@
 import './assets/main.css'
-import './assets/styles/global.css'
 import '@fortawesome/fontawesome-free/css/all.css'
 
 import { createApp } from 'vue'
