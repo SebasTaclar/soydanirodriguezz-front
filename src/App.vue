@@ -5,7 +5,7 @@
       <RouterLink class="link-navbar home" to="/" @click="closeMobileMenu">
         <div class="brand-container">
           <div class="brand-info">
-            <div class="brand-title">DigitalWallpapers</div>
+            <div class="brand-title">DigitalWallpapers<span class="highlight">Moto</span></div>
           </div>
         </div>
       </RouterLink>
@@ -182,6 +182,11 @@ watch(route, () => {
   color: #ffffff;
   line-height: 1.2;
   margin: 0;
+}
+
+.brand-title .highlight {
+  color: #60a5fa;
+  text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
 }
 
 .brand-subtitle {

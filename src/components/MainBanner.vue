@@ -13,6 +13,7 @@
           class="horizontal-gallery"
           ref="galleryRef"
           @touchstart="handleTouchStart"
+          @touchmove="handleTouchMove"
           @touchend="handleTouchEnd"
         >
           <div
@@ -22,11 +23,11 @@
             :class="{ 'active': currentImageIndex === index }"
             @click="goToImage(index)">
             <div class="image-wrapper">
-              <img :src="image.src" :alt="image.alt" />
+              <img :src="image.src"  />
               <div class="image-overlay">
                 <div class="image-info">
                   <h3>{{ image.title }}</h3>
-                  <p>{{ image.description }}</p>
+
                 </div>
               </div>
             </div>
@@ -129,46 +130,32 @@ const {
 // Datos de las imágenes de la moto
 const motoImages = ref([
   {
-    src: '/images/ns200_slide1.png',
-    alt: 'KTM 890 Duke GP - Detalles del motor',
-    title: 'Motor de alta performance',
-    description: 'Tecnología avanzada con detalles en naranja racing'
+    src: '/images/ns200_slide1.jpeg',
+    title: 'Moto NS200s',
   },
   {
-    src: '/images/ns200_slide2.png',
-    alt: 'KTM 890 Duke GP - Vista frontal',
+    src: '/images/ns200_slide2.jpeg',
     title: 'Diseño agresivo frontal',
-    description: 'Faros LED distintivos y carenado deportivo'
   },
   {
-    src: '/images/ns200_slide3.jpeg',
-    alt: 'KTM 890 Duke GP - Vista lateral completa',
+    src: '/images/ns200_slide3.jpg',
     title: 'Perfil deportivo completo',
-    description: 'Líneas aerodinámicas perfectas en negro y naranja'
   },
   {
-    src: '/images/ns200_slide4.jpg',
-    alt: 'KTM 890 Duke GP - Rueda trasera',
-    title: 'Rueda deportiva',
-    description: 'Llanta naranja con frenos de alta performance'
+    src: '/images/ns200_slide4.jpeg',
+    title: 'Diseño deportivo',
   },
   {
-    src: '/images/ns200_slide5.jpeg',
-    alt: 'KTM 890 Duke GP - Rueda trasera',
-    title: 'Rueda deportiva',
-    description: 'Llanta naranja con frenos de alta performance'
+    src: '/images/ns200_slide5.jpg',
+    title: 'Alta tecnología',
   },
   {
-    src: '/images/ns200_slide6.jpeg',
-    alt: 'KTM 890 Duke GP - Rueda trasera',
-    title: 'Rueda deportiva',
-    description: 'Llanta naranja con frenos de alta performance'
+    src: '/images/ns200_slide6.jpg',
+    title: 'Tecnología avanzada',
   },
   {
     src: '/images/ns200_slide7.jpeg',
-    alt: 'KTM 890 Duke GP - Rueda trasera',
-    title: 'Rueda deportiva',
-    description: 'Llanta naranja con frenos de alta performance'
+    title: 'Sistema amigable',
   }
 ])
 
@@ -177,52 +164,165 @@ const galleryRef = ref<HTMLElement | null>(null)
 
 // Variables para gestos táctiles
 const touchStartX = ref(0)
-const touchEndX = ref(0)
+const touchStartY = ref(0)
+const isDragging = ref(false)
+const startScrollLeft = ref(0)
+const lastTouchX = ref(0)
+const lastTouchTime = ref(0)
+const velocityX = ref(0)
 
-// Funciones para el carousel de imágenes con scroll horizontal
+// Funciones para el carousel de imágenes con scroll horizontal optimizado
 const nextImage = () => {
   if (galleryRef.value) {
     const isMobile = window.innerWidth <= 768
-    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 400
-    galleryRef.value.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 420
+
+    // Scroll más rápido y directo para botones
+    galleryRef.value.scrollBy({
+      left: scrollAmount,
+      behavior: 'auto' // Cambio a auto para scroll inmediato
+    })
+
+    // Actualizar índice si es mobile
+    if (isMobile) {
+      const newIndex = Math.min(currentImageIndex.value + 1, motoImages.value.length - 1)
+      currentImageIndex.value = newIndex
+    }
   }
 }
 
 const prevImage = () => {
   if (galleryRef.value) {
     const isMobile = window.innerWidth <= 768
-    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 400
-    galleryRef.value.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
-  }
-}
+    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 420
 
-// Funciones para gestos táctiles
-const handleTouchStart = (e: TouchEvent) => {
-  touchStartX.value = e.touches[0].clientX
-}
+    // Scroll más rápido y directo para botones
+    galleryRef.value.scrollBy({
+      left: -scrollAmount,
+      behavior: 'auto' // Cambio a auto para scroll inmediato
+    })
 
-const handleTouchEnd = (e: TouchEvent) => {
-  touchEndX.value = e.changedTouches[0].clientX
-  handleSwipe()
-}
-
-const handleSwipe = () => {
-  const swipeThreshold = 50
-  const difference = touchStartX.value - touchEndX.value
-
-  if (Math.abs(difference) > swipeThreshold) {
-    if (difference > 0) {
-      // Swipe izquierda - siguiente imagen
-      nextImage()
-    } else {
-      // Swipe derecha - imagen anterior
-      prevImage()
+    // Actualizar índice si es mobile
+    if (isMobile) {
+      const newIndex = Math.max(currentImageIndex.value - 1, 0)
+      currentImageIndex.value = newIndex
     }
   }
 }
 
+// Utilidades de métrica y animación para snap
+const getGalleryMetrics = () => {
+  const el = galleryRef.value
+  if (!el) return { item: 0, gap: 0, pad: 0 }
+  const firstItem = el.querySelector('.gallery-image-item') as HTMLElement | null
+  const styles = window.getComputedStyle(el)
+  const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0
+  const pad = parseFloat(styles.paddingLeft || '0') || 0
+  const item = firstItem ? firstItem.clientWidth : 0
+  return { item, gap, pad }
+}
+
+const animateScrollTo = (targetLeft: number, duration = 450) => {
+  const el = galleryRef.value
+  if (!el) return
+  const start = el.scrollLeft
+  const dist = targetLeft - start
+  const startTime = performance.now()
+  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
+  const step = (now: number) => {
+    const p = Math.min(1, (now - startTime) / duration)
+    el.scrollLeft = start + dist * easeOutCubic(p)
+    if (p < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+
+// Funciones para gestos táctiles con arrastre y snap
+const handleTouchStart = (e: TouchEvent) => {
+  if (!galleryRef.value) return
+  const touch = e.touches[0]
+  touchStartX.value = touch.clientX
+  touchStartY.value = touch.clientY
+  lastTouchX.value = touch.clientX
+  lastTouchTime.value = performance.now()
+  isDragging.value = true
+  startScrollLeft.value = galleryRef.value.scrollLeft
+  // Desactivar snap y smooth durante el drag para seguir el dedo
+  galleryRef.value.style.scrollSnapType = 'none'
+  galleryRef.value.style.scrollBehavior = 'auto'
+}
+
+const handleTouchMove = (e: TouchEvent) => {
+  if (!isDragging.value || !galleryRef.value) return
+  const touch = e.touches[0]
+  const dx = touch.clientX - touchStartX.value
+  const dy = Math.abs(touch.clientY - touchStartY.value)
+  // Si el gesto es predominantemente horizontal, prevenimos el scroll vertical
+  if (Math.abs(dx) > dy) {
+    e.preventDefault()
+    galleryRef.value.scrollLeft = startScrollLeft.value - dx
+  }
+  // Calcular velocidad aproximada
+  const now = performance.now()
+  const dt = now - lastTouchTime.value
+  if (dt > 0) velocityX.value = (touch.clientX - lastTouchX.value) / dt
+  lastTouchX.value = touch.clientX
+  lastTouchTime.value = now
+}
+
+const handleTouchEnd = () => {
+  if (!galleryRef.value) return
+  isDragging.value = false
+  // Rehabilitar snap visual tras calcular destino
+  const el = galleryRef.value
+  const { item, gap, pad } = getGalleryMetrics()
+  const unit = item + gap
+  // Ajustar posición relativa descontando padding
+  const raw = Math.max(0, el.scrollLeft - pad)
+  let targetIndex = unit > 0 ? Math.round(raw / unit) : currentImageIndex.value
+  targetIndex = Math.max(0, Math.min(targetIndex, (motoImages.value?.length || 1) - 1))
+  const targetLeft = pad + targetIndex * unit
+  // Animar al destino y luego restaurar propiedades
+  animateScrollTo(targetLeft, 450)
+  // Actualizamos índice
+  currentImageIndex.value = targetIndex
+  // Restaurar snap (dejar que CSS tome control después de la animación)
+  setTimeout(() => {
+    if (galleryRef.value) {
+      galleryRef.value.style.scrollSnapType = ''
+      galleryRef.value.style.scrollBehavior = ''
+    }
+  }, 460)
+}
+
 const goToImage = (index: number) => {
   currentImageIndex.value = index
+
+  // Scroll directo pero suave a la imagen específica
+  if (galleryRef.value) {
+    const isMobile = window.innerWidth <= 768
+    if (isMobile) {
+      // En mobile, calcular posición exacta
+      const imageWidth = galleryRef.value.clientWidth * 0.85
+      const gap = 24 // Gap entre imágenes
+      const scrollPosition = index * (imageWidth + gap)
+
+      galleryRef.value.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth' // Scroll suave para clicks directos
+      })
+    } else {
+      // En desktop
+      const imageWidth = 400
+      const gap = 32 // Gap entre imágenes en desktop
+      const scrollPosition = index * (imageWidth + gap)
+
+      galleryRef.value.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth' // Scroll suave para clicks directos
+      })
+    }
+  }
 }
 
 // Datos de los productos
@@ -385,10 +485,12 @@ onUnmounted(() => {
   backdrop-filter: blur(10px);
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-behavior: smooth;
+  scroll-behavior: smooth; /* Volvemos a smooth para que funcionen los swipes suaves */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
   border-radius: 0;
+  touch-action: pan-x; /* Mejorar gesto horizontal */
+  overscroll-behavior-x: contain; /* Evitar rebote de la página */
 }
 
 /* Ocultar scrollbar en WebKit */
@@ -400,7 +502,7 @@ onUnmounted(() => {
   flex: 0 0 400px; /* Ancho fijo para cada imagen */
   position: relative;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease-out; /* Transición más rápida */
   border-radius: 16px;
   overflow: hidden;
   border: 2px solid rgba(96, 165, 250, 0.3);
