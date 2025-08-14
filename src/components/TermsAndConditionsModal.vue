@@ -12,10 +12,9 @@
         <div class="terms-content">
           <div class="warning-icon">⚠️</div>
           <p class="terms-text">
-            Al continuar, confirmas que adquieres uno o más wallpapers digitales de alta calidad.
-            Autorizas el uso de tus datos personales para fines relacionados con la compra y aceptas que el pago es
-            no
-            reembolsable.
+            Al continuar, confirmas que compras una o más participaciones en una dinámica en la que puedes ganar o no el
+            premio. Autorizas el uso de tus datos personales para fines relacionados con la actividad y aceptas que el
+            pago es no reembolsable.
           </p>
 
           <div class="checkbox-container">
