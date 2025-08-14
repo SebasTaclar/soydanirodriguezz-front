@@ -111,6 +111,7 @@
                   <th>ID</th>
                   <th>Cliente</th>
                   <th>Email</th>
+                  <th>Contacto</th>
                   <th>Wallpapers</th>
                   <th>Monto</th>
                   <th>Estado</th>
@@ -123,6 +124,7 @@
                   <td class="purchase-id">#{{ purchase.id }}</td>
                   <td class="buyer-name">{{ purchase.buyerName }}</td>
                   <td class="buyer-email">{{ purchase.buyerEmail }}</td>
+                  <td class="buyer-contact">{{ purchase.buyerContactNumber || 'No proporcionado' }}</td>
                   <td class="wallpapers">
                     <div class="wallpaper-numbers">
                       <span v-for="number in purchase.wallpaperNumbers" :key="number" class="wallpaper-tag">
@@ -595,6 +597,12 @@ onMounted(async () => {
 .buyer-email {
   font-size: 0.9rem;
   color: #94a3b8;
+}
+
+.buyer-contact {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  font-weight: 500;
 }
 
 .wallpapers {

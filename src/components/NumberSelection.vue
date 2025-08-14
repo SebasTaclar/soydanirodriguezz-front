@@ -155,6 +155,8 @@
             <h4>Datos del comprador</h4>
             <input v-model="userForm.name" type="text" placeholder="Nombre completo *" class="form-input" required />
             <input v-model="userForm.email" type="email" placeholder="Email *" class="form-input" required />
+            <input v-model="userForm.contactNumber" type="tel" placeholder="Número de contacto *" class="form-input"
+              required />
             <input v-model="userForm.identificationNumber" type="text" placeholder="Número de identificación *"
               class="form-input" required />
             <p class="required-note">* Campos obligatorios</p>
@@ -216,6 +218,7 @@ import TermsAndConditionsModal from '@/components/TermsAndConditionsModal.vue'
 const userForm = ref({
   name: '',
   email: '',
+  contactNumber: '',
   identificationType: 'CC',
   identificationNumber: ''
 })
@@ -469,6 +472,7 @@ const totalAmount = computed(() => {
 const isFormValid = computed(() => {
   return userForm.value.name.trim() !== '' &&
     userForm.value.email.trim() !== '' &&
+    userForm.value.contactNumber.trim() !== '' &&
     userForm.value.identificationNumber.trim() !== ''
 })
 
@@ -537,6 +541,7 @@ const payWithMercadoPago = async () => {
         wallpaperNumbers: selectedNumbers.value,
         buyerEmail: userForm.value.email,
         buyerName: userForm.value.name,
+        buyerContactNumber: userForm.value.contactNumber,
         buyerIdentificationNumber: userForm.value.identificationNumber,
         amount: totalAmount.value
       }
@@ -552,6 +557,7 @@ const payWithMercadoPago = async () => {
         userForm.value = {
           name: '',
           email: '',
+          contactNumber: '',
           identificationType: 'CC',
           identificationNumber: ''
         }

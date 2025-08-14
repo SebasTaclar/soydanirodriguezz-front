@@ -7,6 +7,7 @@ export interface CreatePaymentRequest {
   buyerEmail: string
   buyerName: string
   buyerIdentificationNumber: string
+  buyerContactNumber: string
   amount: number
 }
 
@@ -15,6 +16,7 @@ export interface Purchase {
   wallpaperNumbers: number[]
   buyerEmail: string
   buyerName: string
+  buyerContactNumber: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
   amount: number
   currency: string
