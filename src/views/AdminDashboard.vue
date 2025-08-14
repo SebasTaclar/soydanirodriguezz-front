@@ -62,6 +62,94 @@
           </div>
         </div>
 
+        <!-- Winner Selection Section -->
+        <div class="winner-selection-section">
+          <div class="winner-header">
+            <h3>🎯 Selección del Número Ganador</h3>
+            <p>Genera el número ganador de entre los wallpapers pagados/aprobados</p>
+          </div>
+
+          <div class="winner-stats">
+            <div class="eligible-numbers">
+              <span class="stat-label">Wallpapers Vendidos - Números Elegibles:</span>
+              <span class="stat-value">{{ eligibleNumbers.length }}</span>
+            </div>
+
+          </div>
+
+          <div class="winner-game-container">
+            <div v-if="!isGameStarted && !winnerNumber" class="game-start">
+              <button
+                @click="startWinnerGame"
+                :disabled="eligibleNumbers.length === 0 || isGameRunning"
+                class="start-game-btn"
+              >
+                🎲 Iniciar Dinámica
+              </button>
+              <p class="game-hint">
+                Se realizarán 5 intentos antes de revelar el ganador
+                <br>
+                <small v-if="eligibleNumbers.length < 5" class="warning-text">
+                  ⚠️ Solo hay {{ eligibleNumbers.length }} números únicos - algunos números pueden repetirse
+                </small>
+                <small v-else class="success-text">
+                  ✅ {{ eligibleNumbers.length }} números únicos disponibles
+                </small>
+              </p>
+            </div>
+
+            <div v-if="isGameStarted" class="game-active">
+              <div class="attempts-container">
+                <h4>Intentos: {{ currentAttempt }}/5</h4>
+                <div class="attempts-display">
+                  <div
+                    v-for="(attempt, index) in attempts"
+                    :key="index"
+                    class="attempt-number"
+                    :class="{
+                      'current': index === currentAttempt - 1 && !isGameComplete,
+                      'revealed': index < currentAttempt - 1 || isGameComplete,
+                      'spinning': isShowingSpinEffect && index === currentAttempt - 1
+                    }"
+                  >
+                    {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt || '?') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="game-controls">
+                <button
+                  v-if="currentAttempt <= 5 && !isGameComplete"
+                  @click="nextAttempt"
+                  :disabled="isProcessingAttempt"
+                  class="next-attempt-btn"
+                >
+                  {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯 Intento ${currentAttempt}`) }}
+                </button>
+              </div>
+
+              <div v-if="isGameComplete && winnerNumber" class="winner-reveal">
+                <div class="winner-announcement">
+                  <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
+                  <div class="winner-number-display">
+                    #{{ winnerNumber }}
+                  </div>
+                  <div v-if="winnerPurchase" class="winner-details">
+                    <h4>Detalles del Ganador:</h4>
+                    <p><strong>Cliente:</strong> {{ winnerPurchase.buyerName }}</p>
+                    <p><strong>Email:</strong> {{ winnerPurchase.buyerEmail }}</p>
+                    <p><strong>Fecha de Compra:</strong> {{ formatDate(winnerPurchase.createdAt) }}</p>
+                  </div>
+                </div>
+
+                <button @click="resetGame" class="reset-game-btn">
+                  🔄 Nueva Dinámica
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Status Filter -->
         <div class="filter-section">
           <div class="filter-header">
@@ -183,12 +271,47 @@ const {
 const selectedStatus = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'>('ALL')
 const isRefreshingWallpapers = ref(false)
 
+// Winner game state
+const isGameStarted = ref(false)
+const currentAttempt = ref(0)
+const attempts = ref<(number | null)[]>([null, null, null, null, null])
+const winnerNumber = ref<number | null>(null)
+const isGameComplete = ref(false)
+const isGameRunning = ref(false)
+const isProcessingAttempt = ref(false)
+const isShowingSpinEffect = ref(false)
+const spinningNumbers = ref<(number | null)[]>([null, null, null, null, null])
+
 // Compras filtradas
 const filteredPurchases = computed(() => {
   if (selectedStatus.value === 'ALL') {
     return purchases.value
   }
   return purchasesByStatus.value[selectedStatus.value] || []
+})
+
+// Números elegibles para el sorteo (solo aprobados)
+const eligibleNumbers = computed(() => {
+  const approvedPurchases = purchasesByStatus.value.APPROVED || []
+  const numbers: number[] = []
+
+  approvedPurchases.forEach(purchase => {
+    if (purchase.wallpaperNumbers && Array.isArray(purchase.wallpaperNumbers)) {
+      numbers.push(...purchase.wallpaperNumbers)
+    }
+  })
+
+  return Array.from(new Set(numbers)).sort((a, b) => a - b) // Remove duplicates and sort
+})
+
+// Encontrar la compra ganadora
+const winnerPurchase = computed(() => {
+  if (!winnerNumber.value) return null
+
+  const approvedPurchases = purchasesByStatus.value.APPROVED || []
+  return approvedPurchases.find(purchase =>
+    purchase.wallpaperNumbers && purchase.wallpaperNumbers.includes(winnerNumber.value!)
+  )
 })
 
 // Métodos
@@ -228,6 +351,115 @@ const getStatusText = (status: string) => {
     'CANCELLED': 'Cancelada'
   }
   return statusMap[status as keyof typeof statusMap] || status
+}
+
+// Winner game methods
+const startWinnerGame = () => {
+  if (eligibleNumbers.value.length === 0) return
+
+  // Check if we have enough numbers for a complete game (at least 5 unique numbers recommended)
+  if (eligibleNumbers.value.length < 5) {
+    // Still allow the game but show a warning in console
+    console.warn(`⚠️ Solo hay ${eligibleNumbers.value.length} números elegibles. Se pueden repetir números en los intentos.`)
+  }
+
+  isGameStarted.value = true
+  isGameRunning.value = true
+  currentAttempt.value = 0
+  attempts.value = [null, null, null, null, null]
+  winnerNumber.value = null
+  isGameComplete.value = false
+  isShowingSpinEffect.value = false
+  spinningNumbers.value = [null, null, null, null, null]
+
+  // Pre-select the winner number (will be revealed on 5th attempt)
+  const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
+  winnerNumber.value = eligibleNumbers.value[randomIndex]
+}
+
+const nextAttempt = async () => {
+  if (currentAttempt.value >= 5 || isProcessingAttempt.value) return
+
+  isProcessingAttempt.value = true
+  currentAttempt.value++
+
+  // Get numbers that have already been used in previous attempts
+  const usedNumbers = attempts.value.filter(num => num !== null) as number[]
+
+  // Start spinning effect
+  isShowingSpinEffect.value = true
+
+  // Spin numbers for dramatic effect (2 seconds)
+  const spinDuration = 2000
+  const spinInterval = 100
+  const spinTimes = spinDuration / spinInterval
+
+  // Create a pool of available numbers for spinning effect (excluding used ones and winner)
+  const availableForSpinning = eligibleNumbers.value.filter(num =>
+    num !== winnerNumber.value && !usedNumbers.includes(num)
+  )
+
+  for (let i = 0; i < spinTimes; i++) {
+    // If we have available unique numbers, use them; otherwise use all eligible except winner
+    const spinPool = availableForSpinning.length > 0 ? availableForSpinning :
+                     eligibleNumbers.value.filter(num => num !== winnerNumber.value)
+
+    if (spinPool.length > 0) {
+      const randomIndex = Math.floor(Math.random() * spinPool.length)
+      spinningNumbers.value[currentAttempt.value - 1] = spinPool[randomIndex]
+    }
+    await new Promise(resolve => setTimeout(resolve, spinInterval))
+  }
+
+  // Stop spinning effect
+  isShowingSpinEffect.value = false
+
+  if (currentAttempt.value === 5) {
+    // Reveal the winner on 5th attempt
+    attempts.value[4] = winnerNumber.value
+    isGameComplete.value = true
+    isGameRunning.value = false
+  } else {
+    // Generate a random number from eligible numbers (excluding winner and previously used numbers)
+    let randomNumber
+    let availableNumbers = eligibleNumbers.value.filter(num =>
+      num !== winnerNumber.value && !usedNumbers.includes(num)
+    )
+
+    // If we don't have enough unique numbers (excluding the winner),
+    // allow previously used numbers but still exclude the winner
+    if (availableNumbers.length === 0) {
+      availableNumbers = eligibleNumbers.value.filter(num => num !== winnerNumber.value)
+    }
+
+    // Select a random number from available numbers
+    if (availableNumbers.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableNumbers.length)
+      randomNumber = availableNumbers[randomIndex]
+    } else {
+      // Fallback: use any eligible number except the winner
+      do {
+        const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
+        randomNumber = eligibleNumbers.value[randomIndex]
+      } while (randomNumber === winnerNumber.value && eligibleNumbers.value.length > 1)
+    }
+
+    attempts.value[currentAttempt.value - 1] = randomNumber
+  }
+
+  isProcessingAttempt.value = false
+}
+
+const resetGame = () => {
+  isGameStarted.value = false
+  currentAttempt.value = 0
+  attempts.value = [null, null, null, null, null]
+  winnerNumber.value = null
+  isGameComplete.value = false
+  isGameRunning.value = false
+  isProcessingAttempt.value = false
+  isShowingSpinEffect.value = false
+  spinningNumbers.value = [null, null, null, null, null]
 }
 
 // Cargar datos al montar el componente
@@ -352,7 +584,9 @@ onMounted(async () => {
 }
 
 .dashboard-content {
-  space-y: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
 }
 
 .stats-grid {
@@ -425,6 +659,287 @@ onMounted(async () => {
   color: #ffffff;
   margin: 0;
   line-height: 1.1;
+}
+
+/* Winner Selection Styles */
+.winner-selection-section {
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.winner-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.winner-header h3 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.winner-header p {
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+.winner-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+  gap: 2rem;
+}
+
+.eligible-numbers,
+.total-revenue {
+  text-align: center;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 1rem;
+  border-radius: 12px;
+  flex: 1;
+}
+
+.stat-label {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  color: #60a5fa;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.winner-game-container {
+  text-align: center;
+}
+
+.game-start {
+  padding: 2rem;
+}
+
+.start-game-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.start-game-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+}
+
+.start-game-btn:disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.game-hint {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.warning-text {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.success-text {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.game-active {
+  padding: 2rem;
+}
+
+.attempts-container h4 {
+  color: #ffffff;
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+}
+
+.attempts-display {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.attempt-number {
+  width: 80px;
+  height: 80px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid #475569;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #94a3b8;
+  transition: all 0.3s ease;
+}
+
+.attempt-number.current {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  animation: pulse 2s infinite;
+}
+
+.attempt-number.revealed {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.2);
+  color: #ffffff;
+}
+
+.attempt-number.spinning {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+  color: #ffffff;
+  animation: spin-effect 0.1s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes spin-effect {
+  0% {
+    transform: rotateY(0deg) scale(1);
+    background: rgba(245, 158, 11, 0.2);
+  }
+  25% {
+    transform: rotateY(90deg) scale(1.1);
+    background: rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    transform: rotateY(180deg) scale(1);
+    background: rgba(139, 92, 246, 0.2);
+  }
+  75% {
+    transform: rotateY(270deg) scale(1.1);
+    background: rgba(34, 197, 94, 0.2);
+  }
+  100% {
+    transform: rotateY(360deg) scale(1);
+    background: rgba(245, 158, 11, 0.2);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.next-attempt-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.next-attempt-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.next-attempt-btn:disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+}
+
+.winner-reveal {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+  border-radius: 16px;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.winner-announcement h2 {
+  color: #10b981;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  animation: bounce 1s ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+.winner-number-display {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #ffffff;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 20px;
+  padding: 1rem 2rem;
+  margin: 1rem 0;
+  display: inline-block;
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+  to { box-shadow: 0 0 30px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.6); }
+}
+
+.winner-details {
+  margin-top: 2rem;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.winner-details h4 {
+  color: #60a5fa;
+  margin-bottom: 1rem;
+}
+
+.winner-details p {
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+.reset-game-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 2rem;
+}
+
+.reset-game-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
 }
 
 .filter-section {
@@ -700,6 +1215,32 @@ onMounted(async () => {
     padding: 0 1rem;
   }
 
+  .winner-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .attempts-display {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .attempt-number {
+    width: 60px;
+    height: 60px;
+    font-size: 1.2rem;
+  }
+
+  .winner-number-display {
+    font-size: 3rem;
+    padding: 0.8rem 1.5rem;
+  }
+
+  .winner-selection-section {
+    padding: 1.5rem;
+  }
+
+
   .dashboard-header h1 {
     font-size: 2rem;
   }
@@ -723,6 +1264,32 @@ onMounted(async () => {
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 0.8rem;
+  }
+
+  .attempts-display {
+    gap: 0.5rem;
+  }
+
+  .attempt-number {
+    width: 50px;
+    height: 50px;
+    font-size: 1rem;
+  }
+
+  .winner-number-display {
+    font-size: 2.5rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .start-game-btn,
+  .next-attempt-btn,
+  .reset-game-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .winner-header h3 {
+    font-size: 1.5rem;
   }
 }
 </style>

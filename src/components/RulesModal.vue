@@ -37,18 +37,12 @@
         <div class="rule-section">
           <h4>⚖️ Condiciones generales</h4>
           <ul>
-            <li>El sorteo se realiza con sistema aleatorio certificado</li>
-            <li>En caso de no venderse todos los números, se sortea entre los vendidos</li>
-            <li>El ganador debe reclamar en máximo 30 días</li>
+            <li>La dinámica se realiza con sistema aleatorio</li>
+            <li>La dinámica se llevará a cabo una vez alcanzado el 50% de los fondos vendidos</li>
           </ul>
         </div>
 
-        <div class="demo-notice">
-          <div class="demo-icon">⚠️</div>
-          <div class="demo-text">
-            <strong>AVISO IMPORTANTE:</strong> Este sitio está en modo DEMO.
-          </div>
-        </div>
+
       </div>
 
       <div class="modal-footer">

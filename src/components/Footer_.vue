@@ -3,8 +3,9 @@
     <!-- Sección principal del footer -->
     <div class="footer-main">
       <div class="footer-container">
-        <!-- Columna 1: Logo y descripción -->
-        <div class="footer-column brand-column">
+        <!-- Contenido con logo a la izquierda y contacto a la derecha -->
+        <div class="footer-content">
+          <!-- Logo y descripción -->
           <div class="brand-section">
             <h2 class="brand-title">FondosDigitales<span class="highlight">Moto</span></h2>
             <p class="brand-description">
@@ -12,59 +13,20 @@
             </p>
           </div>
 
-        </div>
-
-        <!-- Columna 2: Enlaces rápidos -->
-        <div class="footer-column">
-          <h3 class="column-title">Enlaces Rápidos</h3>
-          <ul class="footer-links">
-            <li><a href="#colecciones">Colecciones</a></li>
-            <li><a href="#como-funciona">¿Cómo Funciona?</a></li>
-            <li><a href="#reglamento">Reglamento</a></li>
-          </ul>
-        </div>
-
-        <!-- Columna 3: Soporte -->
-        <div class="footer-column">
-          <h3 class="column-title">Soporte</h3>
-          <ul class="footer-links">
-            <!-- <li><a href="#ayuda">Centro de Ayuda</a></li> -->
-            <li><a href="#contacto">Contacto</a></li>
-            <li><a href="#preguntas">Preguntas Frecuentes</a></li>
-            <li><a href="#terminos">Términos y Condiciones</a></li>
-            <!-- <li><a href="#privacidad">Política de Privacidad</a></li> -->
-          </ul>
-        </div>
-
-        <!-- Columna 4: Contacto -->
-        <div class="footer-column contact-column">
-          <h3 class="column-title">Contacto</h3>
-          <div class="contact-info">
-
-
-            <div class="contact-item">
-              <div class="contact-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-                </svg>
-              </div>
-              <div class="contact-text">
-                <span>Teléfono</span>
-                <p>+57 (1) 234-5678</p>
-              </div>
-            </div>
-
-            <div class="contact-item">
-              <div class="contact-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                </svg>
-              </div>
-              <div class="contact-text">
-                <span>Email</span>
-                <p>info@digitalwallpapers.com</p>
+          <!-- Información de contacto -->
+          <div class="contact-section">
+            <h3 class="section-title">Contacto</h3>
+            <div class="contact-info">
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+                  </svg>
+                </div>
+                <div class="contact-text">
+                  <span>Teléfono</span>
+                  <p>+57 (1) 234-5678</p>
+                </div>
               </div>
             </div>
           </div>
@@ -75,18 +37,8 @@
     <!-- Barra inferior -->
     <div class="footer-bottom">
       <div class="footer-container">
-        <!-- Copyright centrado -->
         <div class="copyright-section">
           <p>&copy; 2025 FondosDigitales. Todos los derechos reservados.</p>
-        </div>
-
-        <!-- Enlaces centrados en su propio div -->
-        <div class="links-section">
-          <div class="bottom-links">
-            <a href="#privacidad">Privacidad</a>
-            <a href="#terminos">Términos</a>
-            <a href="#cookies">Cookies</a>
-          </div>
         </div>
       </div>
     </div>
@@ -115,21 +67,26 @@
 }
 
 .footer-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
-  gap: 3rem;
 }
 
-/* Columna de marca */
-.brand-column {
-  padding-right: 2rem;
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4rem;
+}
+
+/* Sección de marca a la izquierda */
+.brand-section {
+  flex: 1;
+  max-width: 500px;
 }
 
 .brand-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 800;
   margin-bottom: 1rem;
   color: #ffffff;
@@ -142,190 +99,84 @@
 }
 
 .brand-description {
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1.6;
   color: #cbd5e1;
-  margin-bottom: 2rem;
-  max-width: 350px;
+  margin: 0;
 }
 
-.social-networks h4 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: #f1f5f9;
-}
-
-.social-icons {
+/* Sección de contacto a la derecha */
+.contact-section {
+  flex-shrink: 0;
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 1.5rem;
 }
 
-.social-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.social-icon::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.social-icon:hover::before {
-  transform: translateX(100%);
-}
-
-.social-icon svg {
-  width: 20px;
-  height: 20px;
-  z-index: 1;
-}
-
-.social-icon.facebook {
-  background: linear-gradient(135deg, #1877F2, #0C63D4);
-}
-
-.social-icon.instagram {
-  background: linear-gradient(135deg, #E4405F, #C13584, #833AB4);
-}
-
-.social-icon.twitter {
-  background: linear-gradient(135deg, #1DA1F2, #0C7FC7);
-}
-
-.social-icon.youtube {
-  background: linear-gradient(135deg, #FF0000, #CC0000);
-}
-
-.social-icon:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-/* Columnas de enlaces */
-.footer-column {
-  padding-top: 0.5rem;
-}
-
-.column-title {
-  font-size: 1.3rem;
+.section-title {
+  font-size: 1.4rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
   color: #60a5fa;
+  margin: 0;
   position: relative;
 }
 
-.column-title::after {
+.section-title::after {
   content: '';
   position: absolute;
   bottom: -8px;
-  left: 0;
+  right: 0;
   width: 40px;
   height: 3px;
   background: linear-gradient(90deg, #60a5fa, #3b82f6);
   border-radius: 2px;
 }
 
-.footer-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.footer-links li {
-  margin-bottom: 0.8rem;
-}
-
-.footer-links a {
-  color: #cbd5e1;
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  position: relative;
-  padding-left: 0;
-}
-
-.footer-links a::before {
-  content: '';
-  position: absolute;
-  left: -15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 2px;
-  background: #60a5fa;
-  transition: width 0.3s ease;
-}
-
-.footer-links a:hover {
-  color: #ffffff;
-  padding-left: 15px;
-}
-
-.footer-links a:hover::before {
-  width: 8px;
-}
-
-/* Columna de contacto */
-.contact-column {
-  padding-left: 1rem;
-}
-
 .contact-info {
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  justify-content: flex-end;
 }
 
 .contact-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
 }
 
 .contact-icon {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
 }
 
 .contact-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   color: #ffffff;
 }
 
 .contact-text span {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #60a5fa;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: block;
 }
 
 .contact-text p {
-  margin: 0.3rem 0 0 0;
-  color: #cbd5e1;
-  font-size: 0.95rem;
+  margin: 0.4rem 0 0 0;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -341,41 +192,12 @@
 /* Sección del copyright */
 .copyright-section {
   text-align: center;
-  margin-bottom: 1rem;
 }
 
 .copyright-section p {
   margin: 0;
   color: #94a3b8;
   font-size: 0.9rem;
-}
-
-/* Sección de enlaces */
-.links-section {
-  text-align: center;
-}
-
-.bottom-links {
-  display: inline-flex;
-  gap: 2rem;
-  justify-content: center;
-  align-items: center;
-}
-
-.bottom-links {
-  display: flex;
-  gap: 2rem;
-}
-
-.bottom-links a {
-  color: #94a3b8;
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.3s ease;
-}
-
-.bottom-links a:hover {
-  color: #60a5fa;
 }
 
 /* Elementos decorativos */
@@ -435,50 +257,56 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1200px) {
-  .footer-container {
-    grid-template-columns: 1.2fr 1fr 1fr 1fr;
-    gap: 2rem;
+@media (max-width: 768px) {
+  .footer-main {
+    padding: 3rem 0 2rem;
   }
 
-  .brand-column {
-    padding-right: 1rem;
-  }
-}
-
-@media (max-width: 968px) {
   .footer-container {
-    grid-template-columns: 1fr 1fr;
+    padding: 0 1rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: 2.5rem;
   }
 
-  .brand-column {
-    grid-column: 1 / -1;
+  .contact-section {
+    align-items: center;
     text-align: center;
-    padding-right: 0;
-    margin-bottom: 1rem;
   }
 
-  .contact-column {
-    grid-column: 1 / -1;
-    padding-left: 0;
-    text-align: center;
+  .section-title::after {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .contact-info {
-    max-width: 400px;
-    margin: 0 auto;
+    justify-content: center;
   }
-}
 
-@media (max-width: 640px) {
+  .brand-title {
+    font-size: 2.5rem;
+  }
+
+  .brand-description {
+    font-size: 1rem;
+  }
+
+  .contact-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.8rem;
+  }
+}@media (max-width: 480px) {
   .footer-main {
-    padding: 3rem 0 1.5rem;
+    padding: 2rem 0 1.5rem;
   }
 
   .footer-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
     padding: 0 1rem;
   }
 
@@ -487,62 +315,21 @@
   }
 
   .brand-description {
-    max-width: none;
+    font-size: 0.95rem;
   }
 
-  .footer-column {
-    text-align: center;
-  }
-
-  .column-title::after {
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .social-icons {
-    justify-content: center;
-  }
-
-  .copyright-section {
-    margin-bottom: 1rem;
-  }
-
-  .links-section {
-    text-align: center;
-  }
-
-  .bottom-links {
-    justify-content: center;
-    gap: 1.5rem;
-  }
-
-  .decoration-circle {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .footer-container {
-    padding: 0 0.5rem;
-  }
-
-  .social-icons {
-    gap: 0.5rem;
-  }
-
-  .social-icon {
+  .contact-icon {
     width: 40px;
     height: 40px;
   }
 
-  .contact-item {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  .contact-icon svg {
+    width: 18px;
+    height: 18px;
   }
 
-  .contact-icon {
-    margin-bottom: 0.5rem;
+  .decoration-circle {
+    display: none;
   }
 }
 </style>
