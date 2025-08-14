@@ -93,7 +93,7 @@ const faqs = ref([
   },
    {
     question: "¿No me permite hacer el pago desde mi Iphone?",
-    answer: "Si tienes problemas para realizar el pago desde tu iPhone, asegúrate de que tu navegador permita ventanas emergentes y que no haya extensiones bloqueando el proceso. (Si ya le diste bloquear a ventanas emergentes, intenta cerrar todas las pestañas en las que este abierta la pagina y vuelve a intentar el proceso)"
+    answer: "Si tienes problemas para realizar el pago desde tu iPhone, asegúrate de que tu navegador permita ventanas emergentes y que no haya extensiones bloqueando el proceso. (Si ya le diste bloquear a ventanas emergentes, intenta cerrar todas las pestañas en las que este abierta la pagina y vuelve a intentar el proceso)."
   },
   // {
   //   question: "¿Cómo puedo permitir o bloquear ventanas emergentes para sitios web específicos?",
