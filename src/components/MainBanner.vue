@@ -32,7 +32,9 @@
               </div>
             </div>
           </div>
+
         </div>
+
 
         <!-- Navegación con flechas a los lados -->
         <div class="gallery-navigation">
@@ -46,13 +48,32 @@
               <polyline points="9,18 15,12 9,6"></polyline>
             </svg>
           </button>
+ <!-- Sección de modificaciones de la moto (colocada debajo de la galería) -->
+          <div class="moto-modifications" ref="motoModRef">
+            <div class="moto-modifications-inner" ref="motoInnerRef">
+              <p class="modifications-description">
+                Esta <span class="highlight-text">Pulsar NS200</span> incluye:
+                <strong>Cúpula Nueva, Retrovisores Nuevos, Tapas Laterales Nuevas y Emblemas Nuevos.</strong>
+                <button @click="openInstallationVideo" class="video-link">
+                  🎥 Ve el video de instalación
+                </button>
+              </p>
+            </div>
+          </div>
         </div>
+
+
+
+
 
         <!-- Contenido centrado debajo de la galería -->
         <div class="content-wrapper">
           <div class="description">
             <p>Elige tus números, confirma y guarda tu comprobante. Dinámica transparente y regulado por reglas claras.</p>
           </div>
+
+
+
           <!-- Botones de acción -->
           <div class="action-buttons">
             <button class="btn-primary" @click="selectNumbers">Elegir números</button>
@@ -161,6 +182,11 @@ const motoImages = ref([
 
 const currentImageIndex = ref(0)
 const galleryRef = ref<HTMLElement | null>(null)
+const motoModRef = ref<HTMLElement | null>(null)
+const motoInnerRef = ref<HTMLElement | null>(null)
+// Listeners que se asignan en onMounted para poder limpiarlos en onUnmounted
+let onGalleryScroll: (() => void) | null = null
+let onResize: (() => void) | null = null
 
 // Variables para gestos táctiles
 const touchStartX = ref(0)
@@ -382,6 +408,24 @@ const viewRules = () => {
   emit('showRules')
 }
 
+const openInstallationVideo = () => {
+  // Abrir video (TikTok) en una nueva pestaña de forma segura
+  const videoUrl = 'https://vt.tiktok.com/ZSHsQ7enESGjT-ITuy2/'
+  // Intentar abrir con noopener,noreferrer para seguridad
+  try {
+    window.open(videoUrl, '_blank', 'noopener,noreferrer')
+  } catch {
+    // Fallback: crear un enlace y hacer click
+    const a = document.createElement('a')
+    a.href = videoUrl
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+}
+
 // Navegación con teclado
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'ArrowLeft') {
@@ -399,11 +443,34 @@ onMounted(() => {
 
   // Agregar listener para teclado
   window.addEventListener('keydown', handleKeydown)
+  // Sincronizar posición de la sección de modificaciones con el scroll de la galería
+  const syncModPosition = () => {
+    const el = galleryRef.value
+    const inner = motoInnerRef.value
+    if (!el || !inner) return
+  // Ajustar ancho del inner para que se mueva acorde a la galería (área visible)
+  inner.style.width = `${el.clientWidth}px`
+  // Trasladar inner negativamente la misma cantidad de scroll para que parezca que se mueve con la galería
+  inner.style.transform = `translateX(${ -el.scrollLeft }px)`
+  }
+
+  // asignar listeners para limpieza posterior
+  onGalleryScroll = () => syncModPosition()
+  onResize = () => syncModPosition()
+
+  if (galleryRef.value) galleryRef.value.addEventListener('scroll', onGalleryScroll)
+  // Recalcular en resize para mantener alineación
+  window.addEventListener('resize', onResize)
+  // Ejecutar una vez para ajustar posición inicial
+  setTimeout(syncModPosition, 50)
 })
 
 // Limpiar el listener cuando se desmonte el componente
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
+  // Limpiar listener de scroll y resize
+  if (galleryRef.value && onGalleryScroll) galleryRef.value.removeEventListener('scroll', onGalleryScroll)
+  if (onResize) window.removeEventListener('resize', onResize)
 })
 </script>
 
@@ -471,6 +538,60 @@ onUnmounted(() => {
   text-align: center;
 }
 
+.moto-modifications {
+  /* Centrar y alinear con el contenido principal debajo de la galería */
+  position:absolute;
+  width: 100%;
+  max-width: 1200px; /* igual que el content-wrapper */
+  margin: 5rem auto 0 18rem; /* arriba separado, centrado */
+  padding: 0.75rem 2rem; /* padding horizontal para alinear con el layout */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: 1;
+}
+
+.modifications-description {
+  font-size: 1rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+}
+
+.highlight-text {
+  color: #60a5fa;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+}
+
+.video-link {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.5rem;
+}
+
+.video-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
 /* Galería horizontal */
 .horizontal-gallery {
   display: flex;
@@ -480,6 +601,7 @@ onUnmounted(() => {
   flex-wrap: nowrap;
   gap: 2rem;
   padding: 2rem;
+  padding-bottom: 4.5rem; /* espacio extra para que el texto no quede encima de las fotos */
   background: rgba(15, 23, 42, 0.6);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
@@ -491,6 +613,12 @@ onUnmounted(() => {
   border-radius: 0;
   touch-action: pan-x; /* Mejorar gesto horizontal */
   overscroll-behavior-x: contain; /* Evitar rebote de la página */
+}
+
+/* Movimiento suave del inner que se sincroniza con el scroll */
+.moto-modifications-inner {
+  transition: transform 0.15s linear;
+  will-change: transform;
 }
 
 /* Ocultar scrollbar en WebKit */
@@ -752,6 +880,32 @@ onUnmounted(() => {
   .gallery-next {
     right: 0.5rem;
   }
+
+  /* Responsive para modificaciones en tablet */
+  .moto-modifications {
+    /* En tablet quitar posicion absoluta y usar flujo normal */
+    position: static !important;
+    width: 100% !important;
+    max-width: 1000px;
+    padding: 0.6rem 1rem;
+    margin: -10rem auto 0 auto;
+  }
+
+  .moto-modifications-inner {
+    width: auto !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .modifications-description {
+    font-size: 0.95rem;
+  }
+
+  .video-link {
+    margin-left: 0.3rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.5rem;
+  }
 }
 
 /* Móviles pequeños */
@@ -803,6 +957,37 @@ onUnmounted(() => {
 
   .gallery-next {
     right: 0.25rem;
+  }
+
+  /* Responsive para modificaciones en móvil */
+  .moto-modifications {
+    /* En móviles pequeños: flujo normal, ancho contenido y botón en bloque */
+    position: static !important;
+    width: 100% !important;
+    max-width: 92%;
+    padding: 0.5rem 1rem;
+    margin: -10rem auto 0 auto;
+  }
+
+  .moto-modifications-inner {
+    width: auto !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .modifications-description {
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .video-link {
+    margin-left: 15rem;
+    margin-top: -1.1rem;
+    padding: 0.3rem 1rem;
+    font-size: 0.4rem;
+    display: block;
+    text-align: center;
+
   }
 }
 
