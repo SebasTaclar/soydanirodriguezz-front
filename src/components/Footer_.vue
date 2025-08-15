@@ -25,7 +25,7 @@
                 </div>
                 <div class="contact-text">
                   <span>Teléfono</span>
-                  <p>+57 (1) 234-5678</p>
+                  <p>+57 311 8715539</p>
                 </div>
               </div>
             </div>
