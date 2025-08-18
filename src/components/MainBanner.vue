@@ -4,8 +4,8 @@
     <div class="moto-gallery-section">
       <div class="gallery-container">
         <div class="gallery-header">
-          <h1>Gana una <span class="highlight-blue">Pulsar</span> con tu</h1>
-          <h1>número de la suerte</h1>
+          <h1>Gana una <span class="highlight-blue">Pulsar</span> con tu número de la suerte</h1>
+          <h1></h1>
         </div>
 
         <!-- Galería horizontal en .horizontal-gallery -->
@@ -54,9 +54,6 @@
               <p class="modifications-description">
                 Esta <span class="highlight-text">Pulsar NS200</span> incluye:
                 <strong>Cúpula Nueva, Retrovisores Nuevos, Tapas Laterales Nuevas y Emblemas Nuevos.</strong>
-                <button @click="openInstallationVideo" class="video-link">
-                  🎥 Ve el video de instalación
-                </button>
               </p>
             </div>
           </div>
