@@ -64,6 +64,11 @@
 
         <!-- Winner Selection Section -->
         <div class="winner-selection-section">
+          <!-- Confetti Animation -->
+          <div v-if="isGameComplete && winnerNumber" class="confetti-container">
+            <div v-for="i in 50" :key="i" class="confetti" :style="getConfettiStyle(i)"></div>
+          </div>
+
           <div class="winner-header">
             <h3>🎯 Selección del Número Ganador</h3>
             <p>Genera el número ganador de entre los wallpapers pagados/aprobados</p>
@@ -86,19 +91,26 @@
               >
                 🎲 Iniciar Dinámica
               </button>
-              <p class="game-hint">
-                Se realizarán 5 intentos antes de revelar el ganador
-                <br>
-                <small v-if="eligibleNumbers.length < 5" class="warning-text">
-                  ⚠️ Solo hay {{ eligibleNumbers.length }} números únicos - algunos números pueden repetirse
-                </small>
-                <small v-else class="success-text">
-                  ✅ {{ eligibleNumbers.length }} números únicos disponibles
-                </small>
-              </p>
+              <div class="game-rules">
+
+                <p class="game-hint">
+                  Se realizarán 5 intentos antes de revelar el ganador de la moto
+                  <br>
+                  <small v-if="eligibleNumbers.length < 5" class="warning-text">
+                    ⚠️ Solo hay {{ eligibleNumbers.length }} números únicos - algunos números pueden repetirse
+                  </small>
+                  <small v-else class="success-text">
+                    ✅ {{ eligibleNumbers.length }} números únicos disponibles
+                  </small>
+                </p>
+              </div>
             </div>
 
             <div v-if="isGameStarted" class="game-active">
+              <div class="game-explanation">
+                  <h4>🏆 ¡El quinto número es el ganador de la moto!</h4>
+                  <p>Los primeros 4 números ganarán dinero</p>
+                </div>
               <div class="attempts-container">
                 <h4>Intentos: {{ currentAttempt }}/5</h4>
                 <div class="attempts-display">
@@ -109,10 +121,15 @@
                     :class="{
                       'current': index === currentAttempt - 1 && !isGameComplete,
                       'revealed': index < currentAttempt - 1 || isGameComplete,
-                      'spinning': isShowingSpinEffect && index === currentAttempt - 1
+                      'spinning': isShowingSpinEffect && index === currentAttempt - 1,
+                      'clickable': attempt && index < 4
                     }"
+                    @click="attempt && index < 4 ? showWinnerModal(attempt, index) : null"
                   >
-                    {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt || '?') }}
+                    <div class="attempt-number-display">
+                      {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt || '?') }}
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -128,17 +145,41 @@
                 </button>
               </div>
 
+              <!-- Modal para ganadores de dinero inline -->
+              <div v-if="showModal" class="inline-winner-modal">
+                <div class="inline-modal-content">
+                  <button class="modal-close" @click="closeModal">×</button>
+                  <div class="modal-header">
+                    <h2>🎉 ¡FELICITACIONES! 🎉</h2>
+                    <div class="modal-number-display">
+                      #{{ selectedWinner.number }}
+                    </div>
+                  </div>
+                  <div class="modal-body">
+                    <h3 v-if="selectedWinner.position === 4">🏆 ¡Ganaste la motocicleta!</h3>
+                    <h3 v-else>💰 ¡Ganaste dinero!</h3>
+                    <p class="win-message">{{ getWinMessage(selectedWinner.position) }}</p>
+                    <div v-if="selectedWinner.purchase" class="modal-winner-details">
+                      <h4>Detalles del Ganador:</h4>
+                      <p><strong>Nombre:</strong> {{ formatWinnerName(selectedWinner.purchase.buyerName) }}</p>
+                      <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(selectedWinner.purchase.createdAt) }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div v-if="isGameComplete && winnerNumber" class="winner-reveal">
                 <div class="winner-announcement">
                   <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
                   <div class="winner-number-display">
                     #{{ winnerNumber }}
                   </div>
+                  <h2 class="winner-title">🎉 ¡Felicitaciones al Ganador de la Moto! 🎉</h2>
                   <div v-if="winnerPurchase" class="winner-details">
-                    <h4>Detalles del Ganador:</h4>
-                    <p><strong>Cliente:</strong> {{ winnerPurchase.buyerName }}</p>
-                    <p><strong>Email:</strong> {{ winnerPurchase.buyerEmail }}</p>
-                    <p><strong>Fecha de Compra:</strong> {{ formatDate(winnerPurchase.createdAt) }}</p>
+
+                    <h3>Detalles del Ganador:</h3>
+                    <p><strong>Nombre:</strong> {{ formatWinnerName(winnerPurchase.buyerName) }}</p>
+                    <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(winnerPurchase.createdAt) }}</p>
                   </div>
                 </div>
 
@@ -273,7 +314,7 @@ const isRefreshingWallpapers = ref(false)
 
 // Winner game state
 const isGameStarted = ref(false)
-const currentAttempt = ref(0)
+const currentAttempt = ref(1)
 const attempts = ref<(number | null)[]>([null, null, null, null, null])
 const winnerNumber = ref<number | null>(null)
 const isGameComplete = ref(false)
@@ -281,6 +322,18 @@ const isGameRunning = ref(false)
 const isProcessingAttempt = ref(false)
 const isShowingSpinEffect = ref(false)
 const spinningNumbers = ref<(number | null)[]>([null, null, null, null, null])
+
+// Modal state para ganadores de dinero
+const showModal = ref(false)
+const selectedWinner = ref<{
+  number: number | null
+  position: number
+  purchase: typeof purchases.value[0] | null
+}>({
+  number: null,
+  position: 0,
+  purchase: null
+})
 
 // Compras filtradas
 const filteredPurchases = computed(() => {
@@ -353,6 +406,65 @@ const getStatusText = (status: string) => {
   return statusMap[status as keyof typeof statusMap] || status
 }
 
+const formatWinnerName = (fullName: string) => {
+  const nameParts = fullName.trim().split(' ')
+  if (nameParts.length === 1) {
+    return nameParts[0] // Solo un nombre
+  }
+
+  // Primer nombre + apellido censurado
+  const firstName = nameParts[0]
+  const lastName = nameParts[nameParts.length - 1]
+  const censoredLastName = lastName.charAt(0) + '*'.repeat(lastName.length - 1)
+
+  return `${firstName} ${censoredLastName}`
+}
+
+const formatDateOnly = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('es-CO', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+// Modal functions para ganadores de dinero
+const showWinnerModal = (number: number, position: number) => {
+  // Si es el quinto número (position 4), no mostrar modal
+  if (position === 4) {
+    return
+  }
+
+  const approvedPurchases = purchasesByStatus.value.APPROVED || []
+  const purchase = approvedPurchases.find(p =>
+    p.wallpaperNumbers && p.wallpaperNumbers.includes(number)
+  )
+
+  selectedWinner.value = {
+    number,
+    position,
+    purchase: purchase || null
+  }
+
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+}
+
+const getWinMessage = (position: number) => {
+  const messages = [
+    "¡Increíble! Eres el primer ganador del día. ¡Gracias por participar!",
+    "¡Fantástico! El segundo lugar es tuyo. ¡Gracias por participar!.",
+    "¡Excelente! Tercer puesto ganador. ¡Gracias por participar!",
+    "¡Genial! Cuarto lugar premiado. ¡Gracias por participar!",
+    "🏆 ¡EXTRAORDINARIO! ¡Eres el gran ganador de la motocicleta NS200! ¡Felicitaciones! 🏆"
+  ]
+  return messages[position] || "¡Felicitaciones, ganaste dinero en efectivo!"
+}
+
 // Winner game methods
 const startWinnerGame = () => {
   if (eligibleNumbers.value.length === 0) return
@@ -415,6 +527,9 @@ const nextAttempt = async () => {
   isShowingSpinEffect.value = false
 
   if (currentAttempt.value === 5) {
+    // Cerrar automáticamente el modal del ganador anterior
+    showModal.value = false
+
     // Reveal the winner on 5th attempt
     attempts.value[4] = winnerNumber.value
     isGameComplete.value = true
@@ -445,6 +560,11 @@ const nextAttempt = async () => {
     }
 
     attempts.value[currentAttempt.value - 1] = randomNumber
+
+    // Mostrar automáticamente el modal para los primeros 4 intentos
+    if (currentAttempt.value <= 4) {
+      showWinnerModal(randomNumber, currentAttempt.value - 1)
+    }
   }
 
   isProcessingAttempt.value = false
@@ -460,6 +580,22 @@ const resetGame = () => {
   isProcessingAttempt.value = false
   isShowingSpinEffect.value = false
   spinningNumbers.value = [null, null, null, null, null]
+}
+
+// Función para generar estilos aleatorios para confetis
+const getConfettiStyle = (index: number) => {
+  const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e']
+  const randomColor = colors[index % colors.length]
+  const randomLeft = Math.random() * 100
+  const randomDelay = Math.random() * 3
+  const randomDuration = 3 + Math.random() * 2
+
+  return {
+    backgroundColor: randomColor,
+    left: `${randomLeft}%`,
+    animationDelay: `${randomDelay}s`,
+    animationDuration: `${randomDuration}s`
+  }
 }
 
 // Cargar datos al montar el componente
@@ -668,6 +804,7 @@ onMounted(async () => {
   padding: 2rem;
   margin-bottom: 3rem;
   border: 1px solid rgba(96, 165, 250, 0.2);
+  position: relative;
 }
 
 .winner-header {
@@ -753,6 +890,30 @@ onMounted(async () => {
   font-style: italic;
 }
 
+.game-rules {
+  margin-bottom: 2rem;
+}
+
+.game-explanation {
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.game-explanation h4 {
+  color: #60a5fa;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.game-explanation p {
+  color: #cbd5e1;
+  font-size: 1rem;
+  margin: 0;
+}
+
 .warning-text {
   color: #f59e0b;
   font-weight: 600;
@@ -781,6 +942,23 @@ onMounted(async () => {
 }
 
 .attempt-number {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.attempt-number.clickable {
+  cursor: pointer;
+}
+
+.attempt-number.clickable:hover .attempt-number-display {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.3);
+}
+
+.attempt-number-display {
   width: 80px;
   height: 80px;
   background: rgba(15, 23, 42, 0.6);
@@ -795,20 +973,31 @@ onMounted(async () => {
   transition: all 0.3s ease;
 }
 
-.attempt-number.current {
+.attempt-result {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.15);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  white-space: nowrap;
+}
+
+.attempt-number.current .attempt-number-display {
   border-color: #60a5fa;
   background: rgba(96, 165, 250, 0.1);
   color: #60a5fa;
   animation: pulse 2s infinite;
 }
 
-.attempt-number.revealed {
+.attempt-number.revealed .attempt-number-display {
   border-color: #10b981;
   background: rgba(16, 185, 129, 0.2);
   color: #ffffff;
 }
 
-.attempt-number.spinning {
+.attempt-number.spinning .attempt-number-display {
   border-color: #f59e0b;
   background: rgba(245, 158, 11, 0.2);
   color: #ffffff;
@@ -869,13 +1058,13 @@ onMounted(async () => {
 .winner-reveal {
   margin-top: 2rem;
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border-radius: 16px;
-  border: 2px solid rgba(16, 185, 129, 0.3);
+  border: 2px solid rgba(96, 165, 250, 0.3);
 }
 
 .winner-announcement h2 {
-  color: #10b981;
+  color: #ffffff;
   font-size: 2rem;
   font-weight: 800;
   margin-bottom: 1rem;
@@ -892,7 +1081,7 @@ onMounted(async () => {
   font-size: 4rem;
   font-weight: 900;
   color: #ffffff;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border-radius: 20px;
   padding: 1rem 2rem;
   margin: 1rem 0;
@@ -914,7 +1103,12 @@ onMounted(async () => {
   text-align: left;
 }
 
-.winner-details h4 {
+.winner-title{
+  color: #10b981;
+}
+
+
+.winner-details h3 {
   color: #60a5fa;
   margin-bottom: 1rem;
 }
@@ -924,8 +1118,20 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
 }
 
+.winner-note {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1f2937 !important;
+  font-weight: 700 !important;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 1rem !important;
+  border: 2px solid #d97706;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
 .reset-game-btn {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #7c3aed, #4f46e5); /* morado -> azul */
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -939,7 +1145,7 @@ onMounted(async () => {
 
 .reset-game-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.32);
 }
 
 .filter-section {
@@ -954,7 +1160,7 @@ onMounted(async () => {
 }
 
 .filter-section h3 {
-  color: #ffffff;
+  color: #10b981;
   font-size: 1.5rem;
   margin-bottom: 1rem;
   font-weight: 700;
@@ -1225,10 +1431,15 @@ onMounted(async () => {
     gap: 0.8rem;
   }
 
-  .attempt-number {
+  .attempt-number .attempt-number-display {
     width: 60px;
     height: 60px;
     font-size: 1.2rem;
+  }
+
+  .attempt-result {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
   }
 
   .winner-number-display {
@@ -1291,5 +1502,253 @@ onMounted(async () => {
   .winner-header h3 {
     font-size: 1.5rem;
   }
+}
+
+/* Inline Winner Modal Styles */
+.inline-winner-modal {
+  margin-top: 2rem;
+  width: 100%;
+  animation: slideDown 0.3s ease-out;
+}
+
+.inline-modal-content {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.1);
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.modal-header h2 {
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.modal-number-display {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 auto 1rem;
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+  animation: bounce-in 0.6s ease-out;
+}
+
+.modal-body {
+  text-align: center;
+}
+
+.modal-body h3 {
+  color: #22c55e;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.win-message {
+  color: #cbd5e1;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.modal-winner-details {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.modal-winner-details h4 {
+  color: #60a5fa;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.modal-winner-details p {
+  color: #e2e8f0;
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .modal-number-display {
+    width: 100px;
+    height: 100px;
+    font-size: 2rem;
+  }
+
+  .modal-body h3 {
+    font-size: 1.2rem;
+  }
+
+  .win-message {
+    font-size: 1rem;
+  }
+}
+
+/* Confetti Animation Styles */
+.confetti-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+  border-radius: 16px;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ff6b6b;
+  animation: confetti-fall linear infinite;
+  transform-origin: center;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Diferentes formas de confeti */
+.confetti:nth-child(2n) {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.confetti:nth-child(3n) {
+  width: 6px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.confetti:nth-child(4n) {
+  width: 12px;
+  height: 6px;
+  border-radius: 6px;
+}
+
+.confetti:nth-child(5n) {
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
 }
 </style>
