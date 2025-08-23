@@ -158,6 +158,8 @@
                     <div v-if="selectedWinner.purchase" class="modal-winner-details">
                       <h4>Detalles del Ganador:</h4>
                       <p><strong>Nombre:</strong> {{ formatWinnerName(selectedWinner.purchase.buyerName) }}</p>
+                      <p><strong>Teléfono:</strong> {{ formatWinnerPhone(selectedWinner.purchase.buyerContactNumber) }}
+                      </p>
                       <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(selectedWinner.purchase.createdAt) }}</p>
                     </div>
                   </div>
@@ -197,6 +199,7 @@
 
                     <h3>Detalles del Ganador:</h3>
                     <p><strong>Nombre:</strong> {{ formatWinnerName(winnerPurchase.buyerName) }}</p>
+                    <p><strong>Teléfono:</strong> {{ formatWinnerPhone(winnerPurchase.buyerContactNumber) }}</p>
                     <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(winnerPurchase.createdAt) }}</p>
                   </div>
                 </div>
@@ -435,6 +438,15 @@ const formatWinnerName = (fullName: string) => {
   const censoredLastName = lastName.charAt(0) + '*'.repeat(lastName.length - 1)
 
   return `${firstName} ${censoredLastName}`
+}
+
+const formatWinnerPhone = (phoneNumber: string) => {
+  if (!phoneNumber || phoneNumber === 'No proporcionado') {
+    return 'No proporcionado'
+  }
+
+  // Retornar el número tal como está almacenado en la base de datos
+  return phoneNumber
 }
 
 const formatDateOnly = (dateString: string) => {
