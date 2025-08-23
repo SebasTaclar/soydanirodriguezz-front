@@ -5,7 +5,7 @@
         <h2>Preguntas frecuentes</h2>
       </div>
 
-      <div class="faq-list">
+      <div class="faq-grid">
         <div v-for="(faq, index) in faqs" :key="index" class="faq-item" :class="{ 'active': activeIndex === index }"
           @click="toggleFAQ(index)">
           <div class="faq-question">
@@ -82,12 +82,21 @@ const faqs = ref([
     answer: "Sí, una vez confirmado el pago, los fondos digitales de los wallpapers adquiridos se envían automáticamente al correo electrónico proporcionado durante la compra. Recibirás un email con el archivo para descargar."
   },
   {
+    question: "¿Tienes problemas para realizar tu pago por el navegador Safari?",
+    answer: "Si tienes inconvenientes con Safari, primero prueba actualizando el navegador. También puedes borrar la caché y las cookies. Si el problema continúa, te recomendamos intentar hacer el pago desde otro navegador como Google Chrome o Mozilla Firefox, o desde un computador. En caso de que aún persista, contáctanos y con gusto te ayudaremos."
+  },
+  {
     question: "¿Puedo comprar más de un número?",
     answer: "Sí, puedes comprar tantos números como desees, siempre y cuando estén disponibles."
   },
   {
     question: "¿No me permite hacer el pago desde mi Iphone?",
     answer: "Si tienes problemas para realizar el pago desde tu iPhone, asegúrate de que tu navegador permita ventanas emergentes y que no haya extensiones bloqueando el proceso. (Si ya le diste bloquear a ventanas emergentes, intenta cerrar todas las pestañas en las que este abierta la pagina y vuelve a intentar el proceso).."
+  },
+
+  {
+    question: "¿Cómo sé que mi pago fue exitoso?",
+    answer: "Al realizar tu compra recibirás uno o dos correos de Mercado Pago. El primero puede indicar que tu pago está pendiente de confirmación, y el segundo te notificará cuando el pago haya sido aprobado con éxito."
   },
   // {
   //   question: "¿Cómo puedo permitir o bloquear ventanas emergentes para sitios web específicos?",
@@ -108,7 +117,7 @@ const toggleFAQ = (index: number) => {
 }
 
 .faq-container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
@@ -126,10 +135,11 @@ const toggleFAQ = (index: number) => {
   text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.faq-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
 }
 
 .faq-item {
@@ -315,6 +325,17 @@ const toggleFAQ = (index: number) => {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .faq-container {
+    max-width: 800px;
+  }
+}
+
 @media (max-width: 768px) {
   .faq-container {
     padding: 0 1rem;
