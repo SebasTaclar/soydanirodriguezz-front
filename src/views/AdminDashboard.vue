@@ -84,11 +84,8 @@
 
           <div class="winner-game-container">
             <div v-if="!isGameStarted && !winnerNumber" class="game-start">
-              <button
-                @click="startWinnerGame"
-                :disabled="eligibleNumbers.length === 0 || isGameRunning"
-                class="start-game-btn"
-              >
+              <button @click="startWinnerGame" :disabled="eligibleNumbers.length === 0 || isGameRunning"
+                class="start-game-btn">
                 🎲 Iniciar Dinámica
               </button>
               <div class="game-rules">
@@ -108,26 +105,21 @@
 
             <div v-if="isGameStarted" class="game-active">
               <div class="game-explanation">
-                  <h4>🏆 ¡El quinto número es el ganador de la moto!</h4>
-                  <p>Los primeros 4 números ganarán dinero</p>
-                </div>
+                <h4>🏆 ¡El quinto número es el ganador de la moto!</h4>
+                <p>Los primeros 4 números ganarán dinero</p>
+              </div>
               <div class="attempts-container">
-                <h4>Intentos: {{ currentAttempt }}/5</h4>
+                <h4>Intentos: {{ currentAttempt - 1 }}/5</h4>
                 <div class="attempts-display">
-                  <div
-                    v-for="(attempt, index) in attempts"
-                    :key="index"
-                    class="attempt-number"
-                    :class="{
-                      'current': index === currentAttempt - 1 && !isGameComplete,
-                      'revealed': index < currentAttempt - 1 || isGameComplete,
-                      'spinning': isShowingSpinEffect && index === currentAttempt - 1,
-                      'clickable': attempt && index < 4
-                    }"
-                    @click="attempt && index < 4 ? showWinnerModal(attempt, index) : null"
-                  >
+                  <div v-for="(attempt, index) in attempts" :key="index" class="attempt-number" :class="{
+                    'current': index === currentAttempt - 1 && !isGameComplete,
+                    'revealed': index < currentAttempt - 1 || isGameComplete,
+                    'spinning': isShowingSpinEffect && index === currentAttempt - 1,
+                    'clickable': attempt && index < 4
+                  }" @click="attempt && index < 4 ? showWinnerModal(attempt, index) : null">
                     <div class="attempt-number-display">
-                      {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt || '?') }}
+                      {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') :
+                        (attempt || '?') }}
                     </div>
 
                   </div>
@@ -135,13 +127,17 @@
               </div>
 
               <div class="game-controls">
-                <button
-                  v-if="currentAttempt <= 5 && !isGameComplete"
-                  @click="nextAttempt"
-                  :disabled="isProcessingAttempt"
-                  class="next-attempt-btn"
-                >
-                  {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯 Intento ${currentAttempt}`) }}
+                <button v-if="currentAttempt <= 5 && !isGameComplete" @click="nextAttempt"
+                  :disabled="isProcessingAttempt" class="next-attempt-btn">
+                  {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯
+                  Intento ${currentAttempt}`) }}
+                </button>
+              </div>
+
+              <!-- Botón de reiniciar debajo con padding -->
+              <div v-if="isGameStarted" class="reset-controls">
+                <button @click="confirmResetGame" class="reset-game-btn">
+                  🔄 Nueva Dinámica
                 </button>
               </div>
 
@@ -168,6 +164,28 @@
                 </div>
               </div>
 
+              <!-- Modal de confirmación para reiniciar dinámica -->
+              <div v-if="showResetConfirmation" class="modal-overlay">
+                <div class="modal-content reset-confirmation-modal">
+                  <div class="modal-header">
+                    <h2>⚠️ Confirmar Reinicio</h2>
+                  </div>
+                  <div class="modal-body">
+                    <p>¿Estás seguro de que quieres reiniciar la dinámica?</p>
+                    <p class="warning-text">Se perderán todos los intentos actuales y tendrás que empezar desde el
+                      principio.</p>
+                    <div class="confirmation-buttons">
+                      <button @click="cancelReset" class="cancel-btn">
+                        ❌ Cancelar
+                      </button>
+                      <button @click="confirmReset" class="confirm-btn">
+                        ✅ Sí, Reiniciar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div v-if="isGameComplete && winnerNumber" class="winner-reveal">
                 <div class="winner-announcement">
                   <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
@@ -182,10 +200,6 @@
                     <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(winnerPurchase.createdAt) }}</p>
                   </div>
                 </div>
-
-                <button @click="resetGame" class="reset-game-btn">
-                  🔄 Nueva Dinámica
-                </button>
               </div>
             </div>
           </div>
@@ -335,6 +349,9 @@ const selectedWinner = ref<{
   purchase: null
 })
 
+// Modal state para confirmación de reinicio
+const showResetConfirmation = ref(false)
+
 // Compras filtradas
 const filteredPurchases = computed(() => {
   if (selectedStatus.value === 'ALL') {
@@ -477,7 +494,7 @@ const startWinnerGame = () => {
 
   isGameStarted.value = true
   isGameRunning.value = true
-  currentAttempt.value = 0
+  currentAttempt.value = 1
   attempts.value = [null, null, null, null, null]
   winnerNumber.value = null
   isGameComplete.value = false
@@ -490,10 +507,9 @@ const startWinnerGame = () => {
 }
 
 const nextAttempt = async () => {
-  if (currentAttempt.value >= 5 || isProcessingAttempt.value) return
+  if (currentAttempt.value > 5 || isProcessingAttempt.value) return
 
   isProcessingAttempt.value = true
-  currentAttempt.value++
 
   // Get numbers that have already been used in previous attempts
   const usedNumbers = attempts.value.filter(num => num !== null) as number[]
@@ -514,7 +530,7 @@ const nextAttempt = async () => {
   for (let i = 0; i < spinTimes; i++) {
     // If we have available unique numbers, use them; otherwise use all eligible except winner
     const spinPool = availableForSpinning.length > 0 ? availableForSpinning :
-                     eligibleNumbers.value.filter(num => num !== winnerNumber.value)
+      eligibleNumbers.value.filter(num => num !== winnerNumber.value)
 
     if (spinPool.length > 0) {
       const randomIndex = Math.floor(Math.random() * spinPool.length)
@@ -562,17 +578,20 @@ const nextAttempt = async () => {
     attempts.value[currentAttempt.value - 1] = randomNumber
 
     // Mostrar automáticamente el modal para los primeros 4 intentos
-    if (currentAttempt.value <= 4) {
+    if (currentAttempt.value < 4) {
       showWinnerModal(randomNumber, currentAttempt.value - 1)
     }
   }
+
+  // Increment attempt counter after processing
+  currentAttempt.value++
 
   isProcessingAttempt.value = false
 }
 
 const resetGame = () => {
   isGameStarted.value = false
-  currentAttempt.value = 0
+  currentAttempt.value = 1
   attempts.value = [null, null, null, null, null]
   winnerNumber.value = null
   isGameComplete.value = false
@@ -580,6 +599,20 @@ const resetGame = () => {
   isProcessingAttempt.value = false
   isShowingSpinEffect.value = false
   spinningNumbers.value = [null, null, null, null, null]
+}
+
+// Funciones para el modal de confirmación
+const confirmResetGame = () => {
+  showResetConfirmation.value = true
+}
+
+const cancelReset = () => {
+  showResetConfirmation.value = false
+}
+
+const confirmReset = () => {
+  showResetConfirmation.value = false
+  resetGame()
 }
 
 // Función para generar estilos aleatorios para confetis
@@ -1010,18 +1043,22 @@ onMounted(async () => {
     transform: rotateY(0deg) scale(1);
     background: rgba(245, 158, 11, 0.2);
   }
+
   25% {
     transform: rotateY(90deg) scale(1.1);
     background: rgba(239, 68, 68, 0.2);
   }
+
   50% {
     transform: rotateY(180deg) scale(1);
     background: rgba(139, 92, 246, 0.2);
   }
+
   75% {
     transform: rotateY(270deg) scale(1.1);
     background: rgba(34, 197, 94, 0.2);
   }
+
   100% {
     transform: rotateY(360deg) scale(1);
     background: rgba(245, 158, 11, 0.2);
@@ -1029,8 +1066,15 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .next-attempt-btn {
@@ -1055,6 +1099,12 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+.reset-controls {
+  padding-top: 0;
+  display: flex;
+  justify-content: center;
+}
+
 .winner-reveal {
   margin-top: 2rem;
   padding: 2rem;
@@ -1072,9 +1122,22 @@ onMounted(async () => {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-10px); }
-  60% { transform: translateY(-5px); }
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-10px);
+  }
+
+  60% {
+    transform: translateY(-5px);
+  }
 }
 
 .winner-number-display {
@@ -1091,8 +1154,13 @@ onMounted(async () => {
 }
 
 @keyframes glow {
-  from { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
-  to { box-shadow: 0 0 30px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.6); }
+  from {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  }
+
+  to {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.6);
+  }
 }
 
 .winner-details {
@@ -1103,7 +1171,7 @@ onMounted(async () => {
   text-align: left;
 }
 
-.winner-title{
+.winner-title {
   color: #10b981;
 }
 
@@ -1131,7 +1199,8 @@ onMounted(async () => {
 }
 
 .reset-game-btn {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5); /* morado -> azul */
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  /* morado -> azul */
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -1527,6 +1596,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1559,6 +1629,69 @@ onMounted(async () => {
   border: 1px solid rgba(96, 165, 250, 0.3);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   position: relative;
+}
+
+/* Reset Confirmation Modal Styles */
+.reset-confirmation-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.reset-confirmation-modal .modal-header h2 {
+  color: #f59e0b;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.reset-confirmation-modal .modal-body p {
+  color: #e2e8f0;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.reset-confirmation-modal .warning-text {
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-btn,
+.confirm-btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: translateY(-1px);
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
 }
 
 .modal-close {
@@ -1657,12 +1790,15 @@ onMounted(async () => {
     transform: scale(0.3);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.05);
   }
+
   70% {
     transform: scale(0.9);
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -1721,6 +1857,7 @@ onMounted(async () => {
     transform: translateY(-100vh) rotate(0deg);
     opacity: 1;
   }
+
   100% {
     transform: translateY(100vh) rotate(720deg);
     opacity: 0;
