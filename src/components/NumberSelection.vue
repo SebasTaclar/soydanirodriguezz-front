@@ -3,8 +3,8 @@
     <div class="selection-container">
       <!-- Título y descripción -->
       <div class="selection-header">
-        <h2>Elige tus Wallpapers NS200</h2>
-        <p>Selecciona los números de wallpapers que quieres comprar. Cada wallpaper cuesta $15.000 COP.</p>
+        <h2>Elige tus Wallpapers</h2>
+        <p>Selecciona los números de WallpapersMoto que quieres comprar. Cada wallpaper cuesta $15.000 COP.</p>
       </div>
 
       <!-- Sección ¿Cómo funciona? -->
@@ -15,7 +15,7 @@
             <div class="step-icon">�️</div>
             <div class="step-content">
               <h4>1. Elige tus wallpapers</h4>
-              <p>Selecciona los números de wallpapers NS200 que quieres comprar.</p>
+              <p>Cada número representa un Wallpaper. Selecciona los números de WallpapersMoto que quieres adquirir.</p>
             </div>
           </div>
 

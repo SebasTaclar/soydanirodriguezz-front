@@ -70,7 +70,7 @@
           </div>
 
           <div class="winner-header">
-            <h3>🎯 Selección del Número Ganador</h3>
+            <h3>🎯 Selección del Wallpaper Ganador</h3>
             <p>Genera el número ganador de entre los wallpapers pagados/aprobados</p>
           </div>
 

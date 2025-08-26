@@ -74,21 +74,18 @@ const faqs = ref([
     answer: "La dinámica se realizará una vez alcanzado el 50% de los fondos digitales vendidos."
   },
   {
-    question: "¿Cómo se elige al ganador?",
-    answer: "Utilizamos un sistema de selección aleatoria transparente. El ganador se selecciona mediante un generador de números aleatorios. Todo el proceso es transmitido en vivo."
-  },
-  {
-    question: "¿Los fondos digitales se envían al correo electrónico?",
-    answer: "Sí, una vez confirmado el pago, los fondos digitales de los wallpapers adquiridos se envían automáticamente al correo electrónico proporcionado durante la compra. Recibirás un email con el archivo para descargar."
+    question: "¿Puedo comprar más de un número?",
+    answer: "Sí, puedes comprar tantos números como desees, siempre y cuando estén disponibles."
   },
   {
     question: "¿Tienes problemas para realizar tu pago por el navegador Safari?",
     answer: "Si tienes inconvenientes con Safari, primero prueba actualizando el navegador. También puedes borrar la caché y las cookies. Si el problema continúa, te recomendamos intentar hacer el pago desde otro navegador como Google Chrome o Mozilla Firefox, o desde un computador. En caso de que aún persista, contáctanos y con gusto te ayudaremos."
   },
   {
-    question: "¿Puedo comprar más de un número?",
-    answer: "Sí, puedes comprar tantos números como desees, siempre y cuando estén disponibles."
+    question: "¿Los fondos digitales se envían al correo electrónico?",
+    answer: "Sí, una vez confirmado el pago, los fondos digitales de los wallpapers adquiridos se envían automáticamente al correo electrónico proporcionado durante la compra. Recibirás un email con el archivo para descargar."
   },
+
   {
     question: "¿No me permite hacer el pago desde mi Iphone?",
     answer: "Si tienes problemas para realizar el pago desde tu iPhone, asegúrate de que tu navegador permita ventanas emergentes y que no haya extensiones bloqueando el proceso. (Si ya le diste bloquear a ventanas emergentes, intenta cerrar todas las pestañas en las que este abierta la pagina y vuelve a intentar el proceso).."

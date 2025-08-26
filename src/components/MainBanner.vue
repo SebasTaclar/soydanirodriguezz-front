@@ -4,7 +4,7 @@
     <div class="moto-gallery-section">
       <div class="gallery-container">
         <div class="gallery-header">
-          <h1>Gana una <span class="highlight-blue">Pulsar</span> con tu número de la suerte</h1>
+          <h1>Adquiere tus <span class="highlight-blue">DigitalWallpapers</span></h1>
           <h1></h1>
         </div>
 
@@ -52,7 +52,7 @@
           <div class="moto-modifications" ref="motoModRef">
             <div class="moto-modifications-inner" ref="motoInnerRef">
               <p class="modifications-description">
-                Esta <span class="highlight-text">Pulsar NS200</span> incluye:
+                Esta <span class="highlight-text">Motocicleta</span> incluye:
                 <strong>Cúpula Nueva, Retrovisores Nuevos, Tapas Laterales Nuevas y Emblemas Nuevos.</strong>
               </p>
             </div>
@@ -65,9 +65,7 @@
 
         <!-- Contenido centrado debajo de la galería -->
         <div class="content-wrapper">
-          <div class="description">
-            <p>Elige tus números, confirma y guarda tu comprobante. Dinámica transparente y regulado por reglas claras.</p>
-          </div>
+
 
 
 
@@ -885,7 +883,7 @@ onUnmounted(() => {
     width: 100% !important;
     max-width: 1000px;
     padding: 0.6rem 1rem;
-    margin: -10rem auto 0 auto;
+    margin: -10.8rem auto 0 auto;
   }
 
   .moto-modifications-inner {
@@ -963,7 +961,7 @@ onUnmounted(() => {
     width: 100% !important;
     max-width: 92%;
     padding: 0.5rem 1rem;
-    margin: -10rem auto 0 auto;
+    margin: -10.8rem auto 0 auto;
   }
 
   .moto-modifications-inner {
