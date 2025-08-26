@@ -77,7 +77,7 @@
            <!-- Estadísticas -->
           <div class="stats-section">
             <div class="stat-card">
-              <div class="stat-value">$ 15.000</div>
+              <div class="stat-value">$ 1.500</div>
               <div class="stat-label">por número</div>
             </div>
           <div class="stat-card">

@@ -40,6 +40,32 @@ export interface PaymentResponse {
   }
 }
 
+export interface WompiPaymentResponse {
+  message: string
+  purchase: {
+    id: string
+    wallpaperNumbers: number[]
+    amount: number
+    currency: string
+    status: string
+    provider: string
+  }
+  payment: {
+    transactionId: string
+    reference: string
+    publicKey: string
+    signature: string
+    // Para usar con el widget en lugar de redirección
+    widgetConfig?: {
+      publicKey: string
+      currency: string
+      amountInCents: number
+      reference: string
+      signature: string
+    }
+  }
+}
+
 export interface GetPurchasesResponse {
   email: string
   count: number
@@ -56,6 +82,21 @@ export class PaymentService {
       return response
     } catch (error) {
       console.error('Error creating payment:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Crear un nuevo pago con Wompi
+   */
+  async createWompiPayment(
+    request: CreatePaymentRequest,
+  ): Promise<ApiResponse<WompiPaymentResponse>> {
+    try {
+      const response = await apiClient.post<WompiPaymentResponse>('/wompi/payments', request)
+      return response
+    } catch (error) {
+      console.error('Error creating Wompi payment:', error)
       throw error
     }
   }

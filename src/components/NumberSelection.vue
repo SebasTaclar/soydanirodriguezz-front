@@ -172,6 +172,16 @@
                 Validando disponibilidad...
               </span>
             </button>
+
+            <button class="payment-btn wompi-payment"
+              :disabled="!isFormValid || selectedNumbers.length === 0 || isProcessingPayment"
+              @click="showTermsModalWompi">
+              <span v-if="!isProcessingPayment">🏦 Pagar con Wompi</span>
+              <span v-else class="processing-text">
+                <div class="processing-spinner"></div>
+                Procesando con Wompi...
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -213,6 +223,7 @@ import { ref, computed, onMounted } from 'vue'
 import { usePayments } from '@/composables/usePayments'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import TermsAndConditionsModal from '@/components/TermsAndConditionsModal.vue'
+import type { WompiWidgetResult } from '@/types/WompiType'
 
 // Form refs
 const userForm = ref({
@@ -258,6 +269,9 @@ const isProcessingPayment = ref<boolean>(false)
 
 // Estado del modal de términos y condiciones
 const showTermsAndConditions = ref<boolean>(false)
+
+// Estado para rastrear el método de pago seleccionado
+const selectedPaymentMethod = ref<'mercadopago' | 'wompi'>('mercadopago')
 
 // Estado para mostrar notificaciones de números no disponibles
 const unavailableNotification = ref<{
@@ -466,7 +480,11 @@ const clearAllNumbers = () => {
 
 // Computed properties
 const totalAmount = computed(() => {
-  return selectedNumbers.value.length * 5000
+  return selectedNumbers.value.length * 1500 // $1,500 COP por wallpaper (precio de prueba)
+})
+
+const totalAmountInCents = computed(() => {
+  return totalAmount.value * 100 // Convertir a centavos para Wompi
 })
 
 const isFormValid = computed(() => {
@@ -589,6 +607,226 @@ const payWithMercadoPago = async () => {
   }
 }
 
+// Payment with Wompi
+const payWithWompi = async () => {
+  if (selectedNumbers.value.length > 0 && isFormValid.value) {
+    try {
+      // Activar loading
+      isProcessingPayment.value = true
+
+      // VALIDACIÓN CRÍTICA: Verificar que todos los números seleccionados aún estén disponibles
+      console.log('🔍 Validando disponibilidad de números antes del pago con Wompi...')
+
+      // Refrescar los datos desde la API para obtener el estado más actualizado
+      await refreshTakenNumbers()
+
+      // Verificar cada número seleccionado
+      const unavailableNumbers: number[] = []
+
+      for (const number of selectedNumbers.value) {
+        // Verificar si el número está tomado (pagado por otro usuario)
+        if (takenNumbers.value.includes(number)) {
+          unavailableNumbers.push(number)
+        }
+        // Verificar si el número está reservado por otro usuario
+        if (isNumberReserved(number)) {
+          unavailableNumbers.push(number)
+        }
+      }
+
+      // Si hay números no disponibles, mostrar error y removerlos de la selección
+      if (unavailableNumbers.length > 0) {
+        // Remover números no disponibles de la selección
+        selectedNumbers.value = selectedNumbers.value.filter(
+          number => !unavailableNumbers.includes(number)
+        )
+
+        // Mostrar mensaje de error específico
+        const numbersList = unavailableNumbers
+          .map(n => `#${n.toString().padStart(4, '0')}`)
+          .join(', ')
+
+        alert(
+          `⚠️ Los siguientes wallpapers ya no están disponibles: ${numbersList}\n\n` +
+          `Han sido removidos de tu selección. Por favor, selecciona otros wallpapers.`
+        )
+
+        // Desactivar loading y salir
+        isProcessingPayment.value = false
+        return
+      }
+
+      // Si no quedan números seleccionados después de la validación
+      if (selectedNumbers.value.length === 0) {
+        alert('Todos los wallpapers seleccionados ya no están disponibles. Por favor, selecciona otros.')
+        isProcessingPayment.value = false
+        return
+      }
+
+      console.log('✅ Todos los números están disponibles, procesando pago con Wompi...')
+
+      const { createWompiPayment } = usePayments()
+
+      // Enviar todos los números seleccionados como array
+      const paymentData = {
+        wallpaperNumbers: selectedNumbers.value,
+        buyerEmail: userForm.value.email,
+        buyerName: userForm.value.name,
+        buyerContactNumber: userForm.value.contactNumber,
+        buyerIdentificationNumber: userForm.value.identificationNumber,
+        amount: totalAmount.value
+      }
+
+      const response = await createWompiPayment(paymentData)
+
+      if (response?.payment) {
+        // Usar el Widget de Wompi en lugar de redirección
+        openWompiWidget(response)
+      } else {
+        // Fallback temporal mientras se implementa el backend completo
+        openWompiWidgetFallback()
+      }
+    } catch (error) {
+      console.error('Error creating Wompi payment:', error)
+
+      // Verificar si el error es debido a números no disponibles
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      if (errorMessage.toLowerCase().includes('not available') ||
+        errorMessage.toLowerCase().includes('no disponible') ||
+        errorMessage.toLowerCase().includes('already taken')) {
+        alert('❌ Algunos wallpapers seleccionados ya no están disponibles. La página se actualizará con los números correctos.')
+        // Refrescar la página para mostrar el estado actualizado
+        window.location.reload()
+      } else {
+        alert('❌ Error al procesar el pago con Wompi. Intenta nuevamente.')
+      }
+    } finally {
+      // Desactivar loading después de 2 segundos para dar tiempo al redirect
+      setTimeout(() => {
+        isProcessingPayment.value = false
+      }, 2000)
+    }
+  } else if (selectedNumbers.value.length === 0) {
+    alert('Selecciona al menos un wallpaper para pagar')
+  } else {
+    alert('Completa todos los campos requeridos')
+  }
+}
+
+// Función fallback temporal para testing
+const openWompiWidgetFallback = () => {
+  // Por ahora mostrar alerta informativa
+  alert(`🚧 Widget de Wompi en desarrollo
+
+Para completar la integración necesitas:
+
+1. ✅ Frontend: Widget implementado
+2. ⏳ Backend: Generar firma de integridad
+3. ⏳ Backend: Retornar publicKey y signature
+
+Usa MercadoPago mientras tanto.`)
+
+  isProcessingPayment.value = false
+}
+
+// Función para abrir el Widget de Wompi
+const openWompiWidget = (paymentResponse: any) => {
+  // Cargar el script de Wompi si no está cargado
+  loadWompiScript().then(() => {
+    // Configurar el widget con los datos de la respuesta
+    const checkout = new window.WidgetCheckout({
+      currency: 'COP',
+      amountInCents: paymentResponse.purchase.amount * 100, // Convertir de pesos a centavos
+      reference: paymentResponse.payment.reference,
+      publicKey: paymentResponse.payment.publicKey,
+      signature: {
+        integrity: paymentResponse.payment.signature
+      },
+      customerData: {
+        email: userForm.value.email,
+        fullName: userForm.value.name,
+        phoneNumber: userForm.value.contactNumber,
+        phoneNumberPrefix: '+57',
+        legalId: userForm.value.identificationNumber,
+        legalIdType: userForm.value.identificationType
+      }
+    })
+
+    // Abrir el widget
+    checkout.open((result: WompiWidgetResult) => {
+      handleWompiWidgetResult(result)
+    })
+  }).catch((error) => {
+    console.error('Error loading Wompi script:', error)
+    alert('❌ Error al cargar el sistema de pagos. Intenta nuevamente.')
+    isProcessingPayment.value = false
+  })
+}
+
+// Función para cargar el script de Wompi dinámicamente
+const loadWompiScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    // Verificar si ya está cargado
+    if ((window as any).WidgetCheckout) {
+      resolve()
+      return
+    }
+
+    // Verificar si ya existe el script
+    const existingScript = document.querySelector('script[src="https://checkout.wompi.co/widget.js"]')
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve())
+      existingScript.addEventListener('error', () => reject())
+      return
+    }
+
+    // Crear y cargar el script
+    const script = document.createElement('script')
+    script.src = 'https://checkout.wompi.co/widget.js'
+    script.type = 'text/javascript'
+    script.onload = () => resolve()
+    script.onerror = () => reject()
+    document.head.appendChild(script)
+  })
+}
+
+// Función para manejar el resultado del widget
+const handleWompiWidgetResult = (result: WompiWidgetResult) => {
+  const transaction = result.transaction
+
+  console.log('Wompi Widget Result:', result)
+  console.log('Transaction ID:', transaction.id)
+  console.log('Transaction Status:', transaction.status)
+
+  // Desactivar loading
+  isProcessingPayment.value = false
+
+  if (transaction.status === 'APPROVED') {
+    // Pago exitoso - limpiar selección
+    selectedNumbers.value = []
+    userForm.value = {
+      name: '',
+      email: '',
+      contactNumber: '',
+      identificationType: 'CC',
+      identificationNumber: ''
+    }
+
+    // Mostrar mensaje de éxito
+    alert('✅ ¡Pago realizado con éxito! Recibirás los wallpapers por correo electrónico.')
+
+    // Refrescar números tomados para actualizar la UI
+    refreshTakenNumbers()
+
+  } else if (transaction.status === 'DECLINED') {
+    alert('❌ El pago fue rechazado. Intenta con otro método de pago.')
+  } else if (transaction.status === 'PENDING') {
+    alert('⏳ Tu pago está siendo procesado. Te notificaremos cuando se complete.')
+  } else {
+    alert('❌ Hubo un problema con el pago. Intenta nuevamente.')
+  }
+}
+
 // Métodos para manejar el modal de términos y condiciones
 const showTermsModal = () => {
   if (selectedNumbers.value.length === 0) {
@@ -601,6 +839,22 @@ const showTermsModal = () => {
     return
   }
 
+  selectedPaymentMethod.value = 'mercadopago'
+  showTermsAndConditions.value = true
+}
+
+const showTermsModalWompi = () => {
+  if (selectedNumbers.value.length === 0) {
+    alert('Selecciona al menos un wallpaper para pagar')
+    return
+  }
+
+  if (!isFormValid.value) {
+    alert('Completa todos los campos requeridos')
+    return
+  }
+
+  selectedPaymentMethod.value = 'wompi'
   showTermsAndConditions.value = true
 }
 
@@ -610,7 +864,16 @@ const handleTermsClose = () => {
 
 const handleTermsAccept = () => {
   showTermsAndConditions.value = false
-  payWithMercadoPago()
+  if (selectedPaymentMethod.value === 'wompi') {
+    payWithWompi()
+  } else {
+    payWithMercadoPago()
+  }
+}
+
+const handleTermsAcceptWompi = () => {
+  showTermsAndConditions.value = false
+  payWithWompi()
 }
 </script>
 
@@ -1821,6 +2084,35 @@ const handleTermsAccept = () => {
 .mercadopago-payment:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 180, 216, 0.4);
+}
+
+.wompi-payment {
+  background: linear-gradient(135deg, #1f2937, #374151);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #10b981;
+}
+
+.wompi-payment:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.wompi-payment:hover:not(:disabled):before {
+  left: 100%;
+}
+
+.wompi-payment:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  border-color: #059669;
 }
 
 .processing-text {

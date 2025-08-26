@@ -28,17 +28,59 @@ export function usePayments() {
           JSON.stringify({
             purchaseId: response.data.purchase.id,
             wallpaperNumbers: response.data.purchase.wallpaperNumbers,
-            email: paymentData.buyerEmail,
+            amount: response.data.purchase.amount,
+            timestamp: new Date().toISOString(),
           }),
         )
 
         return response.data
       } else {
-        throw new Error(response.message || 'Error creating payment')
+        throw new Error(response.message || 'Failed to create payment')
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error creating payment'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
       error.value = errorMessage
+      console.error('Payment creation error:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Crear un nuevo pago con Wompi
+   */
+  const createWompiPayment = async (paymentData: CreatePaymentRequest) => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await paymentService.createWompiPayment(paymentData)
+
+      if (response.success && response.data) {
+        // Guardar la URL de pago para redirigir al usuario
+        currentPaymentUrl.value = response.data.payment.paymentUrl
+
+        // Guardar información del pago en localStorage para tracking
+        localStorage.setItem(
+          'lastWompiPaymentData',
+          JSON.stringify({
+            purchaseId: response.data.purchase.id,
+            transactionId: response.data.payment.transactionId,
+            wallpaperNumbers: response.data.purchase.wallpaperNumbers,
+            amount: response.data.purchase.amount,
+            timestamp: new Date().toISOString(),
+          }),
+        )
+
+        return response.data
+      } else {
+        throw new Error(response.message || 'Failed to create Wompi payment')
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
+      error.value = errorMessage
+      console.error('Wompi payment creation error:', err)
       throw err
     } finally {
       isLoading.value = false
@@ -135,6 +177,7 @@ export function usePayments() {
 
     // Métodos
     createPayment,
+    createWompiPayment,
     getUserPurchases,
     hasUserPurchasedWallpaper,
     clearPaymentUrl,
