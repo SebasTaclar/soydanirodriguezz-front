@@ -2,7 +2,7 @@
   <div v-if="isVisible" class="modal-overlay" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
-        <h3>Reglas de la Dinámica</h3>
+        <h3>Reglas</h3>
         <button class="close-btn" @click="closeModal">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
@@ -14,9 +14,9 @@
         <div class="rule-section">
           <h4>🎯 Participación</h4>
           <ul>
-            <li>Cada número tiene un costo de $15.000 COP</li>
+            <li>Cada Wallpaper tiene un costo de $15.000 COP</li>
             <li>Los números van del 001 al 5000</li>
-            <li>Una vez comprado, el número queda reservado para ti</li>
+            <li>Una vez comprado, el Wallpaper queda reservado para ti</li>
           </ul>
         </div>
 
@@ -27,20 +27,19 @@
           </ul>
         </div>
 
-        <div class="rule-section">
+        <!-- <div class="rule-section">
           <h4>🏆 Premios</h4>
           <ul>
             <li>Motocicleta 200 NS</li>
           </ul>
-        </div>
-
+        </div> -->
+<!--
         <div class="rule-section">
           <h4>⚖️ Condiciones generales</h4>
           <ul>
-            <li>La dinámica se realiza con sistema aleatorio</li>
             <li>La dinámica se llevará a cabo una vez alcanzado el 50% de los fondos vendidos</li>
           </ul>
-        </div>
+        </div> -->
 
 
       </div>

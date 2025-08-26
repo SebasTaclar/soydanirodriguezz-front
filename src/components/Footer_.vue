@@ -7,9 +7,9 @@
         <div class="footer-content">
           <!-- Logo y descripción -->
           <div class="brand-section">
-            <h2 class="brand-title">FondosDigitales<span class="highlight">Moto</span></h2>
+            <h2 class="brand-title">DigitalWallpapers<span class="highlight">Moto</span></h2>
             <p class="brand-description">
-              Tu oportunidad de comprar tus fondos digitales y ganar la moto de tus sueños.
+              Tu oportunidad de comprar tus fondos digitales.
             </p>
           </div>
 
@@ -38,7 +38,7 @@
     <div class="footer-bottom">
       <div class="footer-container">
         <div class="copyright-section">
-          <p>&copy; 2025 FondosDigitales. Todos los derechos reservados.</p>
+          <p>&copy; 2025 DigitalWallpapersMoto. Todos los derechos reservados.</p>
         </div>
       </div>
     </div>

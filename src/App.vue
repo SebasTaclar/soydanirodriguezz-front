@@ -12,7 +12,7 @@
 
       <!-- Navegación principal -->
       <div class="nav-menu desktop-nav">
-        <a href="#numbers" class="nav-link" @click="closeMobileMenu(); scrollToNumbers()">Participa Ahora</a>
+        <a href="#numbers" class="nav-link" @click="closeMobileMenu(); scrollToNumbers()">Elige Ahora</a>
         <a href="#faq" class="nav-link " @click="closeMobileMenu">¿Preguntas?</a>
       </div>
 

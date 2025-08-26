@@ -11,11 +11,11 @@
       <div class="modal-body">
         <div class="terms-content">
           <div class="warning-icon">⚠️</div>
-          <p class="terms-text">
-            Al continuar, confirmas que compras una o más participaciones en una dinámica en la que puedes ganar o no el
-            premio. Autorizas el uso de tus datos personales para fines relacionados con la actividad y aceptas que el
-            pago es no reembolsable.
-          </p>
+
+            <strong>Consulta el documento completo aquí:</strong>
+            <a class="terms-link" href="images/terminos-condiciones.pdf" target="_blank" rel="noopener noreferrer">
+              Ver PDF de Términos y Condiciones
+            </a>
 
           <div class="checkbox-container">
             <label class="checkbox-label">
@@ -178,6 +178,32 @@ const handleAccept = () => {
   padding: 1.5rem;
   border-radius: 12px;
   border-left: 4px solid #fbbf24;
+}
+
+.terms-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: #60a5fa;
+  font-weight: 600;
+  text-decoration: none;
+  position: relative;
+  padding-right: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.terms-link::after {
+  content: '\2197'; /* flecha diagonal */
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.terms-link:hover {
+  color: #93c5fd;
+  text-decoration: underline;
 }
 
 .checkbox-container {
