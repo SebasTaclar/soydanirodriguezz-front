@@ -46,6 +46,7 @@ export function useAdminPurchases() {
     const grouped = {
       PENDING: purchases.value.filter((p) => p.status === 'PENDING'),
       APPROVED: purchases.value.filter((p) => p.status === 'APPROVED'),
+      COMPLETED: purchases.value.filter((p) => p.status === 'COMPLETED'),
       REJECTED: purchases.value.filter((p) => p.status === 'REJECTED'),
       CANCELLED: purchases.value.filter((p) => p.status === 'CANCELLED'),
     }
@@ -57,11 +58,11 @@ export function useAdminPurchases() {
    */
   const stats = computed(() => {
     const totalRevenue = purchases.value
-      .filter((p) => p.status === 'APPROVED')
+      .filter((p) => p.status === 'APPROVED' || p.status === 'COMPLETED')
       .reduce((sum, p) => sum + p.amount, 0)
 
     const totalWallpapersSold = purchases.value
-      .filter((p) => p.status === 'APPROVED')
+      .filter((p) => p.status === 'APPROVED' || p.status === 'COMPLETED')
       .reduce((sum, p) => sum + p.wallpaperNumbers.length, 0)
 
     return {
@@ -70,6 +71,7 @@ export function useAdminPurchases() {
       totalWallpapersSold,
       pendingPurchases: purchasesByStatus.value.PENDING.length,
       approvedPurchases: purchasesByStatus.value.APPROVED.length,
+      completedPurchases: purchasesByStatus.value.COMPLETED.length,
       rejectedPurchases: purchasesByStatus.value.REJECTED.length,
       cancelledPurchases: purchasesByStatus.value.CANCELLED.length,
     }

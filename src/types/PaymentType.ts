@@ -14,7 +14,7 @@ export interface WallpaperType {
 export interface PaymentType {
   id: string
   wallpaperNumber: number
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+  status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED' | 'CANCELLED'
   amount: number
   currency: string
   createdAt: string

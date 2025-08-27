@@ -17,7 +17,7 @@ export interface Purchase {
   buyerEmail: string
   buyerName: string
   buyerContactNumber: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+  status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED' | 'CANCELLED'
   amount: number
   currency: string
   createdAt: string

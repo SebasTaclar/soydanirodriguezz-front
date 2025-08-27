@@ -229,7 +229,7 @@
             </button>
             <button @click="selectedStatus = 'APPROVED'"
               :class="['filter-btn', 'approved', { active: selectedStatus === 'APPROVED' }]">
-              Aprobadas ({{ purchasesByStatus.APPROVED.length }})
+              Aprobadas ({{ purchasesByStatus.APPROVED.length + purchasesByStatus.COMPLETED.length }})
             </button>
             <button @click="selectedStatus = 'REJECTED'"
               :class="['filter-btn', 'rejected', { active: selectedStatus === 'REJECTED' }]">
@@ -360,15 +360,21 @@ const filteredPurchases = computed(() => {
   if (selectedStatus.value === 'ALL') {
     return purchases.value
   }
+  if (selectedStatus.value === 'APPROVED') {
+    // Cuando se selecciona APPROVED, incluir tanto APPROVED como COMPLETED
+    return [...(purchasesByStatus.value.APPROVED || []), ...(purchasesByStatus.value.COMPLETED || [])]
+  }
   return purchasesByStatus.value[selectedStatus.value] || []
 })
 
-// Números elegibles para el sorteo (solo aprobados)
+// Números elegibles para el sorteo (solo aprobados y completados)
 const eligibleNumbers = computed(() => {
   const approvedPurchases = purchasesByStatus.value.APPROVED || []
+  const completedPurchases = purchasesByStatus.value.COMPLETED || []
+  const eligiblePurchases = [...approvedPurchases, ...completedPurchases]
   const numbers: number[] = []
 
-  approvedPurchases.forEach(purchase => {
+  eligiblePurchases.forEach(purchase => {
     if (purchase.wallpaperNumbers && Array.isArray(purchase.wallpaperNumbers)) {
       numbers.push(...purchase.wallpaperNumbers)
     }
@@ -382,7 +388,10 @@ const winnerPurchase = computed(() => {
   if (!winnerNumber.value) return null
 
   const approvedPurchases = purchasesByStatus.value.APPROVED || []
-  return approvedPurchases.find(purchase =>
+  const completedPurchases = purchasesByStatus.value.COMPLETED || []
+  const eligiblePurchases = [...approvedPurchases, ...completedPurchases]
+
+  return eligiblePurchases.find(purchase =>
     purchase.wallpaperNumbers && purchase.wallpaperNumbers.includes(winnerNumber.value!)
   )
 })
@@ -420,6 +429,7 @@ const getStatusText = (status: string) => {
   const statusMap = {
     'PENDING': 'Pendiente',
     'APPROVED': 'Aprobada',
+    'COMPLETED': 'Completada',
     'REJECTED': 'Rechazada',
     'CANCELLED': 'Cancelada'
   }
@@ -466,7 +476,9 @@ const showWinnerModal = (number: number, position: number) => {
   }
 
   const approvedPurchases = purchasesByStatus.value.APPROVED || []
-  const purchase = approvedPurchases.find(p =>
+  const completedPurchases = purchasesByStatus.value.COMPLETED || []
+  const eligiblePurchases = [...approvedPurchases, ...completedPurchases]
+  const purchase = eligiblePurchases.find(p =>
     p.wallpaperNumbers && p.wallpaperNumbers.includes(number)
   )
 
@@ -1452,6 +1464,12 @@ onMounted(async () => {
 }
 
 .status-badge.approved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.completed {
   background: rgba(16, 185, 129, 0.2);
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.3);
