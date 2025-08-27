@@ -23,7 +23,7 @@
             <div class="step-icon">1️⃣</div>
             <div class="step-content">
               <h4>2. Realiza el pago</h4>
-              <p>Paga de forma segura con MercadoPago.</p>
+              <p>Paga de forma segura con Wompi.</p>
             </div>
           </div>
 
@@ -164,7 +164,8 @@
 
           <!-- Botones de pago -->
           <div class="payment-buttons">
-            <button class="payment-btn mercadopago-payment"
+            <!-- BOTÓN MERCADOPAGO TEMPORALMENTE OCULTO - PARA EMERGENCIAS REMOVER STYLE="display: none" -->
+            <button class="payment-btn mercadopago-payment" style="display: none"
               :disabled="!isFormValid || selectedNumbers.length === 0 || isProcessingPayment" @click="showTermsModal">
               <span v-if="!isProcessingPayment">💳 Pagar con MercadoPago</span>
               <span v-else class="processing-text">
@@ -207,7 +208,7 @@
       <div class="loading-content">
         <div class="loading-spinner"></div>
         <h3>Procesando pago...</h3>
-        <p>Redirigiendo a MercadoPago</p>
+        <p>Abriendo widget de pago seguro</p>
         <div class="loading-dots">
           <span></span>
           <span></span>
