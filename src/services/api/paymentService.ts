@@ -51,18 +51,12 @@ export interface WompiPaymentResponse {
     provider: string
   }
   payment: {
-    transactionId: string
     reference: string
     publicKey: string
     signature: string
-    // Para usar con el widget en lugar de redirección
-    widgetConfig?: {
-      publicKey: string
-      currency: string
-      amountInCents: number
-      reference: string
-      signature: string
-    }
+    amountInCents: number
+    currency: string
+    checkoutUrl: string // URL del Web Checkout para redirección
   }
 }
 

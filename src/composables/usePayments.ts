@@ -59,14 +59,14 @@ export function usePayments() {
 
       if (response.success && response.data) {
         // Guardar la URL de pago para redirigir al usuario
-        currentPaymentUrl.value = response.data.payment.paymentUrl
+        currentPaymentUrl.value = response.data.payment.checkoutUrl
 
         // Guardar información del pago en localStorage para tracking
         localStorage.setItem(
           'lastWompiPaymentData',
           JSON.stringify({
             purchaseId: response.data.purchase.id,
-            transactionId: response.data.payment.transactionId,
+            reference: response.data.payment.reference, // Usar reference en lugar de transactionId
             wallpaperNumbers: response.data.purchase.wallpaperNumbers,
             amount: response.data.purchase.amount,
             timestamp: new Date().toISOString(),

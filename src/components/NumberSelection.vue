@@ -4,7 +4,7 @@
       <!-- Título y descripción -->
       <div class="selection-header">
         <h2>Elige tus Wallpapers</h2>
-        <p>Selecciona los números de WallpapersMoto que quieres comprar. Cada wallpaper cuesta $15.000 COP.</p>
+        <p>Selecciona los números de WallpapersMoto que quieres comprar. Cada wallpaper cuesta $1.500 COP.</p>
       </div>
 
       <!-- Sección ¿Cómo funciona? -->
@@ -223,7 +223,6 @@ import { ref, computed, onMounted } from 'vue'
 import { usePayments } from '@/composables/usePayments'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import TermsAndConditionsModal from '@/components/TermsAndConditionsModal.vue'
-import type { WompiWidgetResult } from '@/types/WompiType'
 
 // Form refs
 const userForm = ref({
@@ -483,10 +482,6 @@ const totalAmount = computed(() => {
   return selectedNumbers.value.length * 1500 // $1,500 COP por wallpaper (precio de prueba)
 })
 
-const totalAmountInCents = computed(() => {
-  return totalAmount.value * 100 // Convertir a centavos para Wompi
-})
-
 const isFormValid = computed(() => {
   return userForm.value.name.trim() !== '' &&
     userForm.value.email.trim() !== '' &&
@@ -679,12 +674,25 @@ const payWithWompi = async () => {
 
       const response = await createWompiPayment(paymentData)
 
-      if (response?.payment) {
-        // Usar el Widget de Wompi en lugar de redirección
-        openWompiWidget(response)
+      console.log('🔍 Respuesta completa del backend:', response)
+
+      if (response?.payment?.checkoutUrl) {
+        // Redirigir al Web Checkout de Wompi
+        console.log('🚀 Redirigiendo a Wompi Web Checkout:', response.payment.checkoutUrl)
+        window.open(response.payment.checkoutUrl, '_blank')
+
+        // Limpiar selección después de iniciar el pago
+        selectedNumbers.value = []
+        userForm.value = {
+          name: '',
+          email: '',
+          contactNumber: '',
+          identificationType: 'CC',
+          identificationNumber: ''
+        }
       } else {
-        // Fallback temporal mientras se implementa el backend completo
-        openWompiWidgetFallback()
+        console.error('❌ No se recibió checkoutUrl del backend')
+        alert('❌ Error: No se pudo generar la URL de pago. Intenta nuevamente.')
       }
     } catch (error) {
       console.error('Error creating Wompi payment:', error)
@@ -710,120 +718,6 @@ const payWithWompi = async () => {
     alert('Selecciona al menos un wallpaper para pagar')
   } else {
     alert('Completa todos los campos requeridos')
-  }
-}
-
-// Función fallback temporal para testing
-const openWompiWidgetFallback = () => {
-  // Por ahora mostrar alerta informativa
-  alert(`🚧 Widget de Wompi en desarrollo
-
-Para completar la integración necesitas:
-
-1. ✅ Frontend: Widget implementado
-2. ⏳ Backend: Generar firma de integridad
-3. ⏳ Backend: Retornar publicKey y signature
-
-Usa MercadoPago mientras tanto.`)
-
-  isProcessingPayment.value = false
-}
-
-// Función para abrir el Widget de Wompi
-const openWompiWidget = (paymentResponse: any) => {
-  // Cargar el script de Wompi si no está cargado
-  loadWompiScript().then(() => {
-    // Configurar el widget con los datos de la respuesta
-    const checkout = new window.WidgetCheckout({
-      currency: 'COP',
-      amountInCents: paymentResponse.purchase.amount * 100, // Convertir de pesos a centavos
-      reference: paymentResponse.payment.reference,
-      publicKey: paymentResponse.payment.publicKey,
-      signature: {
-        integrity: paymentResponse.payment.signature
-      },
-      customerData: {
-        email: userForm.value.email,
-        fullName: userForm.value.name,
-        phoneNumber: userForm.value.contactNumber,
-        phoneNumberPrefix: '+57',
-        legalId: userForm.value.identificationNumber,
-        legalIdType: userForm.value.identificationType
-      }
-    })
-
-    // Abrir el widget
-    checkout.open((result: WompiWidgetResult) => {
-      handleWompiWidgetResult(result)
-    })
-  }).catch((error) => {
-    console.error('Error loading Wompi script:', error)
-    alert('❌ Error al cargar el sistema de pagos. Intenta nuevamente.')
-    isProcessingPayment.value = false
-  })
-}
-
-// Función para cargar el script de Wompi dinámicamente
-const loadWompiScript = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    // Verificar si ya está cargado
-    if ((window as any).WidgetCheckout) {
-      resolve()
-      return
-    }
-
-    // Verificar si ya existe el script
-    const existingScript = document.querySelector('script[src="https://checkout.wompi.co/widget.js"]')
-    if (existingScript) {
-      existingScript.addEventListener('load', () => resolve())
-      existingScript.addEventListener('error', () => reject())
-      return
-    }
-
-    // Crear y cargar el script
-    const script = document.createElement('script')
-    script.src = 'https://checkout.wompi.co/widget.js'
-    script.type = 'text/javascript'
-    script.onload = () => resolve()
-    script.onerror = () => reject()
-    document.head.appendChild(script)
-  })
-}
-
-// Función para manejar el resultado del widget
-const handleWompiWidgetResult = (result: WompiWidgetResult) => {
-  const transaction = result.transaction
-
-  console.log('Wompi Widget Result:', result)
-  console.log('Transaction ID:', transaction.id)
-  console.log('Transaction Status:', transaction.status)
-
-  // Desactivar loading
-  isProcessingPayment.value = false
-
-  if (transaction.status === 'APPROVED') {
-    // Pago exitoso - limpiar selección
-    selectedNumbers.value = []
-    userForm.value = {
-      name: '',
-      email: '',
-      contactNumber: '',
-      identificationType: 'CC',
-      identificationNumber: ''
-    }
-
-    // Mostrar mensaje de éxito
-    alert('✅ ¡Pago realizado con éxito! Recibirás los wallpapers por correo electrónico.')
-
-    // Refrescar números tomados para actualizar la UI
-    refreshTakenNumbers()
-
-  } else if (transaction.status === 'DECLINED') {
-    alert('❌ El pago fue rechazado. Intenta con otro método de pago.')
-  } else if (transaction.status === 'PENDING') {
-    alert('⏳ Tu pago está siendo procesado. Te notificaremos cuando se complete.')
-  } else {
-    alert('❌ Hubo un problema con el pago. Intenta nuevamente.')
   }
 }
 
