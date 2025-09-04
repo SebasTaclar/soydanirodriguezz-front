@@ -4,7 +4,7 @@
       <!-- Título y descripción -->
       <div class="selection-header">
         <h2>Elige tus Wallpapers</h2>
-        <p>Selecciona los números de WallpapersMoto que quieres comprar. Cada wallpaper cuesta $1.500 COP.</p>
+        <p>Selecciona los números de WallpapersMoto que quieres comprar. Cada wallpaper cuesta $15.000 COP.</p>
       </div>
 
       <!-- Sección ¿Cómo funciona? -->
@@ -147,7 +147,7 @@
           <!-- Total a pagar -->
           <div class="payment-summary">
             <h3>Total a pagar</h3>
-            <div class="total-amount">${{ (selectedNumbers.length * 5000).toLocaleString() }} COP</div>
+            <div class="total-amount">${{ (selectedNumbers.length * 15000).toLocaleString() }} COP</div>
           </div>
 
           <!-- Formulario de datos del comprador -->
@@ -480,7 +480,7 @@ const clearAllNumbers = () => {
 
 // Computed properties
 const totalAmount = computed(() => {
-  return selectedNumbers.value.length * 1500 // $1,500 COP por wallpaper (precio de prueba)
+  return selectedNumbers.value.length * 15000 // $1,500 COP por wallpaper (precio de prueba)
 })
 
 const isFormValid = computed(() => {
