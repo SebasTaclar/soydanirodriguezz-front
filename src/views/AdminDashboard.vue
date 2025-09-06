@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-dashboard">
+  <div class="admin-dashboard" :class="{ 'sending-email': isResendingEmail }">
     <div class="dashboard-container">
       <!-- Header -->
       <!-- Header -->
@@ -310,6 +310,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Spinner para reenvío de email -->
+  <Spinner v-if="isResendingEmail" />
 </template>
 
 <script setup lang="ts">
@@ -319,6 +322,7 @@ import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import { authService } from '@/services/api/authService'
 import { paymentService } from '@/services/api/paymentService'
 import { useRouter } from 'vue-router'
+import Spinner from '@/components/Spinner.vue'
 
 const router = useRouter()
 
@@ -760,6 +764,16 @@ onMounted(async () => {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   min-height: 100vh;
   padding: 6rem 0 2rem 0;
+}
+
+/* Deshabilitar interfaz cuando se está enviando email */
+.admin-dashboard.sending-email {
+  pointer-events: none;
+  user-select: none;
+}
+
+.admin-dashboard.sending-email * {
+  cursor: wait !important;
 }
 
 .dashboard-container {
