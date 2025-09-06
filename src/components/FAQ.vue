@@ -49,23 +49,36 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
+import { wallpaperService } from '@/services/api'
 
 const activeIndex = ref<number | null>(null)
 
-// Usar el composable para obtener números vendidos
-const { takenNumbers, refreshTakenNumbers } = useNumbersAvailability()
+// Estado para números aprobados/vendidos solamente
+const approvedNumbers = ref<number[]>([])
 
 // Configuración
 const totalNumbers = 5000
 
-// Computed properties
-const soldNumbers = computed(() => takenNumbers.value.length)
+// Computed properties - Solo números aprobados/vendidos
+const soldNumbers = computed(() => approvedNumbers.value.length)
 const progressPercentage = computed(() => (soldNumbers.value / totalNumbers) * 100)
 
-// Refrescar datos al cargar
+// Función para obtener solo números aprobados
+const loadApprovedNumbers = async () => {
+  try {
+    const response = await wallpaperService.getWallpaperStatus()
+    if (response.success && response.data) {
+      approvedNumbers.value = response.data.approved // Solo aprobados, no pendientes
+    }
+  } catch (error) {
+    console.error('Error cargando números aprobados:', error)
+    approvedNumbers.value = []
+  }
+}
+
+// Cargar datos al montar el componente
 onMounted(async () => {
-  await refreshTakenNumbers()
+  await loadApprovedNumbers()
 })
 
 const faqs = ref([
@@ -93,7 +106,7 @@ const faqs = ref([
 
   {
     question: "¿Cómo sé que mi pago fue exitoso?",
-    answer: "Al realizar tu compra recibirás una confirmación del procesador de pagos. Luego vas a recibir 1 o 2 correos por parte de la aplicación. El primero puede indicar que tu pago está pendiente de confirmación, y el segundo te notificará cuando el pago haya sido aprobado con éxito (en este último correo recibirás adjunto el wallpaper en formato svg para visualizarlo necesitarías abrirlo desde un computador)."
+    answer: "Al realizar tu compra recibirás un correo de Mercado Pago con la confirmacion del pago. Luego vas a recibir 1 o 2 correos por parte de la aplicacion. El primero puede indicar que tu pago está pendiente de confirmación, y el segundo te notificará cuando el pago haya sido aprobado con éxito (en este ultimo correo recibiras adjunto el wallpaper en formato svg para visualizarlo necesitarias abirlo desde un computador)."
   },
   // {
   //   question: "¿Cómo puedo permitir o bloquear ventanas emergentes para sitios web específicos?",
