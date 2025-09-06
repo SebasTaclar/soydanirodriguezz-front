@@ -242,6 +242,12 @@
           </div>
         </div>
 
+        <!-- Search Box -->
+        <div class="search-box-container">
+          <input v-model="searchQuery" type="text"
+            placeholder="Buscar por cliente, email, contacto o número de wallpaper..." class="search-box" />
+        </div>
+
         <!-- Purchases Table -->
         <div class="purchases-section">
           <h3>Lista de Compras</h3>
@@ -262,6 +268,7 @@
                   <th>Monto</th>
                   <th>Estado</th>
                   <th>Fecha</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -286,6 +293,14 @@
                     </span>
                   </td>
                   <td class="date">{{ formatDate(purchase.createdAt) }}</td>
+                  <td class="actions">
+                    <button @click="resendEmail(purchase)" class="action-btn resend-btn" :disabled="isResendingEmail"
+                      title="Reenviar email con wallpaper">
+                      <span v-if="isResendingEmail">📤</span>
+                      <span v-else>✉️</span>
+                      Reenviar Email
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -327,6 +342,8 @@ const {
 
 // Estado local
 const selectedStatus = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'>('ALL')
+const searchQuery = ref('')
+const isResendingEmail = ref(false)
 const isRefreshingWallpapers = ref(false)
 
 // Winner game state
@@ -357,14 +374,38 @@ const showResetConfirmation = ref(false)
 
 // Compras filtradas
 const filteredPurchases = computed(() => {
+  let filtered = []
+
+  // Primero filtrar por estado
   if (selectedStatus.value === 'ALL') {
-    return purchases.value
-  }
-  if (selectedStatus.value === 'APPROVED') {
+    filtered = purchases.value
+  } else if (selectedStatus.value === 'APPROVED') {
     // Cuando se selecciona APPROVED, incluir tanto APPROVED como COMPLETED
-    return [...(purchasesByStatus.value.APPROVED || []), ...(purchasesByStatus.value.COMPLETED || [])]
+    filtered = [...(purchasesByStatus.value.APPROVED || []), ...(purchasesByStatus.value.COMPLETED || [])]
+  } else {
+    filtered = purchasesByStatus.value[selectedStatus.value] || []
   }
-  return purchasesByStatus.value[selectedStatus.value] || []
+
+  // Luego filtrar por búsqueda si hay texto en searchQuery
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    filtered = filtered.filter(purchase => {
+      // Buscar en nombre del cliente
+      const nameMatch = purchase.buyerName?.toLowerCase().includes(query)
+      // Buscar en email
+      const emailMatch = purchase.buyerEmail?.toLowerCase().includes(query)
+      // Buscar en número de contacto
+      const contactMatch = purchase.buyerContactNumber?.toLowerCase().includes(query)
+      // Buscar en números de wallpaper
+      const wallpaperMatch = purchase.wallpaperNumbers?.some(num =>
+        num.toString().includes(query.replace('#', ''))
+      )
+
+      return nameMatch || emailMatch || contactMatch || wallpaperMatch
+    })
+  }
+
+  return filtered
 })
 
 // Números elegibles para el sorteo (solo aprobados y completados)
@@ -466,6 +507,28 @@ const formatDateOnly = (dateString: string) => {
     month: 'long',
     day: 'numeric'
   })
+}
+
+// Función para reenviar email
+const resendEmail = async (purchase: any) => {
+  try {
+    isResendingEmail.value = true
+
+    // Aquí llamarías a tu API para reenviar el email
+    // Por ejemplo: await emailService.resendWallpaper(purchase.id)
+
+    // Por ahora, solo mostrar un mensaje de confirmación
+    alert(`Email reenviado para la compra ${purchase.id} a ${purchase.buyerEmail}`)
+
+    // TODO: Implementar la llamada real a la API cuando esté disponible
+    console.log('Reenviando email para compra:', purchase)
+
+  } catch (error) {
+    console.error('Error al reenviar email:', error)
+    alert('Error al reenviar el email. Intenta nuevamente.')
+  } finally {
+    isResendingEmail.value = false
+  }
 }
 
 // Modal functions para ganadores de dinero
@@ -1349,6 +1412,33 @@ onMounted(async () => {
   border-color: #6b7280;
 }
 
+/* Search Box Styles */
+.search-box-container {
+  margin-bottom: 2rem;
+}
+
+.search-box {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.search-box::placeholder {
+  color: #94a3b8;
+}
+
 .purchases-section h3 {
   color: #ffffff;
   font-size: 1.5rem;
@@ -1368,13 +1458,15 @@ onMounted(async () => {
 .purchases-table-container {
   background: rgba(30, 41, 59, 0.8);
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid rgba(96, 165, 250, 0.2);
 }
 
 .purchases-table {
   width: 100%;
+  min-width: 1250px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .purchases-table th {
@@ -1387,11 +1479,69 @@ onMounted(async () => {
   font-size: 0.9rem;
 }
 
+/* Column-specific widths */
+.purchases-table th:nth-child(1),
+/* ID */
+.purchases-table td:nth-child(1) {
+  width: 80px;
+}
+
+.purchases-table th:nth-child(2),
+/* Nombre */
+.purchases-table td:nth-child(2) {
+  width: 150px;
+}
+
+.purchases-table th:nth-child(3),
+/* Email */
+.purchases-table td:nth-child(3) {
+  width: 200px;
+}
+
+.purchases-table th:nth-child(4),
+/* Contacto */
+.purchases-table td:nth-child(4) {
+  width: 120px;
+}
+
+.purchases-table th:nth-child(5),
+/* Wallpapers */
+.purchases-table td:nth-child(5) {
+  width: 200px;
+}
+
+.purchases-table th:nth-child(6),
+/* Monto */
+.purchases-table td:nth-child(6) {
+  width: 120px;
+}
+
+.purchases-table th:nth-child(7),
+/* Estado */
+.purchases-table td:nth-child(7) {
+  width: 130px;
+  padding-right: 1.5rem;
+}
+
+.purchases-table th:nth-child(8),
+/* Fecha */
+.purchases-table td:nth-child(8) {
+  width: 140px;
+  padding-left: 1.5rem;
+}
+
+.purchases-table th:nth-child(9),
+/* Acciones */
+.purchases-table td:nth-child(9) {
+  width: 150px;
+}
+
 .purchases-table td {
-  padding: 1rem;
+  padding: 0.8rem 1rem;
   border-bottom: 1px solid rgba(96, 165, 250, 0.1);
   color: #cbd5e1;
   vertical-align: top;
+  word-wrap: break-word;
 }
 
 .purchase-row:hover {
@@ -1406,17 +1556,23 @@ onMounted(async () => {
 .buyer-name {
   font-weight: 600;
   color: #ffffff;
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 
 .buyer-email {
   font-size: 0.9rem;
   color: #94a3b8;
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 
 .buyer-contact {
   font-size: 0.9rem;
   color: #cbd5e1;
   font-weight: 500;
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 
 .wallpapers {
@@ -1487,10 +1643,53 @@ onMounted(async () => {
   border: 1px solid rgba(107, 114, 128, 0.3);
 }
 
+/* Estado column - no wrap */
+.status {
+  white-space: nowrap;
+}
+
+/* Fecha column - with wrap */
 .date {
   font-size: 0.9rem;
   color: #94a3b8;
-  white-space: nowrap;
+  word-wrap: break-word;
+  line-height: 1.3;
+}
+
+/* Actions Column Styles */
+.actions {
+  text-align: center;
+  padding: 0.8rem;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.resend-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.resend-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.resend-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Responsive */
@@ -1504,7 +1703,7 @@ onMounted(async () => {
   }
 
   .purchases-table {
-    min-width: 800px;
+    min-width: 1250px;
   }
 }
 
