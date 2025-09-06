@@ -157,6 +157,25 @@ export class PaymentService {
       throw error
     }
   }
+
+  /**
+   * Actualizar email de una compra
+   */
+  async updatePurchaseEmail(
+    purchaseId: string,
+    buyerEmail: string,
+  ): Promise<ApiResponse<{ message: string; purchase: Purchase }>> {
+    try {
+      const response = await apiClient.put<{ message: string; purchase: Purchase }>(
+        `/purchase/${purchaseId}/update`,
+        { buyerEmail },
+      )
+      return response
+    } catch (error) {
+      console.error('Error updating purchase email:', error)
+      throw error
+    }
+  }
 }
 
 // Instancia singleton del servicio de pagos

@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-dashboard" :class="{ 'sending-email': isResendingEmail }">
+  <div class="admin-dashboard" :class="{ 'sending-email': isResendingEmail || isUpdatingEmail }">
     <div class="dashboard-container">
       <!-- Header -->
       <!-- Header -->
@@ -276,7 +276,34 @@
                   :class="`purchase-row ${purchase.status.toLowerCase()}`">
                   <td class="purchase-id">#{{ purchase.id }}</td>
                   <td class="buyer-name">{{ purchase.buyerName }}</td>
-                  <td class="buyer-email">{{ purchase.buyerEmail }}</td>
+                  <td class="buyer-email">
+                    <!-- Modo edición -->
+                    <div v-if="editingEmailId === purchase.id" class="email-edit-container">
+                      <input v-model="editingEmailValue" type="email" class="email-input" :disabled="isUpdatingEmail"
+                        @keyup.enter="saveEmailEdit(purchase)" @keyup.escape="cancelEmailEdit()"
+                        placeholder="Email del cliente" />
+                      <div class="email-actions">
+                        <button @click="saveEmailEdit(purchase)" :disabled="isUpdatingEmail" class="save-btn"
+                          title="Guardar cambios">
+                          <span v-if="isUpdatingEmail">⏳</span>
+                          <span v-else>✅</span>
+                        </button>
+                        <button @click="cancelEmailEdit()" :disabled="isUpdatingEmail" class="cancel-btn"
+                          title="Cancelar edición">
+                          ❌
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Modo visualización -->
+                    <div v-else class="email-display"
+                      :class="{ 'email-editable': canEditEmail(purchase), 'email-readonly': !canEditEmail(purchase) }"
+                      @click="canEditEmail(purchase) ? startEmailEdit(purchase) : null"
+                      :title="canEditEmail(purchase) ? `Clic para editar: ${purchase.buyerEmail}` : `Solo se puede editar emails de compras APPROVED/COMPLETED: ${purchase.buyerEmail}`">
+                      <span class="email-text">{{ purchase.buyerEmail }}</span>
+                      <span v-if="canEditEmail(purchase)" class="edit-icon">✏️</span>
+                      <span v-else class="lock-icon">🔒</span>
+                    </div>
+                  </td>
                   <td class="buyer-contact">{{ purchase.buyerContactNumber || 'No proporcionado' }}</td>
                   <td class="wallpapers">
                     <div class="wallpaper-numbers">
@@ -311,8 +338,8 @@
     </div>
   </div>
 
-  <!-- Spinner para reenvío de email -->
-  <Spinner v-if="isResendingEmail" />
+  <!-- Spinner para reenvío de email y actualización de email -->
+  <Spinner v-if="isResendingEmail || isUpdatingEmail" />
 </template>
 
 <script setup lang="ts">
@@ -351,6 +378,11 @@ const selectedStatus = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCEL
 const searchQuery = ref('')
 const isResendingEmail = ref(false)
 const isRefreshingWallpapers = ref(false)
+
+// Estado para edición inline de email
+const editingEmailId = ref<string | null>(null)
+const editingEmailValue = ref('')
+const isUpdatingEmail = ref(false)
 
 // Winner game state
 const isGameStarted = ref(false)
@@ -525,6 +557,11 @@ const canResendEmail = (purchase: any): boolean => {
   return purchase.status === 'APPROVED' || purchase.status === 'COMPLETED'
 }
 
+// Función para verificar si se puede editar el email
+const canEditEmail = (purchase: any): boolean => {
+  return purchase.status === 'APPROVED' || purchase.status === 'COMPLETED'
+}
+
 // Función para generar el tooltip del botón de reenvío
 const getResendEmailTooltip = (purchase: any): string => {
   if (canResendEmail(purchase)) {
@@ -563,6 +600,75 @@ const resendEmail = async (purchase: any) => {
     alert(`❌ Error al reenviar el email: ${errorMessage}. Intenta nuevamente.`)
   } finally {
     isResendingEmail.value = false
+  }
+}
+
+// Funciones para edición inline de email
+const startEmailEdit = (purchase: any) => {
+  // No permitir edición si se está enviando email o actualizando
+  if (isResendingEmail.value || isUpdatingEmail.value) {
+    return
+  }
+
+  // Solo permitir edición en compras APPROVED o COMPLETED
+  if (!canEditEmail(purchase)) {
+    alert('❌ Solo se puede editar el email de compras en estado APPROVED o COMPLETED.')
+    return
+  }
+
+  editingEmailId.value = purchase.id
+  editingEmailValue.value = purchase.buyerEmail
+}
+
+const cancelEmailEdit = () => {
+  editingEmailId.value = null
+  editingEmailValue.value = ''
+}
+
+const saveEmailEdit = async (purchase: any) => {
+  // Validar email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(editingEmailValue.value)) {
+    alert('❌ Por favor ingresa un email válido.')
+    return
+  }
+
+  // Si el email no cambió, cancelar edición
+  if (editingEmailValue.value === purchase.buyerEmail) {
+    cancelEmailEdit()
+    return
+  }
+
+  try {
+    isUpdatingEmail.value = true
+
+    console.log('🔄 Actualizando email para compra:', purchase.id)
+
+    // Llamar al servicio para actualizar el email
+    const response = await paymentService.updatePurchaseEmail(purchase.id, editingEmailValue.value)
+
+    if (response.success) {
+      // Actualizar el email en la lista local
+      const purchaseIndex = purchases.value.findIndex(p => p.id === purchase.id)
+      if (purchaseIndex !== -1) {
+        purchases.value[purchaseIndex].buyerEmail = editingEmailValue.value
+      }
+
+      alert(`✅ Email actualizado exitosamente para la compra ${purchase.id}`)
+      console.log('✅ Email actualizado exitosamente:', response.data)
+
+      // Cancelar modo edición
+      cancelEmailEdit()
+    } else {
+      throw new Error(response.message || 'Error al actualizar email')
+    }
+
+  } catch (error) {
+    console.error('❌ Error al actualizar email:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+    alert(`❌ Error al actualizar el email: ${errorMessage}. Intenta nuevamente.`)
+  } finally {
+    isUpdatingEmail.value = false
   }
 }
 
@@ -1541,6 +1647,8 @@ onMounted(async () => {
 /* Email */
 .purchases-table td:nth-child(3) {
   width: 200px;
+  max-width: 200px;
+  overflow: hidden;
 }
 
 .purchases-table th:nth-child(4),
@@ -1610,6 +1718,134 @@ onMounted(async () => {
   color: #94a3b8;
   word-wrap: break-word;
   line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Email inline editing styles */
+.email-display {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.email-display:hover {
+  background-color: rgba(96, 165, 250, 0.1);
+}
+
+.email-text {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.edit-icon {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-size: 0.8rem;
+}
+
+.email-display:hover .edit-icon {
+  opacity: 1;
+}
+
+/* Estilos para email no editable */
+.email-readonly {
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+.email-readonly:hover {
+  background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.lock-icon {
+  opacity: 0.6;
+  font-size: 0.8rem;
+  color: #ef4444;
+}
+
+.email-readonly:hover .lock-icon {
+  opacity: 1;
+}
+
+/* Estilos para email editable */
+.email-editable {
+  cursor: pointer;
+}
+
+.email-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.email-input {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.email-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.save-btn,
+.cancel-btn {
+  padding: 0.2rem 0.4rem;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.save-btn {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.save-btn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+.cancel-btn {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.save-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .buyer-contact {
