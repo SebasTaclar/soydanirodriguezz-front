@@ -883,7 +883,7 @@ onUnmounted(() => {
     width: 100% !important;
     max-width: 1000px;
     padding: 0.6rem 1rem;
-    margin: -10.8rem auto 0 auto;
+    margin: 2rem auto 0 auto; /* Cambio de -10.8rem a 2rem positivo */
   }
 
   .moto-modifications-inner {
@@ -961,7 +961,7 @@ onUnmounted(() => {
     width: 100% !important;
     max-width: 92%;
     padding: 0.5rem 1rem;
-    margin: -10.8rem auto 0 auto;
+    margin: -8rem auto 0 auto; /* Cambio de -10.8rem a 2rem positivo */
   }
 
   .moto-modifications-inner {
