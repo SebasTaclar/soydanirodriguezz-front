@@ -142,6 +142,21 @@ export class PaymentService {
       return false
     }
   }
+
+  /**
+   * Reenviar email de compra exitosa
+   */
+  async resendPurchaseEmail(purchaseId: string): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await apiClient.post<{ message: string }>('/purchase/resend-email', {
+        purchaseId,
+      })
+      return response
+    } catch (error) {
+      console.error('Error resending purchase email:', error)
+      throw error
+    }
+  }
 }
 
 // Instancia singleton del servicio de pagos

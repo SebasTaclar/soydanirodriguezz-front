@@ -294,8 +294,9 @@
                   </td>
                   <td class="date">{{ formatDate(purchase.createdAt) }}</td>
                   <td class="actions">
-                    <button @click="resendEmail(purchase)" class="action-btn resend-btn" :disabled="isResendingEmail"
-                      title="Reenviar email con wallpaper">
+                    <button @click="resendEmail(purchase)" class="action-btn resend-btn"
+                      :disabled="isResendingEmail || !canResendEmail(purchase)"
+                      :title="getResendEmailTooltip(purchase)">
                       <span v-if="isResendingEmail">📤</span>
                       <span v-else>✉️</span>
                       Reenviar Email
@@ -316,6 +317,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAdminPurchases } from '@/composables/useAdminPurchases'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import { authService } from '@/services/api/authService'
+import { paymentService } from '@/services/api/paymentService'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -405,7 +407,12 @@ const filteredPurchases = computed(() => {
     })
   }
 
-  return filtered
+  // Ordenar por fecha de creación (más reciente primero)
+  return filtered.sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime()
+    const dateB = new Date(b.createdAt).getTime()
+    return dateB - dateA // Orden descendente (más reciente primero)
+  })
 })
 
 // Números elegibles para el sorteo (solo aprobados y completados)
@@ -509,23 +516,47 @@ const formatDateOnly = (dateString: string) => {
   })
 }
 
+// Función para verificar si se puede reenviar email
+const canResendEmail = (purchase: any): boolean => {
+  return purchase.status === 'APPROVED' || purchase.status === 'COMPLETED'
+}
+
+// Función para generar el tooltip del botón de reenvío
+const getResendEmailTooltip = (purchase: any): string => {
+  if (canResendEmail(purchase)) {
+    return `Reenviar email con wallpaper a ${purchase.buyerEmail}`
+  } else {
+    return `Solo se puede reenviar email a compras aprobadas o completadas. Estado actual: ${purchase.status}`
+  }
+}
+
 // Función para reenviar email
 const resendEmail = async (purchase: any) => {
+  // Verificar nuevamente antes de proceder
+  if (!canResendEmail(purchase)) {
+    alert(`❌ No se puede reenviar email. Solo se permite para compras APPROVED o COMPLETED. Estado actual: ${purchase.status}`)
+    return
+  }
+
   try {
     isResendingEmail.value = true
 
-    // Aquí llamarías a tu API para reenviar el email
-    // Por ejemplo: await emailService.resendWallpaper(purchase.id)
+    console.log('🔄 Reenviando email para compra:', purchase.id)
 
-    // Por ahora, solo mostrar un mensaje de confirmación
-    alert(`Email reenviado para la compra ${purchase.id} a ${purchase.buyerEmail}`)
+    // Llamar al servicio para reenviar el email
+    const response = await paymentService.resendPurchaseEmail(purchase.id)
 
-    // TODO: Implementar la llamada real a la API cuando esté disponible
-    console.log('Reenviando email para compra:', purchase)
+    if (response.success) {
+      alert(`✅ Email reenviado exitosamente para la compra ${purchase.id} a ${purchase.buyerEmail}`)
+      console.log('✅ Email reenviado exitosamente:', response.data)
+    } else {
+      throw new Error(response.message || 'Error al reenviar email')
+    }
 
   } catch (error) {
-    console.error('Error al reenviar email:', error)
-    alert('Error al reenviar el email. Intenta nuevamente.')
+    console.error('❌ Error al reenviar email:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+    alert(`❌ Error al reenviar el email: ${errorMessage}. Intenta nuevamente.`)
   } finally {
     isResendingEmail.value = false
   }
@@ -1687,9 +1718,11 @@ onMounted(async () => {
 }
 
 .resend-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
+  background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+  color: #9ca3af !important;
 }
 
 /* Responsive */
