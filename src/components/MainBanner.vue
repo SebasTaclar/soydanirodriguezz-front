@@ -75,15 +75,15 @@
             <button class="btn-secondary" @click="viewRules">Ver reglas</button>
           </div>
            <!-- Estadísticas -->
-          <div class="stats-section">
+          <div class="stats-section stats-centered">
             <div class="stat-card">
               <div class="stat-value">$ 15.000 COP</div>
               <div class="stat-label">por número</div>
             </div>
-          <div class="stat-card">
+          <!-- <div class="stat-card">
             <div class="stat-value">{{ availabilityText }}</div>
             <div class="stat-label">disponibles</div>
-          </div>
+          </div> -->
         </div>
         </div> <!-- Cierre content-wrapper -->
       </div>
@@ -1227,6 +1227,13 @@ onUnmounted(() => {
   margin: 0 auto 2rem auto;
   max-width: 800px;
   justify-content: center;
+}
+
+/* Clase especial para centrar una sola tarjeta */
+.stats-centered {
+  display: flex;
+  justify-content: center;
+  grid-template-columns: none;
 }
 
 .stat-card {
