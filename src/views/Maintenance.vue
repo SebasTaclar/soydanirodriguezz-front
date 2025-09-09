@@ -98,7 +98,7 @@
       <!-- Mensaje de agradecimiento -->
       <div class="thank-you">
         <div class="thank-you-icon">💙</div>
-        <p>Gracias por tu paciencia y comprensión</p>
+        <p>Gracias por tu paciencia y comprensión.</p>
       </div>
     </div>
 
