@@ -15,6 +15,11 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/maintenance',
+      name: 'maintenance',
+      component: () => import('../views/Maintenance.vue'),
+    },
+    {
       path: '/',
       name: 'home',
       component: Home,
