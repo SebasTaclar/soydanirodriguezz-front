@@ -104,7 +104,7 @@ const emit = defineEmits<Emits>()
 
 // Usar el composable de disponibilidad
 const {
-  availabilityText,
+  // availabilityText,
   // getAvailableNumbersArray
 } = useNumbersAvailability()
 
@@ -403,23 +403,7 @@ const viewRules = () => {
   emit('showRules')
 }
 
-const openInstallationVideo = () => {
-  // Abrir video (TikTok) en una nueva pestaña de forma segura
-  const videoUrl = 'https://vt.tiktok.com/ZSHsQ7enESGjT-ITuy2/'
-  // Intentar abrir con noopener,noreferrer para seguridad
-  try {
-    window.open(videoUrl, '_blank', 'noopener,noreferrer')
-  } catch {
-    // Fallback: crear un enlace y hacer click
-    const a = document.createElement('a')
-    a.href = videoUrl
-    a.target = '_blank'
-    a.rel = 'noopener noreferrer'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-  }
-}
+// Nota: función de video eliminada por no uso
 
 // Navegación con teclado
 const handleKeydown = (event: KeyboardEvent) => {
