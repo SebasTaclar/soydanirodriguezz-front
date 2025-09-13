@@ -766,10 +766,7 @@ const handleTermsAccept = () => {
   }
 }
 
-const handleTermsAcceptWompi = () => {
-  showTermsAndConditions.value = false
-  payWithWompi()
-}
+// Nota: la aceptación para Wompi se maneja con handleTermsAccept
 </script>
 
 <style scoped>

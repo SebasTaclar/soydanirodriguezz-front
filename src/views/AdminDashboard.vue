@@ -1,11 +1,9 @@
 <template>
-  <div class="admin-dashboard" :class="{ 'sending-email': isResendingEmail || isUpdatingEmail }">
+  <div class="admin-dashboard">
     <div class="dashboard-container">
-      <!-- Header -->
-      <!-- Header -->
       <div class="dashboard-header">
-        <h1>Panel de Administración</h1>
-        <p>Gestión de compras de wallpapers NS200</p>
+        <h1>Selección del Wallpaper Ganador</h1>
+        <p>Dinámica disponible solo para administradores</p>
         <button @click="refreshData" :disabled="isLoadingPurchases || isRefreshingWallpapers" class="refresh-btn">
           <span v-if="isLoadingPurchases || isRefreshingWallpapers">🔄</span>
           <span v-else>↻</span>
@@ -13,333 +11,112 @@
         </button>
       </div>
 
-      <!-- Error Message -->
-      <div v-if="error" class="error-message">
-        <p>{{ error }}</p>
-        <button @click="error = null" class="close-error">×</button>
-      </div>
+      <div class="winner-selection-section">
+        <!-- Confetti Animation -->
+        <div v-if="isGameComplete && winnerNumber" class="confetti-container">
+          <!-- Lluvia de confeti (existente) -->
+          <div v-for="i in 50" :key="`rain-${i}`" class="confetti" :style="getConfettiStyle(i)"></div>
+          <!-- Estallido central de confeti (nuevo) -->
+          <div v-for="i in 80" :key="`burst-${i}`" class="confetti-burst" :style="getBurstConfettiStyle(i)"></div>
+        </div>
 
-      <!-- Loading State -->
-      <div v-if="isLoadingPurchases && purchases.length === 0" class="loading-state">
-        <div class="loading-spinner"></div>
-        <p>Cargando compras...</p>
-      </div>
+        <div class="winner-header">
+          <h3>🎯 Selección del Wallpaper Ganador</h3>
+          <p>Genera el número ganador de entre los wallpapers pagados/aprobados</p>
+        </div>
 
-      <!-- Dashboard Content -->
-      <div v-else class="dashboard-content">
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-          <div class="stat-card total">
-            <div class="stat-icon">📊</div>
-            <div class="stat-content">
-              <h3>Total Compras</h3>
-              <p class="stat-number">{{ stats.totalPurchases }}</p>
-            </div>
-          </div>
-
-          <div class="stat-card revenue">
-            <div class="stat-icon">💰</div>
-            <div class="stat-content">
-              <h3>Ingresos Aprobados</h3>
-              <p class="stat-number">${{ stats.totalRevenue.toLocaleString() }} COP</p>
-            </div>
-          </div>
-
-          <div class="stat-card wallpapers">
-            <div class="stat-icon">🖼️</div>
-            <div class="stat-content">
-              <h3>Wallpapers</h3>
-              <p class="stat-number">{{ stats.totalWallpapersSold }}</p>
-            </div>
-          </div>
-
-          <div class="stat-card pending">
-            <div class="stat-icon">⏳</div>
-            <div class="stat-content">
-              <h3>Pendientes</h3>
-              <p class="stat-number">{{ stats.pendingPurchases }}</p>
-            </div>
+        <div class="winner-stats">
+          <div class="eligible-numbers">
+            <span class="stat-label">Wallpapers Vendidos - Números Elegibles:</span>
+            <span class="stat-value">{{ eligibleNumbers.length }}</span>
           </div>
         </div>
 
-        <!-- Winner Selection Section -->
-        <div class="winner-selection-section">
-          <!-- Confetti Animation -->
-          <div v-if="isGameComplete && winnerNumber" class="confetti-container">
-            <div v-for="i in 50" :key="i" class="confetti" :style="getConfettiStyle(i)"></div>
+        <div class="winner-game-container">
+          <div v-if="!isGameStarted && !winnerNumber" class="game-start">
+            <button @click="startWinnerGame" :disabled="eligibleNumbers.length === 0 || isGameRunning" class="start-game-btn">
+              🎲 Iniciar Dinámica
+            </button>
+            <div class="game-rules">
+              <p class="game-hint">
+                Se realizarán 5 intentos antes de revelar el ganador de la moto
+                <br>
+                <small v-if="eligibleNumbers.length < 5" class="warning-text">⚠️ Solo hay {{ eligibleNumbers.length }} números únicos - algunos números pueden repetirse</small>
+                <small v-else class="success-text">✅ {{ eligibleNumbers.length }} números únicos disponibles</small>
+              </p>
+            </div>
           </div>
 
-          <div class="winner-header">
-            <h3>🎯 Selección del Wallpaper Ganador</h3>
-            <p>Genera el número ganador de entre los wallpapers pagados/aprobados</p>
-          </div>
-
-          <div class="winner-stats">
-            <div class="eligible-numbers">
-              <span class="stat-label">Wallpapers Vendidos - Números Elegibles:</span>
-              <span class="stat-value">{{ eligibleNumbers.length }}</span>
+          <div v-if="isGameStarted" class="game-active">
+            <div class="game-explanation">
+              <h4>🏆 ¡El quinto número es el ganador de la moto!</h4>
+              <p>Los primeros 4 números ganarán dinero</p>
+            </div>
+            <div class="attempts-container">
+              <h4>Intentos: {{ currentAttempt - 1 }}/5</h4>
+              <div class="attempts-display">
+                <div v-for="(attempt, index) in attempts" :key="index" class="attempt-number" :class="{
+                  'current': index === currentAttempt - 1 && !isGameComplete,
+                  'revealed': index < currentAttempt - 1 || isGameComplete,
+                  'spinning': isShowingSpinEffect && index === currentAttempt - 1,
+                  'clickable': attempt && index < 4
+                }" @click="attempt && index < 4 ? showWinnerModal(attempt, index) : null">
+                  <div class="attempt-number-display">
+                    {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt || '?') }}
+                  </div>
+                </div>
+              </div>
             </div>
 
-          </div>
-
-          <div class="winner-game-container">
-            <div v-if="!isGameStarted && !winnerNumber" class="game-start">
-              <button @click="startWinnerGame" :disabled="eligibleNumbers.length === 0 || isGameRunning"
-                class="start-game-btn">
-                🎲 Iniciar Dinámica
+            <div class="game-controls">
+              <button v-if="currentAttempt <= 5 && !isGameComplete" @click="nextAttempt" :disabled="isProcessingAttempt" class="next-attempt-btn">
+                {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯 Intento ${currentAttempt}`) }}
               </button>
-              <div class="game-rules">
-
-                <p class="game-hint">
-                  Se realizarán 5 intentos antes de revelar el ganador de la moto
-                  <br>
-                  <small v-if="eligibleNumbers.length < 5" class="warning-text">
-                    ⚠️ Solo hay {{ eligibleNumbers.length }} números únicos - algunos números pueden repetirse
-                  </small>
-                  <small v-else class="success-text">
-                    ✅ {{ eligibleNumbers.length }} números únicos disponibles
-                  </small>
-                </p>
-              </div>
             </div>
 
-            <div v-if="isGameStarted" class="game-active">
-              <div class="game-explanation">
-                <h4>🏆 ¡El quinto número es el ganador de la moto!</h4>
-                <p>Los primeros 4 números ganarán dinero</p>
-              </div>
-              <div class="attempts-container">
-                <h4>Intentos: {{ currentAttempt - 1 }}/5</h4>
-                <div class="attempts-display">
-                  <div v-for="(attempt, index) in attempts" :key="index" class="attempt-number" :class="{
-                    'current': index === currentAttempt - 1 && !isGameComplete,
-                    'revealed': index < currentAttempt - 1 || isGameComplete,
-                    'spinning': isShowingSpinEffect && index === currentAttempt - 1,
-                    'clickable': attempt && index < 4
-                  }" @click="attempt && index < 4 ? showWinnerModal(attempt, index) : null">
-                    <div class="attempt-number-display">
-                      {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') :
-                        (attempt || '?') }}
-                    </div>
+            <div v-if="isGameStarted" class="reset-controls">
+              <button @click="confirmResetGame" class="reset-game-btn">🔄 Nueva Dinámica</button>
+            </div>
 
-                  </div>
+            <div v-if="showModal" class="inline-winner-modal">
+              <div class="inline-modal-content">
+                <button class="modal-close" @click="closeModal">×</button>
+                <div class="modal-header">
+                  <h2>🎉 ¡FELICITACIONES! 🎉</h2>
+                  <div class="modal-number-display">#{{ selectedWinner.number }}</div>
                 </div>
-              </div>
-
-              <div class="game-controls">
-                <button v-if="currentAttempt <= 5 && !isGameComplete" @click="nextAttempt"
-                  :disabled="isProcessingAttempt" class="next-attempt-btn">
-                  {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯
-                  Intento ${currentAttempt}`) }}
-                </button>
-              </div>
-
-              <!-- Botón de reiniciar debajo con padding -->
-              <div v-if="isGameStarted" class="reset-controls">
-                <button @click="confirmResetGame" class="reset-game-btn">
-                  🔄 Nueva Dinámica
-                </button>
-              </div>
-
-              <!-- Modal para ganadores de dinero inline -->
-              <div v-if="showModal" class="inline-winner-modal">
-                <div class="inline-modal-content">
-                  <button class="modal-close" @click="closeModal">×</button>
-                  <div class="modal-header">
-                    <h2>🎉 ¡FELICITACIONES! 🎉</h2>
-                    <div class="modal-number-display">
-                      #{{ selectedWinner.number }}
-                    </div>
-                  </div>
-                  <div class="modal-body">
-                    <h3 v-if="selectedWinner.position === 4">🏆 ¡Ganaste la motocicleta!</h3>
-                    <h3 v-else>💰 ¡Ganaste dinero!</h3>
-                    <p class="win-message">{{ getWinMessage(selectedWinner.position) }}</p>
-                    <div v-if="selectedWinner.purchase" class="modal-winner-details">
-                      <h4>Detalles del Ganador:</h4>
-                      <p><strong>Nombre:</strong> {{ formatWinnerName(selectedWinner.purchase.buyerName) }}</p>
-                      <p><strong>Teléfono:</strong> {{ formatWinnerPhone(selectedWinner.purchase.buyerContactNumber) }}
-                      </p>
-                      <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(selectedWinner.purchase.createdAt) }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Modal de confirmación para reiniciar dinámica -->
-              <div v-if="showResetConfirmation" class="modal-overlay">
-                <div class="modal-content reset-confirmation-modal">
-                  <div class="modal-header">
-                    <h2>⚠️ Confirmar Reinicio</h2>
-                  </div>
-                  <div class="modal-body">
-                    <p>¿Estás seguro de que quieres reiniciar la dinámica?</p>
-                    <p class="warning-text">Se perderán todos los intentos actuales y tendrás que empezar desde el
-                      principio.</p>
-                    <div class="confirmation-buttons">
-                      <button @click="cancelReset" class="cancel-btn">
-                        ❌ Cancelar
-                      </button>
-                      <button @click="confirmReset" class="confirm-btn">
-                        ✅ Sí, Reiniciar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="isGameComplete && winnerNumber" class="winner-reveal">
-                <div class="winner-announcement">
-                  <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
-                  <div class="winner-number-display">
-                    #{{ winnerNumber }}
-                  </div>
-                  <h2 class="winner-title">🎉 ¡Felicitaciones al Ganador de la Moto! 🎉</h2>
-                  <div v-if="winnerPurchase" class="winner-details">
-
-                    <h3>Detalles del Ganador:</h3>
-                    <p><strong>Nombre:</strong> {{ formatWinnerName(winnerPurchase.buyerName) }}</p>
-                    <p><strong>Teléfono:</strong> {{ formatWinnerPhone(winnerPurchase.buyerContactNumber) }}</p>
-                    <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(winnerPurchase.createdAt) }}</p>
+                <div class="modal-body">
+                  <h3 v-if="selectedWinner.position === 4">🏆 ¡Ganaste la motocicleta!</h3>
+                  <h3 v-else>💰 ¡Ganaste dinero!</h3>
+                  <p class="win-message">{{ getWinMessage(selectedWinner.position) }}</p>
+                  <div v-if="selectedWinner.purchase" class="modal-winner-details">
+                    <h4>Detalles del Ganador:</h4>
+                    <p><strong>Nombre:</strong> {{ formatWinnerName(selectedWinner.purchase.buyerName) }}</p>
+                    <p><strong>Teléfono:</strong> {{ formatWinnerPhone(selectedWinner.purchase.buyerContactNumber) }}</p>
+                    <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(selectedWinner.purchase.createdAt) }}</p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Status Filter -->
-        <div class="filter-section">
-          <div class="filter-header">
-            <h3>Filtrar por Estado</h3>
-            <button @click="refreshData" :disabled="isLoadingPurchases || isRefreshingWallpapers" class="refresh-btn"
-              title="Refrescar datos">
-              <span v-if="isRefreshingWallpapers">🔄</span>
-              <span v-else>🔄</span>
-              {{ isRefreshingWallpapers ? 'Actualizando...' : 'Refrescar' }}
-            </button>
-          </div>
-          <div class="status-filters">
-            <button @click="selectedStatus = 'ALL'" :class="['filter-btn', { active: selectedStatus === 'ALL' }]">
-              Todos ({{ purchases.length }})
-            </button>
-            <button @click="selectedStatus = 'PENDING'"
-              :class="['filter-btn', 'pending', { active: selectedStatus === 'PENDING' }]">
-              Pendientes ({{ purchasesByStatus.PENDING.length }})
-            </button>
-            <button @click="selectedStatus = 'APPROVED'"
-              :class="['filter-btn', 'approved', { active: selectedStatus === 'APPROVED' }]">
-              Aprobadas ({{ purchasesByStatus.APPROVED.length + purchasesByStatus.COMPLETED.length }})
-            </button>
-            <button @click="selectedStatus = 'REJECTED'"
-              :class="['filter-btn', 'rejected', { active: selectedStatus === 'REJECTED' }]">
-              Rechazadas ({{ purchasesByStatus.REJECTED.length }})
-            </button>
-            <button @click="selectedStatus = 'CANCELLED'"
-              :class="['filter-btn', 'cancelled', { active: selectedStatus === 'CANCELLED' }]">
-              Canceladas ({{ purchasesByStatus.CANCELLED.length }})
-            </button>
-          </div>
-        </div>
-
-        <!-- Search Box -->
-        <div class="search-box-container">
-          <input v-model="searchQuery" type="text"
-            placeholder="Buscar por cliente, email, contacto o número de wallpaper..." class="search-box" />
-        </div>
-
-        <!-- Purchases Table -->
-        <div class="purchases-section">
-          <h3>Lista de Compras</h3>
-
-          <div v-if="filteredPurchases.length === 0" class="no-purchases">
-            <p>No hay compras {{ selectedStatus === 'ALL' ? '' : selectedStatus.toLowerCase() }} para mostrar.</p>
-          </div>
-
-          <div v-else class="purchases-table-container">
-            <table class="purchases-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Email</th>
-                  <th>Contacto</th>
-                  <th>Wallpapers</th>
-                  <th>Monto</th>
-                  <th>Estado</th>
-                  <th>Fecha</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="purchase in filteredPurchases" :key="purchase.id"
-                  :class="`purchase-row ${purchase.status.toLowerCase()}`">
-                  <td class="purchase-id">#{{ purchase.id }}</td>
-                  <td class="buyer-name">{{ purchase.buyerName }}</td>
-                  <td class="buyer-email">
-                    <!-- Modo edición -->
-                    <div v-if="editingEmailId === purchase.id" class="email-edit-container">
-                      <input v-model="editingEmailValue" type="email" class="email-input" :disabled="isUpdatingEmail"
-                        @keyup.enter="saveEmailEdit(purchase)" @keyup.escape="cancelEmailEdit()"
-                        placeholder="Email del cliente" />
-                      <div class="email-actions">
-                        <button @click="saveEmailEdit(purchase)" :disabled="isUpdatingEmail" class="save-btn"
-                          title="Guardar cambios">
-                          <span v-if="isUpdatingEmail">⏳</span>
-                          <span v-else>✅</span>
-                        </button>
-                        <button @click="cancelEmailEdit()" :disabled="isUpdatingEmail" class="cancel-btn"
-                          title="Cancelar edición">
-                          ❌
-                        </button>
-                      </div>
-                    </div>
-                    <!-- Modo visualización -->
-                    <div v-else class="email-display"
-                      :class="{ 'email-editable': canEditEmail(purchase), 'email-readonly': !canEditEmail(purchase) }"
-                      @click="canEditEmail(purchase) ? startEmailEdit(purchase) : null"
-                      :title="canEditEmail(purchase) ? `Clic para editar: ${purchase.buyerEmail}` : `Solo se puede editar emails de compras APPROVED/COMPLETED: ${purchase.buyerEmail}`">
-                      <span class="email-text">{{ purchase.buyerEmail }}</span>
-                      <span v-if="canEditEmail(purchase)" class="edit-icon">✏️</span>
-                      <span v-else class="lock-icon">🔒</span>
-                    </div>
-                  </td>
-                  <td class="buyer-contact">{{ purchase.buyerContactNumber || 'No proporcionado' }}</td>
-                  <td class="wallpapers">
-                    <div class="wallpaper-numbers">
-                      <span v-for="number in purchase.wallpaperNumbers" :key="number" class="wallpaper-tag">
-                        #{{ number }}
-                      </span>
-                    </div>
-                    <small class="wallpaper-count">{{ purchase.wallpaperNumbers.length }} wallpaper(s)</small>
-                  </td>
-                  <td class="amount">${{ purchase.amount.toLocaleString() }} {{ purchase.currency }}</td>
-                  <td class="status">
-                    <span :class="`status-badge ${purchase.status.toLowerCase()}`">
-                      {{ getStatusText(purchase.status) }}
-                    </span>
-                  </td>
-                  <td class="date">{{ formatDate(purchase.createdAt) }}</td>
-                  <td class="actions">
-                    <button @click="resendEmail(purchase)" class="action-btn resend-btn"
-                      :disabled="isResendingEmail || !canResendEmail(purchase)"
-                      :title="getResendEmailTooltip(purchase)">
-                      <span v-if="isResendingEmail">📤</span>
-                      <span v-else>✉️</span>
-                      Reenviar Email
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div v-if="isGameComplete && winnerNumber" class="winner-reveal">
+              <div class="winner-announcement">
+                <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
+                <div class="winner-number-display">#{{ winnerNumber }}</div>
+                <h2 class="winner-title">🎉 ¡Felicitaciones al Ganador de la Moto! 🎉</h2>
+                <div v-if="winnerPurchase" class="winner-details">
+                  <h3>Detalles del Ganador:</h3>
+                  <p><strong>Nombre:</strong> {{ formatWinnerName(winnerPurchase.buyerName) }}</p>
+                  <p><strong>Teléfono:</strong> {{ formatWinnerPhone(winnerPurchase.buyerContactNumber) }}</p>
+                  <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(winnerPurchase.createdAt) }}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Spinner para reenvío de email y actualización de email -->
-  <Spinner v-if="isResendingEmail || isUpdatingEmail" />
 </template>
 
 <script setup lang="ts">
@@ -347,9 +124,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useAdminPurchases } from '@/composables/useAdminPurchases'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import { authService } from '@/services/api/authService'
-import { paymentService } from '@/services/api/paymentService'
 import { useRouter } from 'vue-router'
-import Spinner from '@/components/Spinner.vue'
+import type { Purchase } from '@/services/api/paymentService'
 
 const router = useRouter()
 
@@ -361,10 +137,7 @@ if (!authService.isAdmin()) {
 // Admin purchases composable
 const {
   isLoading: isLoadingPurchases,
-  error,
-  purchases,
   purchasesByStatus,
-  stats,
   getAllPurchases
 } = useAdminPurchases()
 
@@ -374,15 +147,75 @@ const {
 } = useNumbersAvailability()
 
 // Estado local
-const selectedStatus = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'>('ALL')
-const searchQuery = ref('')
-const isResendingEmail = ref(false)
 const isRefreshingWallpapers = ref(false)
 
-// Estado para edición inline de email
-const editingEmailId = ref<string | null>(null)
-const editingEmailValue = ref('')
-const isUpdatingEmail = ref(false)
+// Persistencia de ganadores en localStorage
+const WINNERS_KEY = 'dw_winners'
+type PrizeType = 'money' | 'grand'
+type StoredWinner = {
+  position: number // 1..5
+  number: number
+  prize: PrizeType
+  purchase: {
+    id: string
+    buyerName: string
+    buyerEmail: string
+    buyerContactNumber: string
+    createdAt: string
+  } | null
+  savedAt: string // ISO string
+}
+
+const winners = ref<StoredWinner[]>([])
+
+const loadWinnersFromStorage = () => {
+  try {
+    const raw = localStorage.getItem(WINNERS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as StoredWinner[]
+      if (Array.isArray(parsed)) winners.value = parsed
+    }
+  } catch (e) {
+    console.warn('No se pudo cargar ganadores del localStorage', e)
+  }
+}
+
+const saveWinnersToStorage = () => {
+  try {
+    localStorage.setItem(WINNERS_KEY, JSON.stringify(winners.value))
+  } catch (e) {
+    console.warn('No se pudo guardar ganadores en localStorage', e)
+  }
+}
+
+const addWinner = (positionIndex: number, number: number | null, purchase: Purchase | null, prize: PrizeType) => {
+  if (number == null) return
+  const position = positionIndex + 1 // convertir 0..4 -> 1..5
+  // Evitar duplicar si ya existe ese puesto
+  if (winners.value.some(w => w.position === position)) return
+
+  winners.value.push({
+    position,
+    number,
+    prize,
+    purchase: purchase
+      ? {
+          id: purchase.id,
+          buyerName: purchase.buyerName,
+          buyerEmail: purchase.buyerEmail,
+          buyerContactNumber: purchase.buyerContactNumber,
+          createdAt: purchase.createdAt,
+        }
+      : null,
+    savedAt: new Date().toISOString(),
+  })
+  saveWinnersToStorage()
+}
+
+const clearWinners = () => {
+  winners.value = []
+  saveWinnersToStorage()
+}
 
 // Winner game state
 const isGameStarted = ref(false)
@@ -400,56 +233,16 @@ const showModal = ref(false)
 const selectedWinner = ref<{
   number: number | null
   position: number
-  purchase: typeof purchases.value[0] | null
+  purchase: Purchase | null
 }>({
   number: null,
   position: 0,
   purchase: null
 })
 
-// Modal state para confirmación de reinicio
-const showResetConfirmation = ref(false)
+// (El modal de confirmación se omitió en esta vista simplificada)
 
 // Compras filtradas
-const filteredPurchases = computed(() => {
-  let filtered = []
-
-  // Primero filtrar por estado
-  if (selectedStatus.value === 'ALL') {
-    filtered = purchases.value
-  } else if (selectedStatus.value === 'APPROVED') {
-    // Cuando se selecciona APPROVED, incluir tanto APPROVED como COMPLETED
-    filtered = [...(purchasesByStatus.value.APPROVED || []), ...(purchasesByStatus.value.COMPLETED || [])]
-  } else {
-    filtered = purchasesByStatus.value[selectedStatus.value] || []
-  }
-
-  // Luego filtrar por búsqueda si hay texto en searchQuery
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.toLowerCase().trim()
-    filtered = filtered.filter(purchase => {
-      // Buscar en nombre del cliente
-      const nameMatch = purchase.buyerName?.toLowerCase().includes(query)
-      // Buscar en email
-      const emailMatch = purchase.buyerEmail?.toLowerCase().includes(query)
-      // Buscar en número de contacto
-      const contactMatch = purchase.buyerContactNumber?.toLowerCase().includes(query)
-      // Buscar en números de wallpaper
-      const wallpaperMatch = purchase.wallpaperNumbers?.some(num =>
-        num.toString().includes(query.replace('#', ''))
-      )
-
-      return nameMatch || emailMatch || contactMatch || wallpaperMatch
-    })
-  }
-
-  // Ordenar por fecha de creación (más reciente primero)
-  return filtered.sort((a, b) => {
-    const dateA = new Date(a.createdAt).getTime()
-    const dateB = new Date(b.createdAt).getTime()
-    return dateB - dateA // Orden descendente (más reciente primero)
-  })
-})
 
 // Números elegibles para el sorteo (solo aprobados y completados)
 const eligibleNumbers = computed(() => {
@@ -475,8 +268,10 @@ const winnerPurchase = computed(() => {
   const completedPurchases = purchasesByStatus.value.COMPLETED || []
   const eligiblePurchases = [...approvedPurchases, ...completedPurchases]
 
-  return eligiblePurchases.find(purchase =>
+  return (
+    eligiblePurchases.find(purchase =>
     purchase.wallpaperNumbers && purchase.wallpaperNumbers.includes(winnerNumber.value!)
+    ) || null
   )
 })
 
@@ -498,27 +293,7 @@ const refreshData = async () => {
   }
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-CO', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-const getStatusText = (status: string) => {
-  const statusMap = {
-    'PENDING': 'Pendiente',
-    'APPROVED': 'Aprobada',
-    'COMPLETED': 'Completada',
-    'REJECTED': 'Rechazada',
-    'CANCELLED': 'Cancelada'
-  }
-  return statusMap[status as keyof typeof statusMap] || status
-}
+// (Funciones de listado eliminadas; no se usan en esta vista)
 
 const formatWinnerName = (fullName: string) => {
   const nameParts = fullName.trim().split(' ')
@@ -553,124 +328,6 @@ const formatDateOnly = (dateString: string) => {
 }
 
 // Función para verificar si se puede reenviar email
-const canResendEmail = (purchase: any): boolean => {
-  return purchase.status === 'APPROVED' || purchase.status === 'COMPLETED'
-}
-
-// Función para verificar si se puede editar el email
-const canEditEmail = (purchase: any): boolean => {
-  return purchase.status === 'APPROVED' || purchase.status === 'COMPLETED'
-}
-
-// Función para generar el tooltip del botón de reenvío
-const getResendEmailTooltip = (purchase: any): string => {
-  if (canResendEmail(purchase)) {
-    return `Reenviar email con wallpaper a ${purchase.buyerEmail}`
-  } else {
-    return `Solo se puede reenviar email a compras aprobadas o completadas. Estado actual: ${purchase.status}`
-  }
-}
-
-// Función para reenviar email
-const resendEmail = async (purchase: any) => {
-  // Verificar nuevamente antes de proceder
-  if (!canResendEmail(purchase)) {
-    alert(`❌ No se puede reenviar email. Solo se permite para compras APPROVED o COMPLETED. Estado actual: ${purchase.status}`)
-    return
-  }
-
-  try {
-    isResendingEmail.value = true
-
-    console.log('🔄 Reenviando email para compra:', purchase.id)
-
-    // Llamar al servicio para reenviar el email
-    const response = await paymentService.resendPurchaseEmail(purchase.id)
-
-    if (response.success) {
-      alert(`✅ Email reenviado exitosamente para la compra ${purchase.id} a ${purchase.buyerEmail}`)
-      console.log('✅ Email reenviado exitosamente:', response.data)
-    } else {
-      throw new Error(response.message || 'Error al reenviar email')
-    }
-
-  } catch (error) {
-    console.error('❌ Error al reenviar email:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-    alert(`❌ Error al reenviar el email: ${errorMessage}. Intenta nuevamente.`)
-  } finally {
-    isResendingEmail.value = false
-  }
-}
-
-// Funciones para edición inline de email
-const startEmailEdit = (purchase: any) => {
-  // No permitir edición si se está enviando email o actualizando
-  if (isResendingEmail.value || isUpdatingEmail.value) {
-    return
-  }
-
-  // Solo permitir edición en compras APPROVED o COMPLETED
-  if (!canEditEmail(purchase)) {
-    alert('❌ Solo se puede editar el email de compras en estado APPROVED o COMPLETED.')
-    return
-  }
-
-  editingEmailId.value = purchase.id
-  editingEmailValue.value = purchase.buyerEmail
-}
-
-const cancelEmailEdit = () => {
-  editingEmailId.value = null
-  editingEmailValue.value = ''
-}
-
-const saveEmailEdit = async (purchase: any) => {
-  // Validar email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(editingEmailValue.value)) {
-    alert('❌ Por favor ingresa un email válido.')
-    return
-  }
-
-  // Si el email no cambió, cancelar edición
-  if (editingEmailValue.value === purchase.buyerEmail) {
-    cancelEmailEdit()
-    return
-  }
-
-  try {
-    isUpdatingEmail.value = true
-
-    console.log('🔄 Actualizando email para compra:', purchase.id)
-
-    // Llamar al servicio para actualizar el email
-    const response = await paymentService.updatePurchaseEmail(purchase.id, editingEmailValue.value)
-
-    if (response.success) {
-      // Actualizar el email en la lista local
-      const purchaseIndex = purchases.value.findIndex(p => p.id === purchase.id)
-      if (purchaseIndex !== -1) {
-        purchases.value[purchaseIndex].buyerEmail = editingEmailValue.value
-      }
-
-      alert(`✅ Email actualizado exitosamente para la compra ${purchase.id}`)
-      console.log('✅ Email actualizado exitosamente:', response.data)
-
-      // Cancelar modo edición
-      cancelEmailEdit()
-    } else {
-      throw new Error(response.message || 'Error al actualizar email')
-    }
-
-  } catch (error) {
-    console.error('❌ Error al actualizar email:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-    alert(`❌ Error al actualizar el email: ${errorMessage}. Intenta nuevamente.`)
-  } finally {
-    isUpdatingEmail.value = false
-  }
-}
 
 // Modal functions para ganadores de dinero
 const showWinnerModal = (number: number, position: number) => {
@@ -693,6 +350,9 @@ const showWinnerModal = (number: number, position: number) => {
   }
 
   showModal.value = true
+
+  // Guardar ganador (puestos 1..4) como premio de dinero
+  addWinner(position, number, purchase || null, 'money')
 }
 
 const closeModal = () => {
@@ -745,8 +405,10 @@ const nextAttempt = async () => {
   // Start spinning effect
   isShowingSpinEffect.value = true
 
-  // Spin numbers for dramatic effect (2 seconds)
-  const spinDuration = 2000
+  // Spin numbers for dramatic effect
+  // - Intentos 1 a 4: 6 segundos
+  // - Intento 5 (ganador): 10 segundos
+  const spinDuration = currentAttempt.value === 5 ? 10000 : 6000
   const spinInterval = 100
   const spinTimes = spinDuration / spinInterval
 
@@ -778,6 +440,9 @@ const nextAttempt = async () => {
     attempts.value[4] = winnerNumber.value
     isGameComplete.value = true
     isGameRunning.value = false
+
+    // Guardar ganador final (puesto 5)
+    addWinner(4, winnerNumber.value, winnerPurchase.value, 'grand')
   } else {
     // Generate a random number from eligible numbers (excluding winner and previously used numbers)
     let randomNumber
@@ -805,9 +470,19 @@ const nextAttempt = async () => {
 
     attempts.value[currentAttempt.value - 1] = randomNumber
 
-    // Mostrar automáticamente el modal para los primeros 4 intentos
+    // Guardar ganadores de dinero
     if (currentAttempt.value < 4) {
+      // Para los intentos 1 a 3, abrir modal (esto ya guarda el ganador)
       showWinnerModal(randomNumber, currentAttempt.value - 1)
+    } else if (currentAttempt.value === 4) {
+      // Para el 4to intento, persistir automáticamente sin abrir modal
+      const approvedPurchases = purchasesByStatus.value.APPROVED || []
+      const completedPurchases = purchasesByStatus.value.COMPLETED || []
+      const eligiblePurchases = [...approvedPurchases, ...completedPurchases]
+      const purchase = eligiblePurchases.find(p =>
+        p.wallpaperNumbers && p.wallpaperNumbers.includes(randomNumber)
+      )
+      addWinner(3, randomNumber, purchase || null, 'money')
     }
   }
 
@@ -827,21 +502,12 @@ const resetGame = () => {
   isProcessingAttempt.value = false
   isShowingSpinEffect.value = false
   spinningNumbers.value = [null, null, null, null, null]
+  // Limpiar ganadores persistidos al iniciar una nueva dinámica
+  clearWinners()
 }
 
-// Funciones para el modal de confirmación
-const confirmResetGame = () => {
-  showResetConfirmation.value = true
-}
-
-const cancelReset = () => {
-  showResetConfirmation.value = false
-}
-
-const confirmReset = () => {
-  showResetConfirmation.value = false
-  resetGame()
-}
+// Función para el modal de confirmación (placeholder por si se requiere)
+const confirmResetGame = () => { resetGame() }
 
 // Función para generar estilos aleatorios para confetis
 const getConfettiStyle = (index: number) => {
@@ -859,8 +525,39 @@ const getConfettiStyle = (index: number) => {
   }
 }
 
+// Estilos para estallido central de confeti (explota desde el centro)
+const getBurstConfettiStyle = (index: number): Record<string, string> => {
+  const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e']
+  const color = colors[index % colors.length]
+  // Ángulo y distancia aleatoria
+  const angle = Math.random() * Math.PI * 2
+  const distance = 200 + Math.random() * 280 // px
+  const tx = Math.cos(angle) * distance
+  const ty = Math.sin(angle) * distance
+  const sizes = [6, 8, 10, 12]
+  const size = sizes[Math.floor(Math.random() * sizes.length)]
+  const radii = ['0%', '50%', '20%']
+  const borderRadius = radii[Math.floor(Math.random() * radii.length)]
+  const delay = Math.random() * 0.1
+  const duration = 0.9 + Math.random() * 0.5
+  const rotateStart = Math.floor(Math.random() * 360)
+  const style: Record<string, string> = {
+    backgroundColor: color,
+    width: `${size}px`,
+    height: `${size}px`,
+    borderRadius,
+    transform: `rotate(${rotateStart}deg)`,
+  }
+  style['--tx'] = `${tx}px`
+  style['--ty'] = `${ty}px`
+  style['--dur'] = `${duration}s`
+  style['--delay'] = `${delay}s`
+  return style
+}
+
 // Cargar datos al montar el componente
 onMounted(async () => {
+  loadWinnersFromStorage()
   await refreshData()
 })
 </script>
@@ -988,84 +685,6 @@ onMounted(async () => {
   100% {
     transform: rotate(360deg);
   }
-}
-
-.dashboard-content {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.stat-card {
-  background: rgba(30, 41, 59, 0.8);
-  border-radius: 12px;
-  padding: 1.2rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition: all 0.3s ease;
-  min-height: auto;
-}
-
-.stat-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(96, 165, 250, 0.5);
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.2);
-}
-
-.stat-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  flex-shrink: 0;
-}
-
-.stat-card.total .stat-icon {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-}
-
-.stat-card.revenue .stat-icon {
-  background: linear-gradient(135deg, #10b981, #059669);
-}
-
-.stat-card.wallpapers .stat-icon {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-.stat-card.pending .stat-icon {
-  background: linear-gradient(135deg, #f97316, #ea580c);
-}
-
-.stat-content h3 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #cbd5e1;
-  margin-bottom: 0.3rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stat-number {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #ffffff;
-  margin: 0;
-  line-height: 1.1;
 }
 
 /* Winner Selection Styles */
@@ -2362,6 +1981,19 @@ onMounted(async () => {
   background: #ff6b6b;
   animation: confetti-fall linear infinite;
   transform-origin: center;
+}
+
+.confetti-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: confetti-burst var(--dur) ease-out var(--delay) forwards;
+}
+
+@keyframes confetti-burst {
+  0% { transform: translate(-50%, -50%) translate(0, 0) scale(0.8) rotate(0deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1) rotate(720deg); opacity: 0; }
 }
 
 @keyframes confetti-fall {

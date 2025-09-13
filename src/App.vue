@@ -19,7 +19,8 @@
       <!-- Controles de usuario -->
       <div class="nav-controls desktop-nav">
         <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
-        <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Panel Admin</RouterLink>
+        <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Dinámica</RouterLink>
+        <RouterLink v-if="isLoggedIn" class="btn purchases-btn" to="/compras">🧾 Compras</RouterLink>
         <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
         <div v-if="isLoggedIn" class="user-greeting">
           <span>{{ username }}</span>
@@ -50,6 +51,9 @@
             </div>
             <RouterLink v-if="isLoggedIn && isAdmin" class="mobile-btn admin-btn" to="/admin" @click="closeMobileMenu">
               ⚙️ Panel Admin
+            </RouterLink>
+            <RouterLink v-if="isLoggedIn" class="mobile-btn purchases-btn" to="/compras" @click="closeMobileMenu">
+              🧾 Compras
             </RouterLink>
             <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-btn logout-btn" to="/">
               Cerrar sesión
@@ -293,6 +297,18 @@ watch(route, () => {
   transform: translateY(-2px);
 }
 
+.purchases-btn {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
+}
+
+.purchases-btn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 4px 15px rgba(96, 165, 250, 0.5);
+  transform: translateY(-2px);
+}
+
 .user-greeting {
   color: #e2e8f0;
   font-weight: 600;
@@ -424,6 +440,12 @@ watch(route, () => {
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: #ffffff;
   box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.mobile-btn.purchases-btn {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
 }
 
 .mobile-user-greeting {

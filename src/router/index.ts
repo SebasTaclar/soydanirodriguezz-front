@@ -37,6 +37,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/compras',
+      name: 'purchases-dashboard',
+      component: () => import('../views/PurchasesDashboard.vue'),
+      meta: {
+        requiresAuth: true, // Accesible para cualquier usuario autenticado
+      },
+    },
+    {
       path: '/payment/success',
       name: 'payment-success',
       component: () => import('../views/PaymentSuccess.vue'),
