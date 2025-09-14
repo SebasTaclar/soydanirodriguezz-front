@@ -34,14 +34,16 @@
 
         <div class="winner-game-container">
           <div v-if="!isGameStarted && !winnerNumber" class="game-start">
-            <button @click="startWinnerGame" :disabled="eligibleNumbers.length === 0 || isGameRunning" class="start-game-btn">
+            <button @click="startWinnerGame" :disabled="eligibleNumbers.length === 0 || isGameRunning"
+              class="start-game-btn">
               🎲 Iniciar Dinámica
             </button>
             <div class="game-rules">
               <p class="game-hint">
                 Se realizarán 5 intentos antes de revelar el ganador de la moto
                 <br>
-                <small v-if="eligibleNumbers.length < 5" class="warning-text">⚠️ Solo hay {{ eligibleNumbers.length }} números únicos - algunos números pueden repetirse</small>
+                <small v-if="eligibleNumbers.length < 5" class="warning-text">⚠️ Solo hay {{ eligibleNumbers.length }}
+                  números únicos - algunos números pueden repetirse</small>
                 <small v-else class="success-text">✅ {{ eligibleNumbers.length }} números únicos disponibles</small>
               </p>
             </div>
@@ -62,15 +64,18 @@
                   'clickable': attempt && index < 4
                 }" @click="attempt && index < 4 ? showWinnerModal(attempt, index) : null">
                   <div class="attempt-number-display">
-                    {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt || '?') }}
+                    {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt
+                      || '?') }}
                   </div>
                 </div>
               </div>
             </div>
 
             <div class="game-controls">
-              <button v-if="currentAttempt <= 5 && !isGameComplete" @click="nextAttempt" :disabled="isProcessingAttempt" class="next-attempt-btn">
-                {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯 Intento ${currentAttempt}`) }}
+              <button v-if="currentAttempt <= 5 && !isGameComplete" @click="nextAttempt" :disabled="isProcessingAttempt"
+                class="next-attempt-btn">
+                {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯 Intento
+                ${currentAttempt}`) }}
               </button>
             </div>
 
@@ -92,7 +97,8 @@
                   <div v-if="selectedWinner.purchase" class="modal-winner-details">
                     <h4>Detalles del Ganador:</h4>
                     <p><strong>Nombre:</strong> {{ formatWinnerName(selectedWinner.purchase.buyerName) }}</p>
-                    <p><strong>Teléfono:</strong> {{ formatWinnerPhone(selectedWinner.purchase.buyerContactNumber) }}</p>
+                    <p><strong>Teléfono:</strong> {{ formatWinnerPhone(selectedWinner.purchase.buyerContactNumber) }}
+                    </p>
                     <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(selectedWinner.purchase.createdAt) }}</p>
                   </div>
                 </div>
@@ -114,6 +120,46 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal de confirmación para resetear dinámica -->
+    <div v-if="showResetConfirmModal" class="reset-confirm-modal">
+      <div class="reset-modal-overlay" @click="cancelResetGame"></div>
+      <div class="reset-modal-content">
+        <div class="reset-modal-header">
+          <h3>⚠️ Confirmar Nueva Dinámica</h3>
+        </div>
+        <div class="reset-modal-body">
+          <p>¿Estás seguro de que deseas iniciar una nueva dinámica?</p>
+          <p><strong>Esta acción eliminará:</strong></p>
+          <ul>
+            <li>El progreso actual de la dinámica</li>
+            <li>Los ganadores guardados</li>
+            <li>Todos los intentos realizados</li>
+          </ul>
+          <p class="warning-text">Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="reset-modal-actions">
+          <button @click="cancelResetGame" class="cancel-reset-btn">Cancelar</button>
+          <button @click="executeResetGame" class="confirm-reset-btn">Sí, Nueva Dinámica</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tiempo restante durante revelación -->
+    <div v-if="showRemainingTime" class="remaining-time-overlay">
+      <div class="remaining-time-content">
+        <h3>Revelando número...</h3>
+        <div class="time-display">{{ remainingTime }}s</div>
+      </div>
+    </div>
+
+    <!-- Overlay de bloqueo durante procesamiento -->
+    <div v-if="isProcessingAttempt && !showRemainingTime" class="processing-overlay">
+      <div class="processing-content">
+        <div class="spinner"></div>
+        <h3>Generando número...</h3>
       </div>
     </div>
   </div>
@@ -151,6 +197,8 @@ const isRefreshingWallpapers = ref(false)
 
 // Persistencia de ganadores en localStorage
 const WINNERS_KEY = 'dw_winners'
+const GAME_STATE_KEY = 'dw_game_state'
+
 type PrizeType = 'money' | 'grand'
 type StoredWinner = {
   position: number // 1..5
@@ -164,6 +212,16 @@ type StoredWinner = {
     createdAt: string
   } | null
   savedAt: string // ISO string
+}
+
+type GameState = {
+  isGameStarted: boolean
+  currentAttempt: number
+  attempts: (number | null)[]
+  winnerNumber: number | null
+  isGameComplete: boolean
+  isGameRunning: boolean
+  savedAt: string
 }
 
 const winners = ref<StoredWinner[]>([])
@@ -188,6 +246,41 @@ const saveWinnersToStorage = () => {
   }
 }
 
+const loadGameStateFromStorage = () => {
+  try {
+    const raw = localStorage.getItem(GAME_STATE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as GameState
+      isGameStarted.value = parsed.isGameStarted
+      currentAttempt.value = parsed.currentAttempt
+      attempts.value = parsed.attempts
+      winnerNumber.value = parsed.winnerNumber
+      isGameComplete.value = parsed.isGameComplete
+      isGameRunning.value = parsed.isGameRunning
+      console.log('Estado del juego cargado desde localStorage', parsed)
+    }
+  } catch (e) {
+    console.warn('No se pudo cargar estado del juego del localStorage', e)
+  }
+}
+
+const saveGameStateToStorage = () => {
+  try {
+    const gameState: GameState = {
+      isGameStarted: isGameStarted.value,
+      currentAttempt: currentAttempt.value,
+      attempts: attempts.value,
+      winnerNumber: winnerNumber.value,
+      isGameComplete: isGameComplete.value,
+      isGameRunning: isGameRunning.value,
+      savedAt: new Date().toISOString()
+    }
+    localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState))
+  } catch (e) {
+    console.warn('No se pudo guardar estado del juego en localStorage', e)
+  }
+}
+
 const addWinner = (positionIndex: number, number: number | null, purchase: Purchase | null, prize: PrizeType) => {
   if (number == null) return
   const position = positionIndex + 1 // convertir 0..4 -> 1..5
@@ -200,12 +293,12 @@ const addWinner = (positionIndex: number, number: number | null, purchase: Purch
     prize,
     purchase: purchase
       ? {
-          id: purchase.id,
-          buyerName: purchase.buyerName,
-          buyerEmail: purchase.buyerEmail,
-          buyerContactNumber: purchase.buyerContactNumber,
-          createdAt: purchase.createdAt,
-        }
+        id: purchase.id,
+        buyerName: purchase.buyerName,
+        buyerEmail: purchase.buyerEmail,
+        buyerContactNumber: purchase.buyerContactNumber,
+        createdAt: purchase.createdAt,
+      }
       : null,
     savedAt: new Date().toISOString(),
   })
@@ -227,6 +320,13 @@ const isGameRunning = ref(false)
 const isProcessingAttempt = ref(false)
 const isShowingSpinEffect = ref(false)
 const spinningNumbers = ref<(number | null)[]>([null, null, null, null, null])
+
+// Modal state para confirmación de reset
+const showResetConfirmModal = ref(false)
+
+// Countdown state
+const remainingTime = ref(0)
+const showRemainingTime = ref(false)
 
 // Modal state para ganadores de dinero
 const showModal = ref(false)
@@ -270,7 +370,7 @@ const winnerPurchase = computed(() => {
 
   return (
     eligiblePurchases.find(purchase =>
-    purchase.wallpaperNumbers && purchase.wallpaperNumbers.includes(winnerNumber.value!)
+      purchase.wallpaperNumbers && purchase.wallpaperNumbers.includes(winnerNumber.value!)
     ) || null
   )
 })
@@ -392,6 +492,9 @@ const startWinnerGame = () => {
   // Pre-select the winner number (will be revealed on 5th attempt)
   const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
   winnerNumber.value = eligibleNumbers.value[randomIndex]
+
+  // Guardar estado del juego
+  saveGameStateToStorage()
 }
 
 const nextAttempt = async () => {
@@ -412,6 +515,19 @@ const nextAttempt = async () => {
   const spinInterval = 100
   const spinTimes = spinDuration / spinInterval
 
+  // Mostrar tiempo restante durante la revelación
+  showRemainingTime.value = true
+  remainingTime.value = Math.ceil(spinDuration / 1000)
+
+  // Update remaining time every second
+  const timeInterval = setInterval(() => {
+    remainingTime.value--
+    if (remainingTime.value <= 0) {
+      clearInterval(timeInterval)
+      showRemainingTime.value = false
+    }
+  }, 1000)
+
   // Create a pool of available numbers for spinning effect (excluding used ones and winner)
   const availableForSpinning = eligibleNumbers.value.filter(num =>
     num !== winnerNumber.value && !usedNumbers.includes(num)
@@ -428,6 +544,10 @@ const nextAttempt = async () => {
     }
     await new Promise(resolve => setTimeout(resolve, spinInterval))
   }
+
+  // Clear the interval just in case
+  clearInterval(timeInterval)
+  showRemainingTime.value = false
 
   // Stop spinning effect
   isShowingSpinEffect.value = false
@@ -489,6 +609,9 @@ const nextAttempt = async () => {
   // Increment attempt counter after processing
   currentAttempt.value++
 
+  // Guardar estado del juego después de cada intento
+  saveGameStateToStorage()
+
   isProcessingAttempt.value = false
 }
 
@@ -502,12 +625,29 @@ const resetGame = () => {
   isProcessingAttempt.value = false
   isShowingSpinEffect.value = false
   spinningNumbers.value = [null, null, null, null, null]
+  showResetConfirmModal.value = false
+
   // Limpiar ganadores persistidos al iniciar una nueva dinámica
   clearWinners()
+
+  // Limpiar estado del juego del localStorage
+  localStorage.removeItem(GAME_STATE_KEY)
 }
 
-// Función para el modal de confirmación (placeholder por si se requiere)
-const confirmResetGame = () => { resetGame() }
+// Función para mostrar modal de confirmación
+const confirmResetGame = () => {
+  showResetConfirmModal.value = true
+}
+
+// Función para confirmar el reset
+const executeResetGame = () => {
+  resetGame()
+}
+
+// Función para cancelar el reset
+const cancelResetGame = () => {
+  showResetConfirmModal.value = false
+}
 
 // Función para generar estilos aleatorios para confetis
 const getConfettiStyle = (index: number) => {
@@ -558,6 +698,7 @@ const getBurstConfettiStyle = (index: number): Record<string, string> => {
 // Cargar datos al montar el componente
 onMounted(async () => {
   loadWinnersFromStorage()
+  loadGameStateFromStorage()
   await refreshData()
 })
 </script>
@@ -1992,8 +2133,15 @@ onMounted(async () => {
 }
 
 @keyframes confetti-burst {
-  0% { transform: translate(-50%, -50%) translate(0, 0) scale(0.8) rotate(0deg); opacity: 1; }
-  100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1) rotate(720deg); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0.8) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1) rotate(720deg);
+    opacity: 0;
+  }
 }
 
 @keyframes confetti-fall {
@@ -2031,5 +2179,186 @@ onMounted(async () => {
   width: 8px;
   height: 8px;
   transform: rotate(45deg);
+}
+
+/* Modal de confirmación para reset */
+.reset-confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reset-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+}
+
+.reset-modal-content {
+  position: relative;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.reset-modal-header h3 {
+  color: #f97316;
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.reset-modal-body {
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.reset-modal-body ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.reset-modal-body li {
+  margin: 0.5rem 0;
+}
+
+.warning-text {
+  color: #ef4444;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.reset-modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.cancel-reset-btn,
+.confirm-reset-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-reset-btn {
+  background: rgba(71, 85, 105, 0.8);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.cancel-reset-btn:hover {
+  background: rgba(71, 85, 105, 1);
+}
+
+.confirm-reset-btn {
+  background: rgba(239, 68, 68, 0.8);
+  color: white;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.confirm-reset-btn:hover {
+  background: rgba(239, 68, 68, 1);
+}
+
+/* Tiempo restante durante revelación */
+.remaining-time-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.remaining-time-content {
+  text-align: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.remaining-time-content h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #60a5fa;
+}
+
+.time-display {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #f97316;
+  text-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+}
+
+/* Processing overlay */
+.processing-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.processing-content {
+  text-align: center;
+  color: white;
+}
+
+.processing-content h3 {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  color: #60a5fa;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(96, 165, 250, 0.3);
+  border-top: 4px solid #60a5fa;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

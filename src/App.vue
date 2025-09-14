@@ -50,7 +50,7 @@
               <span>Hola, {{ username }}</span>
             </div>
             <RouterLink v-if="isLoggedIn && isAdmin" class="mobile-btn admin-btn" to="/admin" @click="closeMobileMenu">
-              ⚙️ Panel Admin
+              ⚙️ Dinámica
             </RouterLink>
             <RouterLink v-if="isLoggedIn" class="mobile-btn purchases-btn" to="/compras" @click="closeMobileMenu">
               🧾 Compras
