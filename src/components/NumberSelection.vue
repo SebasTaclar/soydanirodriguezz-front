@@ -174,7 +174,7 @@
               </span>
             </button>
 
-            <button class="payment-btn wompi-payment"
+            <!-- <button class="payment-btn wompi-payment"
               :disabled="!isFormValid || selectedNumbers.length === 0 || isProcessingPayment"
               @click="showTermsModalWompi">
               <span v-if="!isProcessingPayment">🏦 Pagar con Wompi</span>
@@ -182,7 +182,19 @@
                 <div class="processing-spinner"></div>
                 Procesando con Wompi...
               </span>
-            </button>
+            </button> -->
+
+            <!-- Mensaje visible indicando cierre de ventas (Texto solicitado por el usuario) -->
+            <div class="sales-closed-notice" aria-live="polite">
+              <div class="notice-left">
+                <div class="notice-icon">🔒</div>
+                <div class="notice-text">
+                  <div class="notice-title">Ventas cerradas</div>
+                  <div class="notice-desc">Lo sentimos — Se cerró la compra de números.</div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
@@ -2672,5 +2684,52 @@ const handleTermsAccept = () => {
 
 .number-info-list li:last-child {
   margin-bottom: 0;
+}
+.sales-closed-notice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(90deg, rgba(15,23,42,0.92), rgba(30,41,59,0.75));
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+  border-radius: 10px;
+}
+.sales-closed-notice .notice-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.sales-closed-notice .notice-icon {
+  font-size: 1.6rem;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  padding: 0.48rem;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(239,68,68,0.12);
+}
+.sales-closed-notice .notice-title {
+  font-weight: 800;
+  color: #fff;
+  font-size: 1rem;
+}
+.sales-closed-notice .notice-desc {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  max-width: 360px;
+}
+.sales-closed-notice .notify-btn {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sales-closed-notice .notify-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59,130,246,0.2);
 }
 </style>
