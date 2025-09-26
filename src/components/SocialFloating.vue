@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="floating-social">
     <a
       href="https://wa.me/+573118715539"
@@ -14,7 +14,7 @@
       <span class="social-tooltip">WhatsApp</span>
     </a>
   </div>
-</template>
+</template> -->
 
 <script setup lang="ts">
 defineOptions({

@@ -11,10 +11,10 @@
       </RouterLink>
 
       <!-- Navegación principal -->
-      <div class="nav-menu desktop-nav">
+      <!-- <div class="nav-menu desktop-nav">
         <a href="#numbers" class="nav-link" @click="closeMobileMenu(); scrollToNumbers()">Elige Ahora</a>
         <a href="#faq" class="nav-link " @click="closeMobileMenu">¿Preguntas?</a>
-      </div>
+      </div> -->
 
       <!-- Controles de usuario -->
       <div class="nav-controls desktop-nav">
@@ -37,10 +37,10 @@
       <!-- Menu mobile desplegable -->
       <div class="mobile-menu" :class="{ 'active': isMobileMenuOpen }">
         <div class="mobile-menu-content">
-          <div class="mobile-nav-links">
+          <!-- <div class="mobile-nav-links">
             <a href="#numbers" class="mobile-link" @click="closeMobileMenu; scrollToNumbers()">Números</a>
             <a href="#compartir" class="mobile-link" @click="closeMobileMenu">Compartir</a>
-          </div>
+          </div> -->
 
           <div class="mobile-controls">
             <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">

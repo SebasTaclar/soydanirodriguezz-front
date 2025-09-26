@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { authService } from '@/services/api'
 import Home from '@/views/Home.vue'
+import Maintenance from '@/views/Maintenance.vue'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -16,6 +17,11 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'maintenance',
+      component: Maintenance,
+    },
+    {
+      path: '/home',
       name: 'home',
       component: Home,
     },
