@@ -40,6 +40,18 @@
         </p>
       </div>
 
+      <!-- Banner atractivo: Muy pronto volveremos -->
+      <div class="coming-soon-banner" role="status" aria-live="polite">
+        <div class="cs-left">
+          <div class="cs-emoji">🎉</div>
+        </div>
+        <div class="cs-body">
+          <div class="cs-title">¡Muy pronto volveremos!</div>
+          <div class="cs-text">Prepárate para novedades increíbles.</div>
+        </div>
+
+      </div>
+
       <!-- Información de tiempo estimado -->
       <!-- <div class="time-info">
         <div class="time-card">
@@ -64,7 +76,7 @@
       </div> -->
 
       <!-- Información de contacto -->
-      <div class="contact-info">
+      <!-- <div class="contact-info">
         <div class="contact-card">
           <div class="contact-icon">📞</div>
           <div class="contact-content">
@@ -74,10 +86,10 @@
             </a>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- WhatsApp contacto -->
-      <div class="whatsapp-contact">
+      <!-- <div class="whatsapp-contact">
         <div class="whatsapp-title">O escribenos directo al Whatsapp</div>
         <a href="https://wa.me/573118715539?text=Hola,%20necesito%20ayuda%20urgente%20con%20el%20sitio"
            class="whatsapp-btn"
@@ -93,7 +105,7 @@
             <span class="whatsapp-number">+57 311 871 5539</span>
           </div>
         </a>
-      </div>
+      </div> -->
 
       <!-- Mensaje de agradecimiento -->
       <div class="thank-you">
@@ -193,6 +205,62 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Coming soon banner */
+.coming-soon-banner {
+  margin: 1.5rem auto 0 auto;
+  max-width: 900px;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(96,165,250,0.08), rgba(99,102,241,0.06));
+  border: 1px solid rgba(96,165,250,0.12);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.5);
+}
+.coming-soon-banner .cs-emoji {
+  font-size: 2.2rem;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 10px;
+}
+.coming-soon-banner .cs-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+.coming-soon-banner .cs-text {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+.coming-soon-banner .cs-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.coming-soon-banner .cs-pill {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: #fff;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .coming-soon-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.9rem 1rem;
+  }
+  .coming-soon-banner .cs-emoji {
+    font-size: 1.6rem;
+  }
+  .coming-soon-banner .cs-title {
+    font-size: 1.05rem;
+  }
 }
 
 /* Elementos decorativos */
