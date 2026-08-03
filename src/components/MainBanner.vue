@@ -53,7 +53,7 @@
             <div class="moto-modifications-inner" ref="motoInnerRef">
               <p class="modifications-description">
                 Esta <span class="highlight-text">Motocicleta</span> incluye:
-                <strong>Cúpula Nueva, Retrovisores Nuevos, Tapas Laterales Nuevas y Emblemas Nuevos.</strong>
+                <strong>Moto completamente nueva</strong>
               </p>
             </div>
           </div>
@@ -146,33 +146,25 @@ const {
 // Datos de las imágenes de la moto
 const motoImages = ref([
   {
-    src: '/images/ns200_slide1.jpeg',
-    title: 'Moto NS200s',
+    src: 'https://res.cloudinary.com/dlwzazojt/image/upload/v1785695515/descarga_gdd0ra.png',
+    title: 'Imagen decorativa 1',
   },
   {
-    src: '/images/ns200_slide2.jpeg',
-    title: 'Diseño agresivo frontal',
+    src: 'https://res.cloudinary.com/dlwzazojt/image/upload/v1785695515/descarga_1_e7samj.png',
+    title: 'Imagen decorativa 2',
   },
   {
-    src: '/images/ns200_slide3.jpg',
-    title: 'Perfil deportivo completo',
+    src: 'https://res.cloudinary.com/dlwzazojt/image/upload/v1785695514/images_uk74oy.jpg',
+    title: 'Imagen decorativa 3',
   },
   {
-    src: '/images/ns200_slide4.jpeg',
-    title: 'Diseño deportivo',
+    src: 'https://res.cloudinary.com/dlwzazojt/image/upload/v1785695514/71yPsfr9r-doeZQQeYbhZiQcrJxfIMLIy-Y2Zlux_wRaGuY1P7uTyosqfbBrTvbGDxxMnpEA09c8SkGyp5MxRreg3IR5SaBKmAXQuydnS9_rdJFCohxLaXe3t9AlGpPFLFgHvJIG2GzG1Y6qWjbfpZfCtlPo1Hb0wJzD_5y4W4Uwefub7ZthDTKgT4EhyVGo_i98lur.jpg',
+    title: 'Imagen decorativa 4',
   },
   {
-    src: '/images/ns200_slide5.jpg',
-    title: 'Alta tecnología',
+    src: 'https://res.cloudinary.com/dlwzazojt/image/upload/v1785695514/I3k_V9nGOLm1DH5Rf2mSP3q9G3Afre2MH0Sl-5LOgQLIzWw-o3I6qdPDQ7KyzmEOojn-N1zFe2gCswZ2Q4ZUyG6SDd3Ya5bbaeDEhJ58k3ZTd7qsS-yIcDd-HMC2fDI1iCnRuiKHn-71RfBdXL3zNL11kzu4rqMkehLezgo8kGi69a5sZgk3cjLcBzgzyFti_r0vcid.jpg',
+    title: 'Imagen decorativa 5',
   },
-  {
-    src: '/images/ns200_slide6.jpg',
-    title: 'Tecnología avanzada',
-  },
-  {
-    src: '/images/ns200_slide7.jpeg',
-    title: 'Sistema amigable',
-  }
 ])
 
 const currentImageIndex = ref(0)
@@ -427,10 +419,9 @@ onMounted(() => {
     const el = galleryRef.value
     const inner = motoInnerRef.value
     if (!el || !inner) return
-  // Ajustar ancho del inner para que se mueva acorde a la galería (área visible)
-  inner.style.width = `${el.clientWidth}px`
-  // Trasladar inner negativamente la misma cantidad de scroll para que parezca que se mueve con la galería
-  inner.style.transform = `translateX(${ -el.scrollLeft }px)`
+    // Mantener la leyenda centrada en el medio, sin seguir el scroll de las fotos
+    inner.style.width = `${el.clientWidth}px`
+    inner.style.transform = 'none'
   }
 
   // asignar listeners para limpieza posterior
@@ -519,10 +510,13 @@ onUnmounted(() => {
 
 .moto-modifications {
   /* Centrar y alinear con el contenido principal debajo de la galería */
-  position:absolute;
+  position: absolute;
+  left: 50%;
+  top: 110px;
+  transform: translate(-50%, -50%);
   width: 100%;
   max-width: 1200px; /* igual que el content-wrapper */
-  margin: 5rem auto 0 18rem; /* arriba separado, centrado */
+  margin: 0;
   padding: 0.75rem 2rem; /* padding horizontal para alinear con el layout */
   display: flex;
   justify-content: center;
@@ -598,6 +592,9 @@ onUnmounted(() => {
 .moto-modifications-inner {
   transition: transform 0.15s linear;
   will-change: transform;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* Ocultar scrollbar en WebKit */
@@ -612,20 +609,20 @@ onUnmounted(() => {
   transition: all 0.15s ease-out; /* Transición más rápida */
   border-radius: 16px;
   overflow: hidden;
-  border: 2px solid rgba(96, 165, 250, 0.3);
-  background: #1e293b;
+  border: 2px solid rgba(148, 163, 184, 0.35);
+  background: #ffffff;
 }
 
 .gallery-image-item:hover {
   transform: translateY(-8px);
   z-index: 10;
-  border-color: rgba(96, 165, 250, 0.8);
-  box-shadow: 0 12px 35px rgba(96, 165, 250, 0.3);
+  border-color: rgba(96, 165, 250, 0.9);
+  box-shadow: 0 12px 35px rgba(96, 165, 250, 0.18);
 }
 
 .gallery-image-item.active {
   border-color: #60a5fa;
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
+  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.2);
 }
 
 .image-wrapper {

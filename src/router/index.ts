@@ -17,13 +17,17 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'maintenance',
-      component: Maintenance,
+      name: 'home',
+      component: Home,
     },
     {
       path: '/home',
-      name: 'home',
-      component: Home,
+      redirect: '/',
+    },
+    {
+      path: '/maintenance',
+      name: 'maintenance',
+      component: Maintenance,
     },
     {
       path: '/login',
