@@ -22,23 +22,7 @@
               <p>{{ faq.answer }}</p>
 
               <!-- Barra de progreso solo para la primera pregunta -->
-              <div v-if="index === 0" class="progress-section">
-                <div class="progress-info">
-                  <span class="progress-label">Progreso actual </span>
-                  <span class="progress-percentage">{{ progressPercentage.toFixed(1) }}%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-                  <div class="progress-milestone" :style="{ left: '50%' }">
-                    <div class="milestone-line"></div>
-                    <div class="milestone-label">50% - Inicio de la dinámica</div>
-                  </div>
-                </div>
-                <div class="progress-stats">
-                  <span>{{ soldNumbers }} / {{ totalNumbers }} wallpapers vendidos</span>
-                  <span v-if="progressPercentage >= 50" class="ready-badge">🎉 ¡Listo para empezar!</span>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>
@@ -84,7 +68,7 @@ onMounted(async () => {
 const faqs = ref([
   {
     question: "¿Cuándo se realiza la dinámica?",
-    answer: "La dinámica se realizará una vez alcanzado el 50% de los fondos digitales vendidos."
+    answer: "La dinámica se realizará una vez se alcance un límite de wallpapers vendidos. El límite y la fecha de la dinámica serán anunciados previamente a través de las redes sociales de @soydanirodriguezz."
   },
   {
     question: "¿Puedo comprar más de un número?",
@@ -96,7 +80,7 @@ const faqs = ref([
   },
   {
     question: "¿Los fondos digitales se envían al correo electrónico?",
-    answer: "Sí, una vez confirmado el pago, los fondos digitales de los wallpapers adquiridos se envían automáticamente al correo electrónico proporcionado durante la compra. Recibirás un email con el archivo para descargar."
+    answer: "Sí, una vez confirmado el pago, los fondos digitales de los wallpapers adquiridos se enviarán automáticamente al correo electrónico registrado durante la compra. Por favor, verifica que tu dirección de correo esté escrita correctamente y utiliza una cuenta con suficiente espacio de almacenamiento para recibir el archivo. Si el correo es incorrecto o no cuenta con espacio disponible, la entrega podría no completarse correctamente. Recibirás un correo con el archivo listo para descargar."
   },
 
   {
@@ -106,7 +90,7 @@ const faqs = ref([
 
   {
     question: "¿Cómo sé que mi pago fue exitoso?",
-    answer: "Al realizar tu compra recibirás un correo de Mercado Pago con la confirmacion del pago. Luego vas a recibir 1 o 2 correos por parte de la aplicacion. El primero puede indicar que tu pago está pendiente de confirmación, y el segundo te notificará cuando el pago haya sido aprobado con éxito (en este ultimo correo recibiras adjunto el wallpaper en formato svg para visualizarlo necesitarias abirlo desde un computador)."
+    answer: "Al realizar tu compra, recibirás un correo de Wompi confirmando que la transacción fue procesada. Dependiendo de tu entidad bancaria, también podrías recibir una notificación sobre el movimiento o la aprobación del pago. Una vez el pago sea confirmado, recibirás un correo por parte de nuestra plataforma con el wallpaper adquirido para su descarga. Si no encuentras el correo, revisa también las carpetas de spam o correo no deseado."
   },
   // {
   //   question: "¿Cómo puedo permitir o bloquear ventanas emergentes para sitios web específicos?",

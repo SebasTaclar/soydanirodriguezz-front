@@ -184,17 +184,16 @@
               </span>
             </button> -->
 
-            <!-- Mensaje visible indicando cierre de ventas (Texto solicitado por el usuario) -->
-            <div class="sales-closed-notice" aria-live="polite">
-              <div class="notice-left">
-                <div class="notice-icon">🔒</div>
-                <div class="notice-text">
-                  <div class="notice-title">Ventas cerradas</div>
-                  <div class="notice-desc">Lo sentimos — Se cerró la compra de números.</div>
-                </div>
-              </div>
-
-            </div>
+            <!-- Botón de pago Wompi activado -->
+            <button class="payment-btn wompi-payment"
+              :disabled="!isFormValid || selectedNumbers.length === 0 || isProcessingPayment"
+              @click="showTermsModalWompi">
+              <span v-if="!isProcessingPayment">🏦 Pagar con Wompi</span>
+              <span v-else class="processing-text">
+                <div class="processing-spinner"></div>
+                Procesando con Wompi...
+              </span>
+            </button>
           </div>
         </div>
       </div>
