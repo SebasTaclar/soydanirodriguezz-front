@@ -52,8 +52,8 @@
           <div class="moto-modifications" ref="motoModRef">
             <div class="moto-modifications-inner" ref="motoInnerRef">
               <p class="modifications-description">
-                Esta <span class="highlight-text">Motocicleta</span> incluye:
-                <strong>Moto completamente nueva</strong>
+                <span class="highlight-text">Motocicleta </span>
+                <strong>100% nueva</strong>
               </p>
             </div>
           </div>
@@ -864,7 +864,7 @@ onUnmounted(() => {
     width: 100% !important;
     max-width: 1000px;
     padding: 0.6rem 1rem;
-    margin: 2rem auto 0 auto; /* Cambio de -10.8rem a 2rem positivo */
+    margin: 1rem auto 0 auto; /* Cambio de -10.8rem a 2rem positivo */
   }
 
   .moto-modifications-inner {
@@ -942,7 +942,7 @@ onUnmounted(() => {
     width: 100% !important;
     max-width: 92%;
     padding: 0.5rem 1rem;
-    margin: -8rem auto 0 auto; /* Cambio de -10.8rem a 2rem positivo */
+    margin: -7rem -10rem 0 auto; /* Cambio de -10.8rem a 2rem positivo */
   }
 
   .moto-modifications-inner {
