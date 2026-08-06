@@ -194,6 +194,10 @@
                 Procesando con Wompi...
               </span>
             </button>
+
+            <button type="button" class="terms-link-btn" @click="showTermsAndConditions = true">
+              Ver términos y condiciones
+            </button>
           </div>
         </div>
       </div>
@@ -1945,6 +1949,21 @@ const handleTermsAccept = () => {
   flex-direction: column;
   gap: 0.8rem;
   margin-bottom: 2rem;
+}
+
+.terms-link-btn {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  align-self: center;
+}
+
+.terms-link-btn:hover {
+  color: #93c5fd;
 }
 
 .payment-btn {

@@ -40,7 +40,6 @@
             </button>
             <div class="game-rules">
               <p class="game-hint">
-                Se realizarán 5 intentos antes de revelar el ganador de la moto
                 <br>
                 <small v-if="eligibleNumbers.length < 5" class="warning-text">⚠️ Solo hay {{ eligibleNumbers.length }}
                   números únicos - algunos números pueden repetirse</small>

@@ -9,21 +9,33 @@
       </div>
 
       <div class="modal-body">
-        <div class="terms-content">
-          <div class="warning-icon">⚠️</div>
+        <div class="terms-text">
+          <p>
+            Al marcar la casilla de aceptación, declaro que he leído y acepto los presentes términos y condiciones. Autorizo el tratamiento de mis datos personales (nombre, correo electrónico, número de celular y demás información suministrada) para la gestión de mi compra, el registro en la base de datos, la participación en la dinámica y las comunicaciones relacionadas con esta actividad, de conformidad con la legislación vigente sobre protección de datos personales.
+          </p>
+          <p>
+            Entiendo y acepto que la compra corresponde a un wallpaper digital, el cual será entregado por los medios establecidos y no es reembolsable una vez realizada la compra.
+          </p>
+          <p>Asimismo, acepto que mi participación en el sorteo estará sujeta a las siguientes condiciones:</p>
+          <ul>
+            <li>El sorteo se realizará en la fecha y hora que anuncie previamente Daniel a través de sus redes sociales oficiales, mediante una transmisión en vivo.</li>
+            <li>Se seleccionará un (1) ganador de forma pública durante la transmisión.</li>
+            <li>El organizador realizará hasta dos (2) intentos de contacto con el posible ganador utilizando el número telefónico y/o correo electrónico registrados al momento de la compra.</li>
+            <li>Entre el primer y el segundo intento habrá un tiempo máximo de 10 minutos para obtener respuesta.</li>
+            <li>Si transcurrido ese tiempo no es posible establecer contacto con el participante, este perderá su derecho al premio y se procederá inmediatamente a seleccionar un nuevo ganador durante la misma transmisión en vivo.</li>
+            <li>Es responsabilidad de cada participante suministrar datos de contacto correctos y mantenerse atento a las redes sociales oficiales de Daniel, donde se informarán oportunamente la fecha, la hora del sorteo y cualquier información relacionada con la actividad.</li>
+          </ul>
+          <p>
+            Al aceptar estos términos y condiciones, manifiesto que comprendo y acepto íntegramente las reglas aquí establecidas para participar en la dinámica.
+          </p>
+        </div>
 
-            <strong>Consulta el documento completo aquí:</strong>
-            <a class="terms-link" href="images/terminos-condiciones.pdf" target="_blank" rel="noopener noreferrer">
-              Ver PDF de Términos y Condiciones
-            </a>
-
-          <div class="checkbox-container">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="accepted" class="checkbox-input" />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-text">Acepto los términos y condiciones</span>
-            </label>
-          </div>
+        <div class="checkbox-container">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="accepted" class="checkbox-input" />
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">Acepto los términos y condiciones</span>
+          </label>
         </div>
       </div>
 
@@ -82,10 +94,13 @@ const handleAccept = () => {
   background: linear-gradient(145deg, #1e293b, #334155);
   border-radius: 16px;
   width: 90%;
-  max-width: 500px;
+  max-width: 550px;
+  max-height: 85vh;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(96, 165, 250, 0.2);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   animation: modalSlideIn 0.3s ease-out;
 }
 
@@ -94,7 +109,6 @@ const handleAccept = () => {
     opacity: 0;
     transform: translateY(-30px) scale(0.95);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -102,32 +116,29 @@ const handleAccept = () => {
 }
 
 .modal-header {
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid rgba(96, 165, 250, 0.2);
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: rgba(96, 165, 250, 0.1);
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #f1f5f9;
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .close-btn {
   background: none;
   border: none;
   color: #94a3b8;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.4rem;
   border-radius: 8px;
   transition: all 0.3s ease;
   display: flex;
@@ -138,85 +149,46 @@ const handleAccept = () => {
 .close-btn:hover {
   background: rgba(248, 113, 113, 0.1);
   color: #f87171;
-  transform: scale(1.1);
 }
 
 .modal-body {
-  padding: 2rem;
-}
-
-.terms-content {
-  text-align: center;
-}
-
-.warning-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.5));
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .terms-text {
-  color: #e2e8f0;
-  font-size: 1rem;
-  line-height: 1.7;
-  margin-bottom: 3rem;
-  text-align: left;
-  background: rgba(15, 23, 42, 0.5);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border-left: 4px solid #fbbf24;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  text-align: justify;
 }
 
-.terms-link {
-  display: inline-block;
-  margin-top: 0.75rem;
-  color: #60a5fa;
-  font-weight: 600;
-  text-decoration: none;
-  position: relative;
-  padding-right: 1.2rem;
-  transition: color 0.3s ease;
+.terms-text p {
+  margin: 0 0 0.75rem;
 }
 
-.terms-link::after {
-  content: '\2197'; /* flecha diagonal */
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.9rem;
-  opacity: 0.8;
+.terms-text ul {
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.25rem;
 }
 
-.terms-link:hover {
-  color: #93c5fd;
-  text-decoration: underline;
+.terms-text li {
+  margin-bottom: 0.4rem;
 }
 
 .checkbox-container {
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(96, 165, 250, 0.15);
 }
 
 .checkbox-label {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.6rem;
   cursor: pointer;
   user-select: none;
-  text-align: left;
 }
 
 .checkbox-input {
@@ -224,60 +196,58 @@ const handleAccept = () => {
 }
 
 .checkbox-custom {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 2px solid #64748b;
   border-radius: 4px;
   background: transparent;
   position: relative;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-.checkbox-input:checked+.checkbox-custom {
+.checkbox-input:checked + .checkbox-custom {
   background: linear-gradient(135deg, #10b981, #059669);
   border-color: #10b981;
 }
 
-.checkbox-input:checked+.checkbox-custom::after {
+.checkbox-input:checked + .checkbox-custom::after {
   content: '✓';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
 }
 
 .checkbox-text {
   color: #e2e8f0;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
 .modal-footer {
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   border-top: 1px solid rgba(96, 165, 250, 0.2);
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   justify-content: flex-end;
   background: rgba(15, 23, 42, 0.3);
+  flex-shrink: 0;
 }
 
 .btn-cancel,
 .btn-accept {
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border: none;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
 }
 
 .btn-cancel {
@@ -289,34 +259,17 @@ const handleAccept = () => {
 .btn-cancel:hover {
   background: rgba(96, 165, 250, 0.1);
   border-color: #60a5fa;
-  transform: translateY(-2px);
 }
 
 .btn-accept {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
-  min-width: 180px;
-  position: relative;
+  min-width: 160px;
 }
 
 .btn-accept:not(.disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-}
-
-.btn-accept:not(.disabled)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.btn-accept:not(.disabled):hover::before {
-  left: 100%;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 .btn-accept.disabled {
@@ -326,18 +279,10 @@ const handleAccept = () => {
   border: 1px solid rgba(71, 85, 105, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .modal-container {
     width: 95%;
-    margin: 1rem;
-  }
-
-  .modal-header,
-  .modal-body,
-  .modal-footer {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    max-height: 90vh;
   }
 
   .modal-footer {
@@ -347,26 +292,6 @@ const handleAccept = () => {
   .btn-cancel,
   .btn-accept {
     width: 100%;
-    justify-content: center;
-  }
-
-  .terms-text {
-    font-size: 0.95rem;
-    padding: 1.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .modal-header h2 {
-    font-size: 1.25rem;
-  }
-
-  .terms-text {
-    font-size: 0.9rem;
-  }
-
-  .warning-icon {
-    font-size: 2.5rem;
   }
 }
 </style>
