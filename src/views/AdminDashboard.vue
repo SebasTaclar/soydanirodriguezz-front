@@ -22,7 +22,7 @@
 
         <div class="winner-header">
           <h3>🎯 Selección del Wallpaper Ganador</h3>
-          <p>Genera el número ganador de entre los wallpapers pagados/aprobados</p>
+          <p>Genera un único número ganador entre los wallpapers pagados/aprobados</p>
         </div>
 
         <div class="winner-stats">
@@ -33,90 +33,41 @@
         </div>
 
         <div class="winner-game-container">
-          <div v-if="!isGameStarted && !winnerNumber" class="game-start">
+          <div v-if="!isGameComplete" class="game-start">
             <button @click="startWinnerGame" :disabled="eligibleNumbers.length === 0 || isGameRunning"
               class="start-game-btn">
-              🎲 Iniciar Dinámica
+              🎲 {{ isGameRunning ? 'Seleccionando...' : 'Elegir Ganador' }}
             </button>
             <div class="game-rules">
               <p class="game-hint">
-                <br>
-                <small v-if="eligibleNumbers.length < 5" class="warning-text">⚠️ Solo hay {{ eligibleNumbers.length }}
-                  números únicos - algunos números pueden repetirse</small>
-                <small v-else class="success-text">✅ {{ eligibleNumbers.length }} números únicos disponibles</small>
+                <small v-if="eligibleNumbers.length === 0" class="warning-text">⚠️ No hay números elegibles disponibles</small>
+                <small v-else class="success-text">✅ {{ eligibleNumbers.length }} números disponibles para un único ganador</small>
               </p>
+            </div>
+
+            <div v-if="isGameRunning" class="live-draw-box">
+              <p class="live-draw-label">Número aleatorio en curso</p>
+              <div class="live-draw-number">#{{ rollingNumber ?? '?' }}</div>
+              <p class="live-draw-time">Revelando en {{ revealSeconds }}s</p>
             </div>
           </div>
 
-          <div v-if="isGameStarted" class="game-active">
-            <div class="game-explanation">
-              <h4>🏆 ¡El quinto número es el ganador de la moto!</h4>
-              <p>Los primeros 4 números ganarán dinero</p>
-            </div>
-            <div class="attempts-container">
-              <h4>Intentos: {{ currentAttempt - 1 }}/5</h4>
-              <div class="attempts-display">
-                <div v-for="(attempt, index) in attempts" :key="index" class="attempt-number" :class="{
-                  'current': index === currentAttempt - 1 && !isGameComplete,
-                  'revealed': index < currentAttempt - 1 || isGameComplete,
-                  'spinning': isShowingSpinEffect && index === currentAttempt - 1,
-                  'clickable': attempt && index < 4
-                }" @click="attempt && index < 4 ? showWinnerModal(attempt, index) : null">
-                  <div class="attempt-number-display">
-                    {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt
-                      || '?') }}
-                  </div>
-                </div>
+          <div v-else-if="winnerNumber" class="winner-reveal">
+            <div class="winner-announcement">
+              <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
+              <div class="winner-number-display">#{{ winnerNumber }}</div>
+              <h2 class="winner-title">🎉 ¡Felicitaciones al Ganador! 🎉</h2>
+              <div v-if="winnerPurchase" class="winner-details">
+                <h3>Detalles del Ganador:</h3>
+                <p><strong>Nombre:</strong> {{ formatWinnerName(winnerPurchase.buyerName) }}</p>
+                <p><strong>Teléfono:</strong> {{ formatWinnerPhone(winnerPurchase.buyerContactNumber) }}</p>
+                <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(winnerPurchase.createdAt) }}</p>
               </div>
             </div>
+          </div>
 
-            <div class="game-controls">
-              <button v-if="currentAttempt <= 5 && !isGameComplete" @click="nextAttempt" :disabled="isProcessingAttempt"
-                class="next-attempt-btn">
-                {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯 Intento
-                ${currentAttempt}`) }}
-              </button>
-            </div>
-
-            <div v-if="isGameStarted" class="reset-controls">
-              <button @click="confirmResetGame" class="reset-game-btn">🔄 Nueva Dinámica</button>
-            </div>
-
-            <div v-if="showModal" class="inline-winner-modal">
-              <div class="inline-modal-content">
-                <button class="modal-close" @click="closeModal">×</button>
-                <div class="modal-header">
-                  <h2>🎉 ¡FELICITACIONES! 🎉</h2>
-                  <div class="modal-number-display">#{{ selectedWinner.number }}</div>
-                </div>
-                <div class="modal-body">
-                  <h3 v-if="selectedWinner.position === 4">🏆 ¡Ganaste la motocicleta!</h3>
-                  <h3 v-else>💰 ¡Ganaste dinero!</h3>
-                  <p class="win-message">{{ getWinMessage(selectedWinner.position) }}</p>
-                  <div v-if="selectedWinner.purchase" class="modal-winner-details">
-                    <h4>Detalles del Ganador:</h4>
-                    <p><strong>Nombre:</strong> {{ formatWinnerName(selectedWinner.purchase.buyerName) }}</p>
-                    <p><strong>Teléfono:</strong> {{ formatWinnerPhone(selectedWinner.purchase.buyerContactNumber) }}
-                    </p>
-                    <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(selectedWinner.purchase.createdAt) }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="isGameComplete && winnerNumber" class="winner-reveal">
-              <div class="winner-announcement">
-                <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
-                <div class="winner-number-display">#{{ winnerNumber }}</div>
-                <h2 class="winner-title">🎉 ¡Felicitaciones al Ganador de la Moto! 🎉</h2>
-                <div v-if="winnerPurchase" class="winner-details">
-                  <h3>Detalles del Ganador:</h3>
-                  <p><strong>Nombre:</strong> {{ formatWinnerName(winnerPurchase.buyerName) }}</p>
-                  <p><strong>Teléfono:</strong> {{ formatWinnerPhone(winnerPurchase.buyerContactNumber) }}</p>
-                  <p><strong>Fecha de Compra:</strong> {{ formatDateOnly(winnerPurchase.createdAt) }}</p>
-                </div>
-              </div>
-            </div>
+          <div v-if="isGameComplete && winnerNumber" class="reset-controls">
+            <button @click="confirmResetGame" class="reset-game-btn">🔄 Nueva Dinámica</button>
           </div>
         </div>
       </div>
@@ -134,8 +85,8 @@
           <p><strong>Esta acción eliminará:</strong></p>
           <ul>
             <li>El progreso actual de la dinámica</li>
-            <li>Los ganadores guardados</li>
-            <li>Todos los intentos realizados</li>
+            <li>El ganador guardado</li>
+            <li>El resultado del sorteo actual</li>
           </ul>
           <p class="warning-text">Esta acción no se puede deshacer.</p>
         </div>
@@ -146,26 +97,11 @@
       </div>
     </div>
 
-    <!-- Tiempo restante durante revelación -->
-    <div v-if="showRemainingTime" class="remaining-time-overlay">
-      <div class="remaining-time-content">
-        <h3>Revelando número...</h3>
-        <div class="time-display">{{ remainingTime }}s</div>
-      </div>
-    </div>
-
-    <!-- Overlay de bloqueo durante procesamiento -->
-    <div v-if="isProcessingAttempt && !showRemainingTime" class="processing-overlay">
-      <div class="processing-content">
-        <div class="spinner"></div>
-        <h3>Generando número...</h3>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAdminPurchases } from '@/composables/useAdminPurchases'
 import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
 import { authService } from '@/services/api/authService'
@@ -194,13 +130,13 @@ const {
 // Estado local
 const isRefreshingWallpapers = ref(false)
 
-// Persistencia de ganadores en localStorage
+// Persistencia del ganador en localStorage
 const WINNERS_KEY = 'dw_winners'
 const GAME_STATE_KEY = 'dw_game_state'
 
 type PrizeType = 'money' | 'grand'
 type StoredWinner = {
-  position: number // 1..5
+  position: number
   number: number
   prize: PrizeType
   purchase: {
@@ -214,9 +150,6 @@ type StoredWinner = {
 }
 
 type GameState = {
-  isGameStarted: boolean
-  currentAttempt: number
-  attempts: (number | null)[]
   winnerNumber: number | null
   isGameComplete: boolean
   isGameRunning: boolean
@@ -233,7 +166,7 @@ const loadWinnersFromStorage = () => {
       if (Array.isArray(parsed)) winners.value = parsed
     }
   } catch (e) {
-    console.warn('No se pudo cargar ganadores del localStorage', e)
+    console.warn('No se pudo cargar el ganador del localStorage', e)
   }
 }
 
@@ -241,7 +174,7 @@ const saveWinnersToStorage = () => {
   try {
     localStorage.setItem(WINNERS_KEY, JSON.stringify(winners.value))
   } catch (e) {
-    console.warn('No se pudo guardar ganadores en localStorage', e)
+    console.warn('No se pudo guardar el ganador en localStorage', e)
   }
 }
 
@@ -250,12 +183,21 @@ const loadGameStateFromStorage = () => {
     const raw = localStorage.getItem(GAME_STATE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as GameState
-      isGameStarted.value = parsed.isGameStarted
-      currentAttempt.value = parsed.currentAttempt
-      attempts.value = parsed.attempts
-      winnerNumber.value = parsed.winnerNumber
-      isGameComplete.value = parsed.isGameComplete
-      isGameRunning.value = parsed.isGameRunning
+      winnerNumber.value = parsed.winnerNumber ?? null
+      isGameComplete.value = Boolean(parsed.isGameComplete && parsed.winnerNumber)
+
+      // Nunca restaurar "running" al recargar; evita bloquear el botón en "Seleccionando...".
+      isGameRunning.value = false
+
+      if (parsed.isGameRunning) {
+        const normalizedState: GameState = {
+          winnerNumber: winnerNumber.value,
+          isGameComplete: isGameComplete.value,
+          isGameRunning: false,
+          savedAt: new Date().toISOString()
+        }
+        localStorage.setItem(GAME_STATE_KEY, JSON.stringify(normalizedState))
+      }
       console.log('Estado del juego cargado desde localStorage', parsed)
     }
   } catch (e) {
@@ -266,9 +208,6 @@ const loadGameStateFromStorage = () => {
 const saveGameStateToStorage = () => {
   try {
     const gameState: GameState = {
-      isGameStarted: isGameStarted.value,
-      currentAttempt: currentAttempt.value,
-      attempts: attempts.value,
       winnerNumber: winnerNumber.value,
       isGameComplete: isGameComplete.value,
       isGameRunning: isGameRunning.value,
@@ -280,10 +219,9 @@ const saveGameStateToStorage = () => {
   }
 }
 
-const addWinner = (positionIndex: number, number: number | null, purchase: Purchase | null, prize: PrizeType) => {
+const addWinner = (number: number | null, purchase: Purchase | null, prize: PrizeType) => {
   if (number == null) return
-  const position = positionIndex + 1 // convertir 0..4 -> 1..5
-  // Evitar duplicar si ya existe ese puesto
+  const position = 1
   if (winners.value.some(w => w.position === position)) return
 
   winners.value.push({
@@ -310,38 +248,17 @@ const clearWinners = () => {
 }
 
 // Winner game state
-const isGameStarted = ref(false)
-const currentAttempt = ref(1)
-const attempts = ref<(number | null)[]>([null, null, null, null, null])
 const winnerNumber = ref<number | null>(null)
 const isGameComplete = ref(false)
 const isGameRunning = ref(false)
-const isProcessingAttempt = ref(false)
-const isShowingSpinEffect = ref(false)
-const spinningNumbers = ref<(number | null)[]>([null, null, null, null, null])
+const rollingNumber = ref<number | null>(null)
+const revealSeconds = ref(0)
+
+let spinInterval: ReturnType<typeof setInterval> | null = null
+let countdownInterval: ReturnType<typeof setInterval> | null = null
 
 // Modal state para confirmación de reset
 const showResetConfirmModal = ref(false)
-
-// Countdown state
-const remainingTime = ref(0)
-const showRemainingTime = ref(false)
-
-// Modal state para ganadores de dinero
-const showModal = ref(false)
-const selectedWinner = ref<{
-  number: number | null
-  position: number
-  purchase: Purchase | null
-}>({
-  number: null,
-  position: 0,
-  purchase: null
-})
-
-// (El modal de confirmación se omitió en esta vista simplificada)
-
-// Compras filtradas
 
 // Números elegibles para el sorteo (solo aprobados y completados)
 const eligibleNumbers = computed(() => {
@@ -428,205 +345,69 @@ const formatDateOnly = (dateString: string) => {
 
 // Función para verificar si se puede reenviar email
 
-// Modal functions para ganadores de dinero
-const showWinnerModal = (number: number, position: number) => {
-  // Si es el quinto número (position 4), no mostrar modal
-  if (position === 4) {
-    return
+const clearDrawTimers = () => {
+  if (spinInterval) {
+    clearInterval(spinInterval)
+    spinInterval = null
   }
 
-  const approvedPurchases = purchasesByStatus.value.APPROVED || []
-  const completedPurchases = purchasesByStatus.value.COMPLETED || []
-  const eligiblePurchases = [...approvedPurchases, ...completedPurchases]
-  const purchase = eligiblePurchases.find(p =>
-    p.wallpaperNumbers && p.wallpaperNumbers.includes(number)
-  )
-
-  selectedWinner.value = {
-    number,
-    position,
-    purchase: purchase || null
+  if (countdownInterval) {
+    clearInterval(countdownInterval)
+    countdownInterval = null
   }
-
-  showModal.value = true
-
-  // Guardar ganador (puestos 1..4) como premio de dinero
-  addWinner(position, number, purchase || null, 'money')
-}
-
-const closeModal = () => {
-  showModal.value = false
-}
-
-const getWinMessage = (position: number) => {
-  const messages = [
-    "¡Increíble! Eres el primer ganador del día. ¡Gracias por participar!",
-    "¡Fantástico! El segundo lugar es tuyo. ¡Gracias por participar!.",
-    "¡Excelente! Tercer puesto ganador. ¡Gracias por participar!",
-    "¡Genial! Cuarto lugar premiado. ¡Gracias por participar!",
-    "🏆 ¡EXTRAORDINARIO! ¡Eres el gran ganador de la motocicleta NS200! ¡Felicitaciones! 🏆"
-  ]
-  return messages[position] || "¡Felicitaciones, ganaste dinero en efectivo!"
 }
 
 // Winner game methods
-const startWinnerGame = () => {
-  if (eligibleNumbers.value.length === 0) return
+const startWinnerGame = async () => {
+  if (eligibleNumbers.value.length === 0 || isGameRunning.value) return
 
-  // Check if we have enough numbers for a complete game (at least 5 unique numbers recommended)
-  if (eligibleNumbers.value.length < 5) {
-    // Still allow the game but show a warning in console
-    console.warn(`⚠️ Solo hay ${eligibleNumbers.value.length} números elegibles. Se pueden repetir números en los intentos.`)
-  }
-
-  isGameStarted.value = true
   isGameRunning.value = true
-  currentAttempt.value = 1
-  attempts.value = [null, null, null, null, null]
-  winnerNumber.value = null
   isGameComplete.value = false
-  isShowingSpinEffect.value = false
-  spinningNumbers.value = [null, null, null, null, null]
+  winnerNumber.value = null
+  revealSeconds.value = 6
 
-  // Pre-select the winner number (will be revealed on 5th attempt)
-  const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
-  winnerNumber.value = eligibleNumbers.value[randomIndex]
+  clearDrawTimers()
 
-  // Guardar estado del juego
-  saveGameStateToStorage()
-}
+  spinInterval = setInterval(() => {
+    const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
+    rollingNumber.value = eligibleNumbers.value[randomIndex]
+  }, 90)
 
-const nextAttempt = async () => {
-  if (currentAttempt.value > 5 || isProcessingAttempt.value) return
-
-  isProcessingAttempt.value = true
-
-  // Get numbers that have already been used in previous attempts
-  const usedNumbers = attempts.value.filter(num => num !== null) as number[]
-
-  // Start spinning effect
-  isShowingSpinEffect.value = true
-
-  // Spin numbers for dramatic effect
-  // - Intentos 1 a 4: 6 segundos
-  // - Intento 5 (ganador): 10 segundos
-  const spinDuration = currentAttempt.value === 5 ? 10000 : 6000
-  const spinInterval = 100
-  const spinTimes = spinDuration / spinInterval
-
-  // Mostrar tiempo restante durante la revelación
-  showRemainingTime.value = true
-  remainingTime.value = Math.ceil(spinDuration / 1000)
-
-  // Update remaining time every second
-  const timeInterval = setInterval(() => {
-    remainingTime.value--
-    if (remainingTime.value <= 0) {
-      clearInterval(timeInterval)
-      showRemainingTime.value = false
+  countdownInterval = setInterval(() => {
+    if (revealSeconds.value > 0) {
+      revealSeconds.value--
     }
   }, 1000)
 
-  // Create a pool of available numbers for spinning effect (excluding used ones and winner)
-  const availableForSpinning = eligibleNumbers.value.filter(num =>
-    num !== winnerNumber.value && !usedNumbers.includes(num)
-  )
+  try {
+    await new Promise(resolve => setTimeout(resolve, 6000))
 
-  for (let i = 0; i < spinTimes; i++) {
-    // If we have available unique numbers, use them; otherwise use all eligible except winner
-    const spinPool = availableForSpinning.length > 0 ? availableForSpinning :
-      eligibleNumbers.value.filter(num => num !== winnerNumber.value)
+    const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
+    winnerNumber.value = eligibleNumbers.value[randomIndex]
+    const purchase = winnerPurchase.value
 
-    if (spinPool.length > 0) {
-      const randomIndex = Math.floor(Math.random() * spinPool.length)
-      spinningNumbers.value[currentAttempt.value - 1] = spinPool[randomIndex]
-    }
-    await new Promise(resolve => setTimeout(resolve, spinInterval))
-  }
+    addWinner(winnerNumber.value, purchase, 'grand')
 
-  // Clear the interval just in case
-  clearInterval(timeInterval)
-  showRemainingTime.value = false
-
-  // Stop spinning effect
-  isShowingSpinEffect.value = false
-
-  if (currentAttempt.value === 5) {
-    // Cerrar automáticamente el modal del ganador anterior
-    showModal.value = false
-
-    // Reveal the winner on 5th attempt
-    attempts.value[4] = winnerNumber.value
     isGameComplete.value = true
+  } finally {
+    clearDrawTimers()
+    rollingNumber.value = null
+    revealSeconds.value = 0
     isGameRunning.value = false
-
-    // Guardar ganador final (puesto 5)
-    addWinner(4, winnerNumber.value, winnerPurchase.value, 'grand')
-  } else {
-    // Generate a random number from eligible numbers (excluding winner and previously used numbers)
-    let randomNumber
-    let availableNumbers = eligibleNumbers.value.filter(num =>
-      num !== winnerNumber.value && !usedNumbers.includes(num)
-    )
-
-    // If we don't have enough unique numbers (excluding the winner),
-    // allow previously used numbers but still exclude the winner
-    if (availableNumbers.length === 0) {
-      availableNumbers = eligibleNumbers.value.filter(num => num !== winnerNumber.value)
-    }
-
-    // Select a random number from available numbers
-    if (availableNumbers.length > 0) {
-      const randomIndex = Math.floor(Math.random() * availableNumbers.length)
-      randomNumber = availableNumbers[randomIndex]
-    } else {
-      // Fallback: use any eligible number except the winner
-      do {
-        const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
-        randomNumber = eligibleNumbers.value[randomIndex]
-      } while (randomNumber === winnerNumber.value && eligibleNumbers.value.length > 1)
-    }
-
-    attempts.value[currentAttempt.value - 1] = randomNumber
-
-    // Guardar ganadores de dinero
-    if (currentAttempt.value < 4) {
-      // Para los intentos 1 a 3, abrir modal (esto ya guarda el ganador)
-      showWinnerModal(randomNumber, currentAttempt.value - 1)
-    } else if (currentAttempt.value === 4) {
-      // Para el 4to intento, persistir automáticamente sin abrir modal
-      const approvedPurchases = purchasesByStatus.value.APPROVED || []
-      const completedPurchases = purchasesByStatus.value.COMPLETED || []
-      const eligiblePurchases = [...approvedPurchases, ...completedPurchases]
-      const purchase = eligiblePurchases.find(p =>
-        p.wallpaperNumbers && p.wallpaperNumbers.includes(randomNumber)
-      )
-      addWinner(3, randomNumber, purchase || null, 'money')
-    }
+    saveGameStateToStorage()
   }
-
-  // Increment attempt counter after processing
-  currentAttempt.value++
-
-  // Guardar estado del juego después de cada intento
-  saveGameStateToStorage()
-
-  isProcessingAttempt.value = false
 }
 
 const resetGame = () => {
-  isGameStarted.value = false
-  currentAttempt.value = 1
-  attempts.value = [null, null, null, null, null]
+  clearDrawTimers()
   winnerNumber.value = null
   isGameComplete.value = false
   isGameRunning.value = false
-  isProcessingAttempt.value = false
-  isShowingSpinEffect.value = false
-  spinningNumbers.value = [null, null, null, null, null]
+  rollingNumber.value = null
+  revealSeconds.value = 0
   showResetConfirmModal.value = false
 
-  // Limpiar ganadores persistidos al iniciar una nueva dinámica
+  // Limpiar ganador persistido al iniciar una nueva dinámica
   clearWinners()
 
   // Limpiar estado del juego del localStorage
@@ -699,6 +480,10 @@ onMounted(async () => {
   loadWinnersFromStorage()
   loadGameStateFromStorage()
   await refreshData()
+})
+
+onUnmounted(() => {
+  clearDrawTimers()
 })
 </script>
 
@@ -922,6 +707,48 @@ onMounted(async () => {
 
 .game-rules {
   margin-bottom: 2rem;
+}
+
+.live-draw-box {
+  margin: 0 auto;
+  max-width: 340px;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.live-draw-label {
+  margin: 0 0 0.6rem 0;
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.live-draw-number {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
+  animation: drawPulse 0.6s ease-in-out infinite;
+}
+
+.live-draw-time {
+  margin: 0.5rem 0 0 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+@keyframes drawPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
 }
 
 .game-explanation {

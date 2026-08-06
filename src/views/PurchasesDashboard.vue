@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="dashboard-header">
         <h1>Panel de Compras</h1>
-        <p>Gestión de compras de wallpapers NS200</p>
+        <p>Gestión de compras de wallpapers moto</p>
       </div>
 
       <!-- Error Message -->
