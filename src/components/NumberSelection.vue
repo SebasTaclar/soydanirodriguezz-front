@@ -82,7 +82,7 @@
             <div class="numbers-grid">
               <div v-for="number in displayNumbers" :key="number" class="number-item">
                 <button @click="toggleNumber(number)"
-                  :disabled="takenNumbers.includes(number) || isNumberReserved(number)" :class="[
+                  :disabled="isLoadingWallpapers || takenNumbers.includes(number) || isNumberReserved(number)" :class="[
                     'number-btn',
                     {
                       'btn-selected': selectedNumbers.includes(number),
@@ -218,7 +218,21 @@
       </div>
     </div>
 
-    <!-- Overlay de carga -->
+    <!-- Overlay de carga general (API/status) -->
+    <div v-if="isLoadingWallpapers" class="payment-loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <h3>Cargando disponibilidad...</h3>
+        <p>Verificando números en tiempo real</p>
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay de carga pago -->
     <div v-if="isProcessingPayment" class="payment-loading-overlay">
       <div class="loading-content">
         <div class="loading-spinner"></div>
@@ -255,8 +269,12 @@ const {
   isNumberReserved,
   getAvailableNumbersArraySync,
   clearAll,
-  refreshTakenNumbers
+  refreshTakenNumbers,
+  isLoadingWallpapers
 } = useNumbersAvailability()
+
+// Set de números en proceso de validación (prevenir doble clic)
+const processingNumbers = ref<Set<number>>(new Set())
 
 // Estado de números seleccionados localmente
 const selectedNumbers = ref<number[]>([])
@@ -355,6 +373,11 @@ const toggleNumber = async (number: number) => {
     // Remover número
     selectedNumbers.value.splice(index, 1)
   } else {
+    // Prevenir doble clic: si ya se está validando este número, ignorar
+    if (processingNumbers.value.has(number)) return
+
+    processingNumbers.value.add(number)
+
     // Antes de agregar, verificar disponibilidad en tiempo real
     try {
       // Refrescar datos para este número específico
@@ -382,6 +405,8 @@ const toggleNumber = async (number: number) => {
       console.error('Error verificando disponibilidad:', error)
       // En caso de error, permitir la selección pero mostrar advertencia
       selectedNumbers.value.push(number)
+    } finally {
+      processingNumbers.value.delete(number)
     }
   }
 }
