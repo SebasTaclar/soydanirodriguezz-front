@@ -14,7 +14,7 @@
           </div>
 
           <!-- Información de contacto -->
-          <div class="contact-section">
+          <!-- <div class="contact-section">
             <h3 class="section-title">Contacto</h3>
             <div class="contact-info">
               <div class="contact-item">
@@ -25,11 +25,11 @@
                 </div>
                 <div class="contact-text">
                   <span>Teléfono</span>
-                  <p>+57 311 8715539</p>
+                  <p>Disponible por WhatsApp</p>
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
