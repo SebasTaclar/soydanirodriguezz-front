@@ -89,9 +89,9 @@
       </div> -->
 
       <!-- WhatsApp contacto -->
-      <!-- <div class="whatsapp-contact">
-        <div class="whatsapp-title">O escribenos directo al Whatsapp</div>
-        <a href="#"
+      <div class="whatsapp-contact">
+        <div class="whatsapp-title">O escríbenos directo al WhatsApp</div>
+        <a href="https://wa.me/573244554382"
            class="whatsapp-btn"
            target="_blank"
            rel="noopener noreferrer">
@@ -102,10 +102,10 @@
           </div>
           <div class="whatsapp-content">
             <span class="whatsapp-text">WhatsApp</span>
-            <span class="whatsapp-number">Disponible para soporte</span>
+            <span class="whatsapp-number">+57 324 455 4382</span>
           </div>
         </a>
-      </div> -->
+      </div>
 
       <!-- Mensaje de agradecimiento -->
       <div class="thank-you">
