@@ -1,10 +1,11 @@
-<!-- <template>
+<template>
   <div class="floating-social">
     <a
-      href="#"
+      :href="whatsappLink"
       target="_blank"
-      rel="noopener"
+      rel="noopener noreferrer"
       class="social-btn whatsapp"
+      aria-label="Contactar por WhatsApp"
     >
       <img
         src="https://cdn-icons-png.flaticon.com/512/733/733585.png"
@@ -14,12 +15,15 @@
       <span class="social-tooltip">WhatsApp</span>
     </a>
   </div>
-</template> -->
+</template>
 
 <script setup lang="ts">
 defineOptions({
   name: 'SocialFloating'
 })
+
+const whatsappNumber = '573244554382'
+const whatsappLink = `https://wa.me/${whatsappNumber}`
 </script>
 
 <style scoped>

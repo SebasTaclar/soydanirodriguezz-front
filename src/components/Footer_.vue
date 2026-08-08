@@ -14,7 +14,7 @@
           </div>
 
           <!-- Información de contacto -->
-          <!-- <div class="contact-section">
+          <div class="contact-section">
             <h3 class="section-title">Contacto</h3>
             <div class="contact-info">
               <div class="contact-item">
@@ -24,12 +24,14 @@
                   </svg>
                 </div>
                 <div class="contact-text">
-                  <span>Teléfono</span>
-                  <p>Disponible por WhatsApp</p>
+                  <span>WhatsApp</span>
+                  <a href="https://wa.me/573244554382" target="_blank" rel="noopener noreferrer" class="contact-link">
+                    +57 324 455 4382
+                  </a>
                 </div>
               </div>
             </div>
-          </div> -->
+          </div>
         </div>
       </div>
     </div>
@@ -172,12 +174,24 @@
   display: block;
 }
 
-.contact-text p {
+.contact-text p,
+.contact-link {
   margin: 0.4rem 0 0 0;
   color: #e2e8f0;
   font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.4;
+}
+
+.contact-link {
+  display: inline-block;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.contact-link:hover {
+  color: #60a5fa;
+  text-decoration: underline;
 }
 
 /* Barra inferior */
